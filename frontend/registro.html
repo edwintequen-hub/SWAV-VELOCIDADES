@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Registro Operacional - SWAV</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css"
+        rel="stylesheet">
+
+    <link
+        href="/frontend/css/registro.css"
+        rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="container-fluid p-4">
+
+    <!-- ========================================= -->
+    <!-- TÍTULO -->
+    <!-- ========================================= -->
+
+    <div class="mb-4">
+
+        <h2>
+
+            <i class="bi bi-table"></i>
+
+            Registro Operacional
+
+        </h2>
+
+        <small class="text-secondary">
+
+            Detalle de expediciones por período
+
+        </small>
+
+    </div>
+
+    <!-- ========================================= -->
+    <!-- CABECERA -->
+    <!-- ========================================= -->
+
+    <div class="row g-3">
+
+        <div class="col-md-3">
+
+            <div class="card info-card">
+
+                <div class="card-body">
+
+                    <small>Servicio</small>
+
+                    <h4 id="lblServicio">-</h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card info-card">
+
+                <div class="card-body">
+
+                    <small>Ruta</small>
+
+                    <h4 id="lblRuta">-</h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card info-card">
+
+                <div class="card-body">
+
+                    <small>Período</small>
+
+                    <h4 id="lblPeriodo">-</h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card estado-card">
+
+                <div class="card-body">
+
+                    <small>Estado</small>
+
+                    <h4 id="lblEstado">
+
+                        -
+
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ========================================= -->
+    <!-- INDICADORES -->
+    <!-- ========================================= -->
+
+    <div class="row g-3 mt-2">
+
+        <div class="col-md-3">
+
+            <div class="card indicador">
+
+                <div class="card-body text-center">
+
+                    <small>Expediciones</small>
+
+                    <h3 id="lblExpediciones">0</h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card indicador">
+
+                <div class="card-body text-center">
+
+                    <small>Buses</small>
+
+                    <h3 id="lblBuses">0</h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card indicador">
+
+                <div class="card-body text-center">
+
+                    <small>Velocidad Real</small>
+
+                    <h3 id="lblVelReal">0</h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card indicador">
+
+                <div class="card-body text-center">
+
+                    <small>Velocidad Teórica</small>
+
+                    <h3 id="lblVelTeorica">0</h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ========================================= -->
+    <!-- TABLA + GRAFICO -->
+    <!-- ========================================= -->
+
+    <div class="row mt-4">
+
+        <div class="col-lg-8">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    Expediciones
+
+                </div>
+
+                <div class="card-body">
+
+                    <table
+                        class="table table-hover"
+                        id="tablaRegistro">
+
+                        <thead>
+
+                        <tr>
+
+                            <th>Patente</th>
+
+                            <th>Inicio</th>
+
+                            <th>Fin</th>
+
+                            <th>Vel.Real</th>
+
+                            <th>Vel.Teórica</th>
+
+                            <th>Reducción</th>
+
+                            <th>Estado</th>
+
+                        </tr>
+
+                        </thead>
+
+                        <tbody id="tbodyRegistro">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    Velocidades
+
+                </div>
+
+                <div class="card-body">
+
+                    <canvas id="graficoRegistro"></canvas>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="/frontend/js/registro.js"></script>
+
+</body>
+
+</html>

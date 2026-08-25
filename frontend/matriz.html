@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        SWAV - Matriz Operacional
+    </title>
+
+
+    <!-- =====================================================
+         BOOTSTRAP
+         ===================================================== -->
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+
+    <!-- =====================================================
+         BOOTSTRAP ICONS
+         ===================================================== -->
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        rel="stylesheet"
+    >
+
+
+    <!-- =====================================================
+         CSS MATRIZ
+         ===================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="/frontend/css/matriz.css?v=2"
+    >
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     SIDEBAR SWAV
+     ========================================================= -->
+
+<aside class="sidebar">
+
+
+    <!-- =====================================================
+         MARCA
+         ===================================================== -->
+
+    <div class="sidebar-brand">
+
+
+        <div class="sidebar-logo">
+
+            <img
+                src="/frontend/img/logo_metropol.png"
+                alt="Metropol"
+            >
+
+        </div>
+
+
+        <div class="sidebar-title">
+            METROPOL
+        </div>
+
+
+        <div class="sidebar-subtitle">
+            Centro de Control
+        </div>
+
+
+        <div class="sidebar-description">
+            Sistema Web de Análisis de<br>
+            Velocidades
+        </div>
+
+
+    </div>
+
+
+    <!-- =====================================================
+         MENU
+         ===================================================== -->
+
+    <nav class="sidebar-menu">
+
+
+        <!-- DASHBOARD -->
+
+        <a
+            href="/dashboard"
+            class="sidebar-item"
+        >
+
+            <i class="bi bi-house-fill"></i>
+
+            <span>
+                Dashboard
+            </span>
+
+        </a>
+
+
+        <!-- EVENTOS OPERACIONALES -->
+
+        <a
+            href="/eventos"
+            class="sidebar-item"
+        >
+
+            <i class="bi bi-exclamation-triangle-fill"></i>
+
+            <span>
+                Eventos Operacionales
+            </span>
+
+        </a>
+
+
+        <!-- IMPORTACIONES -->
+
+        <a
+            href="/configuracion"
+            class="sidebar-item"
+        >
+
+            <i class="bi bi-upload"></i>
+
+            <span>
+                Importaciones
+            </span>
+
+        </a>
+
+
+        <!-- REPORTES -->
+
+        <a
+            href="/reportes"
+            class="sidebar-item"
+        >
+
+            <i class="bi bi-bar-chart-fill"></i>
+
+            <span>
+                Reportes
+            </span>
+
+        </a>
+
+
+        <!-- MATRIZ OPERACIONAL -->
+
+        <a
+            href="/matriz"
+            class="sidebar-item active"
+        >
+
+            <i class="bi bi-grid-3x3-gap-fill"></i>
+
+            <span>
+                Matriz Operacional
+            </span>
+
+        </a>
+
+
+        <!-- CONFIGURACION -->
+
+        <a
+            href="/configuracion"
+            class="sidebar-item"
+        >
+
+            <i class="bi bi-gear-fill"></i>
+
+            <span>
+                Configuración
+            </span>
+
+        </a>
+
+
+    </nav>
+
+
+</aside>
+
+
+<!-- =========================================================
+     CONTENIDO PRINCIPAL
+     ========================================================= -->
+
+<main class="content">
+
+
+    <!-- =====================================================
+         CABECERA
+         ===================================================== -->
+
+    <div
+        class="d-flex justify-content-between align-items-center mb-3"
+    >
+
+        <div>
+
+            <h2 class="fw-bold text-primary mb-0">
+                SWAV
+            </h2>
+
+            <h5 class="mb-0">
+                Sistema Web de Análisis de Velocidades
+            </h5>
+
+            <small class="text-secondary">
+                Matriz Operacional · Metropol
+            </small>
+
+        </div>
+
+
+        <a
+            href="/dashboard"
+            class="btn btn-primary"
+        >
+            <i class="bi bi-arrow-left"></i>
+            Dashboard
+        </a>
+
+
+    </div>
+
+
+    <hr>
+
+
+    <!-- =====================================================
+         LEYENDA
+         ===================================================== -->
+
+    <div
+        id="resumenEstados"
+        class="d-flex gap-4 align-items-center mb-2"
+    >
+
+
+        <span
+            class="estado-resumen normal-resumen"
+        >
+
+            🟢
+            <b>Normal:</b>
+
+            <strong id="contadorNormal">
+                0
+            </strong>
+
+        </span>
+
+
+        <span
+            class="estado-resumen simple-resumen"
+        >
+
+            🟡
+            <b>Simple:</b>
+
+            <strong id="contadorSimple">
+                0
+            </strong>
+
+        </span>
+
+
+        <span
+            class="estado-resumen complejo-resumen"
+        >
+
+            🔴
+            <b>Complejo:</b>
+
+            <strong id="contadorComplejo">
+                0
+            </strong>
+
+        </span>
+
+
+    </div>
+
+
+    <!-- =====================================================
+         FILTROS
+         ===================================================== -->
+
+    <div
+        class="card shadow-sm mb-3"
+    >
+
+        <div class="card-body">
+
+            <div class="row g-2">
+
+
+                <!-- =================================================
+                     UNIDAD
+                     ================================================= -->
+
+                <div class="col-md-2">
+
+                    <label class="form-label">
+                        Unidad
+                    </label>
+
+
+                    <select
+                        id="cmbUnidad"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            Todas
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- =================================================
+                     TIPO DIA
+                     ================================================= -->
+
+                <div class="col-md-2">
+
+                    <label class="form-label">
+                        Tipo Día
+                    </label>
+
+
+                    <select
+                        id="cmbTipoDia"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            Todos
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- =================================================
+                     ESTADO
+                     ================================================= -->
+
+                <div class="col-md-2">
+
+                    <label class="form-label">
+                        Estado
+                    </label>
+
+
+                    <div
+                        class="estado-dropdown"
+                        id="estadoDropdown"
+                    >
+
+
+                        <button
+                            type="button"
+                            id="btnEstado"
+                            class="form-select estado-button"
+                        >
+                            Todos
+                        </button>
+
+
+                        <div
+                            id="estadoMenu"
+                            class="estado-menu"
+                        >
+
+
+                            <!-- TODOS -->
+
+                            <label class="estado-option">
+
+                                <input
+                                    type="checkbox"
+                                    id="estadoTodos"
+                                    value="TODOS"
+                                    checked
+                                >
+
+                                <span>
+                                    Todos
+                                </span>
+
+                            </label>
+
+
+                            <!-- NORMAL -->
+
+                            <label class="estado-option">
+
+                                <input
+                                    type="checkbox"
+                                    class="estado-checkbox"
+                                    value="OK"
+                                    checked
+                                >
+
+                                <span>
+                                    🟢 Normal
+                                </span>
+
+                            </label>
+
+
+                            <!-- SIMPLE -->
+
+                            <label class="estado-option">
+
+                                <input
+                                    type="checkbox"
+                                    class="estado-checkbox"
+                                    value="SIMPLE"
+                                    checked
+                                >
+
+                                <span>
+                                    🟡 Simple
+                                </span>
+
+                            </label>
+
+
+                            <!-- COMPLEJO -->
+
+                            <label class="estado-option">
+
+                                <input
+                                    type="checkbox"
+                                    class="estado-checkbox"
+                                    value="COMPLEJO"
+                                    checked
+                                >
+
+                                <span>
+                                    🔴 Complejo
+                                </span>
+
+                            </label>
+
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     SERVICIO USUARIO
+                     ================================================= -->
+
+                <div class="col-md-3">
+
+                    <label class="form-label">
+                        Servicio Usuario
+                    </label>
+
+                    <div
+                        class="estado-dropdown"
+                        id="servicioUsuarioDropdown"
+                    >
+
+                        <button
+                            type="button"
+                            id="btnServicioUsuario"
+                            class="form-select estado-button"
+                        >
+                            Todos
+                        </button>
+
+                        <div
+                            id="servicioUsuarioMenu"
+                            class="estado-menu"
+                            style="
+                                max-height: 260px;
+                                overflow-y: auto;
+                            "
+                        >
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     INDICADOR IP / IE
+                     ================================================= -->
+
+                <div class="col-md-3">
+
+                    <label class="form-label">
+                        Indicador
+                    </label>
+
+                    <div
+                        class="estado-dropdown"
+                        id="indicadorDropdown"
+                    >
+
+                        <button
+                            type="button"
+                            id="btnIndicador"
+                            class="form-select estado-button"
+                        >
+                            Todos
+                        </button>
+
+                        <div
+                            id="indicadorMenu"
+                            class="estado-menu"
+                        >
+
+                            <label class="estado-option">
+
+                                <input
+                                    type="checkbox"
+                                    id="indicadorTodos"
+                                    value="TODOS"
+                                    checked
+                                >
+
+                                <span>
+                                    Todos
+                                </span>
+
+                            </label>
+
+
+                            <label class="estado-option">
+
+                                <input
+                                    type="checkbox"
+                                    class="indicador-checkbox"
+                                    value="IP"
+                                    checked
+                                >
+
+                                <span>
+                                    IP
+                                </span>
+
+                            </label>
+
+
+                            <label class="estado-option">
+
+                                <input
+                                    type="checkbox"
+                                    class="indicador-checkbox"
+                                    value="IE"
+                                    checked
+                                >
+
+                                <span>
+                                    IE
+                                </span>
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         MATRIZ
+         ========================================================= -->
+
+    <div class="table-responsive">
+
+
+        <table
+            id="tablaMatriz"
+            class="table table-bordered table-hover align-middle"
+        >
+
+
+            <thead>
+
+                <tr id="encabezado">
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="cuerpo">
+
+            </tbody>
+
+
+        </table>
+
+
+    </div>
+
+
+    <!-- =========================================================
+         DETALLE / REGISTRO
+         ========================================================= -->
+
+    <div
+        id="registro"
+        class="mt-4"
+    >
+
+    </div>
+
+
+</main>
+
+
+<!-- =========================================================
+     JAVASCRIPT MATRIZ
+     ========================================================= -->
+
+<script
+    src="/frontend/js/matriz.js?v=20260812"
+></script>
+
+
+</body>
+
+</html>

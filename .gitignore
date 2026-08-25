@@ -1,0 +1,117 @@
+﻿# ============================================================
+# SWAV - GITIGNORE
+# ============================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+ENV/
+
+# IDE / sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Variables y secretos
+.env
+.env.*
+*.pem
+*.key
+
+# Backups
+*BACKUP*
+*backup*
+*.bak
+
+# Archivos comprimidos / pruebas
+*.zip
+PRUEBA_*.xlsx
+prueba_*.xlsx
+R1_6_DESCARGA_*.csv
+
+# Diagnósticos y utilitarios temporales raíz
+diagnostico_*.py
+diagnosticar_*.ps1
+inspeccionar_*.ps1
+probar_*.py
+probar_*.ps1
+verificar_*.py
+buscar_*.py
+
+# Archivos temporales
+rutas_api*.json
+resumen_json.json
+reportes_operaciones.json
+inventario_proyecto.txt
+
+# Probe Sinoptico
+_sinoptico_probe/
+
+# Bases antiguas / backups
+swav_antes_*.db
+swav_backup_*.db
+
+# Archivos basura accidentales
+-Pattern
+True
+
+# Descargas temporales Sinoptico
+backend/uploads/r16_sinoptico/*.csv
+
+# IMPORTANTE:
+# NO ignoramos database/swav.db todavía.
+# Queremos evaluar incluirla para demo Gerencia.
+
+# ============================================================
+# BASES DE DATOS
+# ============================================================
+
+# Ignorar cualquier BD
+*.db
+
+# PERO conservar la BD activa de la demo
+!database/swav.db
+
+
+# Copias antiguas dentro del código
+*.bak_*
+*_antes_*.py
+* - copia.py
+
+# Scripts auxiliares de desarrollo
+actualizar_*.py
+agregar_*.py
+agregar_*.ps1
+aplicar_*.py
+cambiar_*.py
+cargar_*.py
+certificar_*.ps1
+corregir_*.py
+crear_bd.py
+insertar_*.ps1
+migrar_*.py
+parche_*.py
+reconstruir_*.py
+reconstruir_*.ps1
+reiniciar_*.py
+reset_*.py
+resumen_*.py
+revisar_*.py
+test_*.py
+
+# Cargas locales
+uploads/
+
+
+# Backend auxiliar / bridge Windows
+backend/
+

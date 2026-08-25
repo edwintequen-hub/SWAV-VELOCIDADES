@@ -1,0 +1,1435 @@
+/* =========================================================
+   SWAV
+   MATRIZ OPERACIONAL
+   ========================================================= */
+
+
+/* =========================================================
+   ESTRUCTURA GENERAL
+   ========================================================= */
+
+body {
+
+    margin: 0;
+
+    background: #f4f6f9;
+
+    font-family:
+        Segoe UI,
+        Tahoma,
+        Geneva,
+        Verdana,
+        sans-serif;
+
+}
+
+
+/* =========================================================
+   SIDEBAR SWAV
+   ========================================================= */
+
+.sidebar {
+
+    position: fixed;
+
+    top: 0;
+
+    left: 0;
+
+    width: 195px;
+
+    height: 100vh;
+
+    background: #0d1729;
+
+    color: white;
+
+    z-index: 1000;
+
+    overflow-y: auto;
+
+    overflow-x: hidden;
+
+    box-sizing: border-box;
+
+}
+
+
+/* =========================================================
+   MARCA
+   ========================================================= */
+
+.sidebar-brand {
+
+    width: 100%;
+
+    padding:
+        22px
+        10px
+        28px;
+
+    text-align: center;
+
+    border-bottom:
+        1px solid
+        rgba(255, 255, 255, .08);
+
+    box-sizing: border-box;
+
+}
+
+
+/* =========================================================
+   LOGO
+   ========================================================= */
+
+.sidebar .sidebar-brand .sidebar-logo {
+
+    position: relative !important;
+
+    width: 68px !important;
+
+    min-width: 68px !important;
+
+    max-width: 68px !important;
+
+    height: 68px !important;
+
+    min-height: 68px !important;
+
+    max-height: 68px !important;
+
+    margin:
+        0 auto 14px auto !important;
+
+    padding: 0 !important;
+
+    background: #ffffff !important;
+
+    border-radius: 16px !important;
+
+    display: flex !important;
+
+    align-items: center !important;
+
+    justify-content: center !important;
+
+    overflow: hidden !important;
+
+    box-sizing: border-box !important;
+
+    flex-shrink: 0 !important;
+
+    transform: none !important;
+
+}
+
+
+/* =========================================================
+   IMAGEN DEL LOGO
+   ========================================================= */
+
+.sidebar .sidebar-brand .sidebar-logo > img {
+
+    position: static !important;
+
+    display: block !important;
+
+    width: 52px !important;
+
+    min-width: 52px !important;
+
+    max-width: 52px !important;
+
+    height: 52px !important;
+
+    min-height: 52px !important;
+
+    max-height: 52px !important;
+
+    margin: 0 !important;
+
+    padding: 0 !important;
+
+    object-fit: contain !important;
+
+    object-position: center !important;
+
+    transform: none !important;
+
+    float: none !important;
+
+}
+
+
+/* =========================================================
+   NOMBRE METROPOL
+   ========================================================= */
+
+.sidebar-title {
+
+    font-size: 20px;
+
+    font-weight: 700;
+
+    letter-spacing: .5px;
+
+    margin-bottom: 3px;
+
+    line-height: 1.2;
+
+}
+
+
+/* =========================================================
+   CENTRO DE CONTROL
+   ========================================================= */
+
+.sidebar-subtitle {
+
+    font-size: 13px;
+
+    color: #d5dbea;
+
+    margin-bottom: 5px;
+
+    line-height: 1.3;
+
+}
+
+
+/* =========================================================
+   DESCRIPCION
+   ========================================================= */
+
+.sidebar-description {
+
+    font-size: 10px;
+
+    line-height: 1.5;
+
+    color: #8e9ab3;
+
+}
+
+
+/* =========================================================
+   MENU
+   ========================================================= */
+
+.sidebar-menu {
+
+    width: 100%;
+
+    padding:
+        16px
+        9px;
+
+    box-sizing: border-box;
+
+}
+
+
+/* =========================================================
+   ELEMENTOS DEL MENU
+   ========================================================= */
+
+.sidebar-item {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 13px;
+
+    width: 100%;
+
+    min-height: 46px;
+
+    padding:
+        0
+        14px;
+
+    margin-bottom: 7px;
+
+    border-radius: 9px;
+
+    color: #f0f3f8;
+
+    text-decoration: none;
+
+    font-size: 12px;
+
+    font-weight: 500;
+
+    box-sizing: border-box;
+
+    transition:
+        background .2s ease,
+        color .2s ease,
+        transform .2s ease;
+
+}
+
+
+/* =========================================================
+   ICONOS DEL MENU
+   ========================================================= */
+
+.sidebar-item i {
+
+    width: 18px;
+
+    min-width: 18px;
+
+    text-align: center;
+
+    font-size: 15px;
+
+}
+
+
+/* =========================================================
+   HOVER
+   ========================================================= */
+
+.sidebar-item:hover {
+
+    background:
+        rgba(255, 255, 255, .08);
+
+    color: white;
+
+    text-decoration: none;
+
+}
+
+
+/* =========================================================
+   ACTIVO
+   ========================================================= */
+
+.sidebar-item.active {
+
+    background: #0878d1;
+
+    color: white;
+
+    font-weight: 600;
+
+    box-shadow:
+        0 4px 12px
+        rgba(0, 118, 210, .22);
+
+}
+
+
+.sidebar-item.active:hover {
+
+    background: #0878d1;
+
+    color: white;
+
+}
+
+
+/* =========================================================
+   CONTENIDO PRINCIPAL
+   ========================================================= */
+
+.content {
+
+    margin-left: 195px;
+
+    min-height: 100vh;
+
+    width:
+        calc(100% - 195px);
+
+    padding:
+        28px
+        30px;
+
+    box-sizing: border-box;
+
+}
+
+
+/* =========================================================
+   TITULOS
+   ========================================================= */
+
+h3 {
+
+    font-size: 18px;
+
+    font-weight: 700;
+
+}
+
+
+label {
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    margin-bottom: 4px;
+
+}
+
+
+/* =========================================================
+   COMBOS
+   ========================================================= */
+
+.form-select {
+
+    font-size: 14px;
+
+    height: 38px;
+
+    padding:
+        4px 10px;
+
+}
+
+
+/* =========================================================
+   ESTADO
+   ========================================================= */
+
+.estado-dropdown {
+
+    position: relative;
+
+    width: 100%;
+
+}
+
+
+.estado-button {
+
+    width: 100%;
+
+    text-align: left;
+
+    background: white;
+
+    cursor: pointer;
+
+}
+
+
+.estado-menu {
+
+    display: none;
+
+    position: absolute;
+
+    top: 42px;
+
+    left: 0;
+
+    width: 100%;
+
+    min-width: 180px;
+
+    background: white;
+
+    border: 1px solid #ced4da;
+
+    border-radius: 6px;
+
+    box-shadow:
+        0 4px 12px
+        rgba(0,0,0,.15);
+
+    padding: 6px;
+
+    z-index: 1000;
+
+}
+
+
+.estado-menu.mostrar {
+
+    display: block;
+
+}
+
+
+.estado-option {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding:
+        7px 8px;
+
+    margin: 0;
+
+    border-radius: 4px;
+
+    cursor: pointer;
+
+    font-size: 13px;
+
+    font-weight: 500;
+
+}
+
+
+.estado-option:hover {
+
+    background: #f1f5f9;
+
+}
+
+
+.estado-option input {
+
+    width: 15px;
+
+    height: 15px;
+
+    cursor: pointer;
+
+}
+
+
+/* =========================================================
+   TABLA MATRIZ
+   ========================================================= */
+
+.table {
+
+    font-size: 10px;
+
+    margin-bottom: 0;
+
+}
+
+
+thead {
+
+    background: #0d6efd;
+
+    color: white;
+
+}
+
+
+th {
+
+    text-align: center;
+
+    vertical-align: middle;
+
+    white-space: nowrap;
+
+    font-size: 10px;
+
+    font-weight: 600;
+
+    padding:
+        3px 4px;
+
+}
+
+
+td {
+
+    text-align: center;
+
+    vertical-align: middle;
+
+    min-width: 58px;
+
+    padding:
+        2px 3px;
+
+}
+
+
+/* =========================================================
+   SEMAFORO
+   ========================================================= */
+
+td.normal {
+
+    background: #d9f7d9;
+
+}
+
+
+td.simple {
+
+    background: #fff5b1;
+
+}
+
+
+td.complejo {
+
+    background: #ffd6d6;
+
+}
+
+
+.semaforo {
+
+    font-size: 16px;
+
+    line-height: 16px;
+
+}
+
+
+.porcentaje {
+
+    font-size: 11px;
+
+    font-weight: bold;
+
+    margin-top: 2px;
+
+}
+
+
+.velocidad {
+
+    font-size: 8px;
+
+    color: #555;
+
+}
+
+
+/* =========================================================
+   HOVER
+   ========================================================= */
+
+tbody tr:hover {
+
+    background: #edf5ff;
+
+}
+
+
+/* =========================================================
+   SCROLL
+   ========================================================= */
+
+.table-responsive {
+
+    overflow: auto;
+
+    max-height: 75vh;
+
+}
+
+
+/* =========================================================
+   CELDAS
+   ========================================================= */
+
+.celda-matriz {
+
+    cursor: pointer;
+
+    transition: .15s;
+
+}
+
+
+.celda-matriz:hover {
+
+    transform:
+        scale(1.02);
+
+    box-shadow:
+        0 0 5px
+        rgba(0,0,0,.20);
+
+}
+
+
+.celda-matriz.seleccionada {
+
+    outline:
+        2px solid
+        #2563eb;
+
+    outline-offset:
+        -2px;
+
+}
+
+
+.fila-seleccionada {
+
+    background:
+        #e8f2ff !important;
+
+}
+
+
+/* =========================================================
+   ENCABEZADO FIJO
+   ========================================================= */
+
+#tablaMatriz thead th {
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 10;
+
+}
+
+
+/* =========================================================
+   PRIMERA COLUMNA FIJA
+   ========================================================= */
+
+#tablaMatriz th:nth-child(1),
+#tablaMatriz td:nth-child(1) {
+
+    position: sticky;
+
+    left: 0;
+
+    background: white;
+
+    z-index: 8;
+
+    font-weight: bold;
+
+}
+
+
+/* =========================================================
+   SEGUNDA COLUMNA FIJA
+   ========================================================= */
+
+#tablaMatriz th:nth-child(2),
+#tablaMatriz td:nth-child(2) {
+
+    position: sticky;
+
+    left: 110px;
+
+    background: white;
+
+    z-index: 8;
+
+    font-weight: bold;
+
+}
+
+
+/* =========================================================
+   ESQUINAS
+   ========================================================= */
+
+#tablaMatriz thead th:nth-child(1),
+#tablaMatriz thead th:nth-child(2) {
+
+    z-index: 20;
+
+}
+
+
+/* =========================================================
+   SERVICIOS
+   ========================================================= */
+
+#encabezado th:first-child,
+#encabezado th:nth-child(2) {
+
+    width: 110px;
+
+    min-width: 110px;
+
+    max-width: 110px;
+
+}
+
+
+#cuerpo td:first-child,
+#cuerpo td:nth-child(2) {
+
+    width: 110px;
+
+    min-width: 110px;
+
+    max-width: 110px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+}
+
+
+/* =========================================================
+   PROMEDIO
+   ========================================================= */
+
+#encabezado th:last-child,
+#cuerpo td:last-child {
+
+    min-width: 70px;
+
+    width: 70px;
+
+    text-align: center;
+
+    font-weight: bold;
+
+    background: #fafafa;
+
+}
+
+
+.promedio-alto {
+
+    color: #dc3545;
+
+}
+
+
+.promedio-medio {
+
+    color: #d39e00;
+
+}
+
+
+/* =========================================================
+   DETALLE
+   ========================================================= */
+
+#registro .card {
+
+    border:
+        1px solid
+        #d9dee5;
+
+    border-radius: 4px;
+
+    box-shadow:
+        0 1px 3px
+        rgba(0,0,0,.08);
+
+    overflow: hidden;
+
+}
+
+
+#registro .card-header {
+
+    background:
+        #0d6efd !important;
+
+    color: white;
+
+    padding:
+        6px 10px;
+
+}
+
+
+#registro .card-header h5 {
+
+    margin: 0;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+}
+
+
+#registro .card-body {
+
+    padding:
+        10px 12px;
+
+}
+
+
+#registro .card-body .row {
+
+    margin-left: 0;
+
+    margin-right: 0;
+
+}
+
+
+#registro .card-body .row > div {
+
+    padding-left: 8px;
+
+    padding-right: 8px;
+
+    font-size: 12px;
+
+    color: #444;
+
+}
+
+
+#registro .card-body b {
+
+    display: block;
+
+    font-size: 11px;
+
+    color: #333;
+
+    font-weight: 700;
+
+    margin-bottom: 2px;
+
+}
+
+
+#registro hr {
+
+    margin:
+        8px 0;
+
+    border: 0;
+
+    border-top:
+        1px solid
+        #e0e0e0;
+
+    opacity: 1;
+
+}
+
+
+#registro h6 {
+
+    font-size: 12px;
+
+    color: #333;
+
+    margin-bottom:
+        6px !important;
+
+}
+
+
+/* =========================================================
+   TABLA PPU
+   ========================================================= */
+
+#registro .table-responsive {
+
+    max-height: none;
+
+    overflow-x: auto;
+
+}
+
+
+#registro table {
+
+    width: 100%;
+
+    margin-bottom: 0;
+
+    font-size:
+        15px !important;
+
+}
+
+
+#registro table th {
+
+    background:
+        #f1f4f8;
+
+    color: #333;
+
+    font-size:
+        14px !important;
+
+    font-weight: 700;
+
+    padding:
+        8px 9px;
+
+    border:
+        1px solid
+        #d8dde3;
+
+    text-align: center;
+
+    vertical-align: middle;
+
+}
+
+
+#registro table td {
+
+    font-size:
+        15px !important;
+
+    padding:
+        8px 9px;
+
+    border:
+        1px solid
+        #e0e4e8;
+
+    vertical-align: middle;
+
+    text-align: center;
+
+}
+
+
+#registro table td:first-child {
+
+    font-size:
+        15px !important;
+
+    font-weight: 700;
+
+    color: #222;
+
+}
+
+
+#registro table tbody tr:hover {
+
+    background:
+        #f5f9ff;
+
+}
+
+
+/* =========================================================
+   ESTADOS PPU
+   ========================================================= */
+
+#registro .badge {
+
+    font-size:
+        11px !important;
+
+    font-weight: 700;
+
+    padding:
+        4px 9px;
+
+    border-radius: 10px;
+
+}
+
+
+/* =========================================================
+   ALERTA
+   ========================================================= */
+
+#registro .alert {
+
+    font-size: 11px;
+
+    padding:
+        6px 10px;
+
+    margin-bottom: 0;
+
+}
+
+
+/* =========================================================
+   ENCABEZADO PERIODOS
+   ========================================================= */
+
+#encabezado th {
+
+    padding:
+        4px 3px;
+
+    text-align: center;
+
+    vertical-align: middle;
+
+    white-space: nowrap;
+
+}
+
+
+/* =========================================================
+   CELDAS PERIODOS
+   ========================================================= */
+
+.celda-matriz {
+
+    min-width: 58px;
+
+    width: 58px;
+
+    padding:
+        3px 2px !important;
+
+    text-align: center;
+
+    vertical-align: middle;
+
+}
+
+
+.celda-matriz .semaforo {
+
+    font-size: 10px;
+
+    line-height: 10px;
+
+    margin-bottom: 1px;
+
+}
+
+
+.celda-matriz .porcentaje {
+
+    font-size: 9px;
+
+    font-weight: 600;
+
+    line-height: 11px;
+
+}
+
+
+.celda-matriz .velocidad {
+
+    font-size: 7px;
+
+    line-height: 9px;
+
+    color: #667085;
+
+}
+
+
+/* =========================================================
+   ESPACIADO
+   ========================================================= */
+
+#registro {
+
+    margin-bottom: 15px;
+
+}
+
+
+/* =========================================================
+   ENCABEZADO DE PERIODOS
+   ========================================================= */
+
+.periodo-header {
+
+    min-width: 82px !important;
+
+    width: 82px;
+
+    padding:
+        4px 3px !important;
+
+    text-align: center;
+
+    vertical-align: middle;
+
+    white-space: nowrap;
+
+    line-height: 1.1;
+
+}
+
+
+.periodo-numero {
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    margin-bottom: 2px;
+
+}
+
+
+.periodo-hora {
+
+    font-size: 8px;
+
+    font-weight: 500;
+
+    color: #333;
+
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .sidebar {
+
+        width: 175px;
+
+    }
+
+
+    .content {
+
+        margin-left: 175px;
+
+        width:
+            calc(100% - 175px);
+
+        padding: 20px;
+
+    }
+
+}
+
+
+/* =========================================================
+   MOVIL
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    .sidebar {
+
+        width: 70px;
+
+    }
+
+
+    .sidebar-brand {
+
+        padding:
+            15px
+            5px;
+
+    }
+
+
+    .sidebar .sidebar-brand .sidebar-logo {
+
+        width: 45px !important;
+
+        min-width: 45px !important;
+
+        max-width: 45px !important;
+
+        height: 45px !important;
+
+        min-height: 45px !important;
+
+        max-height: 45px !important;
+
+    }
+
+
+    .sidebar .sidebar-brand .sidebar-logo > img {
+
+        width: 35px !important;
+
+        min-width: 35px !important;
+
+        max-width: 35px !important;
+
+        height: 35px !important;
+
+        min-height: 35px !important;
+
+        max-height: 35px !important;
+
+    }
+
+
+    .sidebar-title,
+    .sidebar-subtitle,
+    .sidebar-description {
+
+        display: none;
+
+    }
+
+
+    .sidebar-item {
+
+        justify-content: center;
+
+        padding: 0;
+
+    }
+
+
+    .sidebar-item span {
+
+        display: none;
+
+    }
+
+
+    .content {
+
+        margin-left: 70px;
+
+        width:
+            calc(100% - 70px);
+
+    }
+
+}
+
+/* ==========================================================
+   SWAV - ESTADOS IP / IE / COMPLEJO / SIMPLE
+   ========================================================== */
+
+.swav-indicador-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+.swav-indicador-ip {
+    background: #0d6efd;
+    color: #fff;
+}
+
+.swav-indicador-ie {
+    background: #198754;
+    color: #fff;
+}
+
+.swav-complejo {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #dc3545;
+    color: #fff;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.swav-simple {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #ffc107;
+    color: #212529;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+/* Reducción COMPLEJO */
+.swav-reduccion-complejo {
+    display: inline-block;
+    padding: 4px 10px;
+    border: 2px solid #dc3545;
+    border-radius: 6px;
+    background: #fff;
+    color: #dc3545;
+    font-weight: 700;
+}
+
+/* Reducción SIMPLE */
+.swav-reduccion-simple {
+    display: inline-block;
+    padding: 4px 10px;
+    border: 2px solid #ffc107;
+    border-radius: 6px;
+    background: #fff;
+    color: #856404;
+    font-weight: 700;
+}
+
+/* =========================================================
+   SEMAFORO MATRIZ - SIN EMOJIS
+   ========================================================= */
+
+.semaforo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 16px;
+}
+
+.semaforo-ok,
+.semaforo-simple,
+.semaforo-complejo {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex: 0 0 14px;
+}
+
+.semaforo-ok {
+    background-color: #22c55e;
+}
+
+.semaforo-simple {
+    background-color: #fbbf24;
+}
+
+.semaforo-complejo {
+    background-color: #dc3545;
+}
+
+
+/* =========================================================
+   ESTADO PPU EN TABLA
+   ========================================================= */
+
+.estado-ppu {
+    display: inline-block;
+    min-width: 110px;
+    padding: 7px 14px;
+    border: 3px solid #0f2740;
+    border-radius: 9px;
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1;
+}
+
+.estado-ppu-ok {
+    background: #2f7d22;
+    color: #ffffff;
+}
+
+.estado-ppu-simple {
+    background: #fff200;
+    color: #000000;
+}
+
+.estado-ppu-complejo {
+    background: #ff1616;
+    color: #ffffff;
+}
+

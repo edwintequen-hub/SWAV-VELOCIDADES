@@ -1,0 +1,46 @@
+:root{
+
+    --swav-blue:#0B3D91;
+    --swav-blue-light:#2563EB;
+
+    --swav-green:#16A34A;
+
+    --swav-yellow:#FACC15;
+
+    --swav-red:#DC2626;
+
+    --swav-gray:#F3F4F6;
+
+    --swav-dark:#1F2937;
+
+    --card-radius:14px;
+
+}
+
+body{
+
+    background:var(--swav-gray);
+
+    font-family:"Segoe UI",sans-serif;
+
+}
+
+.swav-card{
+
+    background:white;
+
+    border-radius:14px;
+
+    padding:20px;
+
+    box-shadow:0 4px 18px rgba(0,0,0,.08);
+
+}
+
+.swav-title{
+
+    color:var(--swav-blue);
+
+    font-weight:700;
+
+}
