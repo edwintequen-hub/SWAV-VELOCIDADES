@@ -8,7 +8,226 @@ REPORTES HISTORICOS
 
 document.addEventListener(
     "DOMContentLoaded",
-    () => {
+    async () => {
+
+
+        // =====================================================
+        // CARGAR FILTROS DESDE BACKEND
+        // =====================================================
+
+        async function cargarFiltrosReportes() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/reportes/filtros"
+                    );
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "HTTP " + response.status
+                    );
+
+                }
+
+                const filtros =
+                    await response.json();
+
+
+                function llenarSelect(
+                    id,
+                    valores,
+                    textoTodos
+                ) {
+
+                    const select =
+                        document.getElementById(
+                            id
+                        );
+
+                    if (!select) {
+                        return;
+                    }
+
+                    const valorActual =
+                        select.value;
+
+                    select.innerHTML = "";
+
+                    const opcionTodos =
+                        document.createElement(
+                            "option"
+                        );
+
+                    opcionTodos.value = "";
+                    opcionTodos.textContent =
+                        textoTodos;
+
+                    select.appendChild(
+                        opcionTodos
+                    );
+
+
+                    [
+                        ...new Set(
+                            (valores || [])
+                                .filter(Boolean)
+                        )
+                    ]
+                    .sort(
+                        (a, b) =>
+                            String(a).localeCompare(
+                                String(b),
+                                "es",
+                                {
+                                    numeric: true,
+                                    sensitivity: "base"
+                                }
+                            )
+                    )
+                    .forEach(
+                        valor => {
+
+                            const option =
+                                document.createElement(
+                                    "option"
+                                );
+
+                            option.value =
+                                String(valor);
+
+                            option.textContent =
+                                String(valor);
+
+                            select.appendChild(
+                                option
+                            );
+
+                        }
+                    );
+
+
+                    const existeValorAnterior =
+                        [
+                            ...select.options
+                        ]
+                        .some(
+                            option =>
+                                option.value ===
+                                valorActual
+                        );
+
+                    if (existeValorAnterior) {
+
+                        select.value =
+                            valorActual;
+
+                    }
+
+                }
+
+
+                llenarSelect(
+                    "unidad",
+                    filtros.unidades,
+                    "Todas"
+                );
+
+                llenarSelect(
+                    "tipoDia",
+                    filtros.tipos_dia,
+                    "Todos"
+                );
+
+                llenarSelect(
+                    "servicioUsuario",
+                    filtros.servicios,
+                    "Todos"
+                );
+
+                llenarSelect(
+                    "servicioEmpresa",
+                    filtros.rutas,
+                    "Todos"
+                );
+
+                llenarSelect(
+                    "indicador",
+                    filtros.indicadores,
+                    "Todos"
+                );
+
+                llenarSelect(
+                    "clasificacion",
+                    filtros.clasificaciones,
+                    "Todas"
+                );
+
+
+                // -------------------------------------------------
+                // FECHAS DISPONIBLES
+                // -------------------------------------------------
+
+                const fechas =
+                    filtros.fechas || [];
+
+                if (fechas.length > 0) {
+
+                    const ultimaFecha =
+                        fechas[
+                            fechas.length - 1
+                        ];
+
+                    const fechaDesde =
+                        document.getElementById(
+                            "fechaDesde"
+                        );
+
+                    const fechaHasta =
+                        document.getElementById(
+                            "fechaHasta"
+                        );
+
+                    if (
+                        fechaDesde &&
+                        !fechaDesde.value
+                    ) {
+                        fechaDesde.value =
+                            ultimaFecha;
+                    }
+
+                    if (
+                        fechaHasta &&
+                        !fechaHasta.value
+                    ) {
+                        fechaHasta.value =
+                            ultimaFecha;
+                    }
+
+                }
+
+                console.log(
+                    "Filtros de reportes cargados:",
+                    filtros
+                );
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "Error cargando filtros de reportes:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        await cargarFiltrosReportes();
 
 
         const btnConsultar =

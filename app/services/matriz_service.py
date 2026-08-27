@@ -434,9 +434,51 @@ def obtener_matriz(
                 else None
             )
 
-            clasificacion_periodo = (
-                reg.clasificacion
-            )
+            # =================================================
+            # PRIORIDAD OPERACIONAL DE LA MATRIZ
+            # =================================================
+            #
+            # La celda debe representar el evento mas critico
+            # encontrado entre las PPU del periodo:
+            #
+            # COMPLEJO > SIMPLE > OK
+            #
+            # Los valores consolidados del HistoricoRegistro
+            # se conservan para velocidad, reduccion y expediciones.
+            # Solo la clasificacion visual de la matriz se obtiene
+            # desde las PPU certificadas del periodo.
+            # =================================================
+
+            estados_ppu = {
+                str(
+                    ppu.get(
+                        "estado",
+                        "OK"
+                    )
+                    or "OK"
+                )
+                .strip()
+                .upper()
+                for ppu in ppu_periodo
+            }
+
+            if "COMPLEJO" in estados_ppu:
+
+                clasificacion_periodo = (
+                    "COMPLEJO"
+                )
+
+            elif "SIMPLE" in estados_ppu:
+
+                clasificacion_periodo = (
+                    "SIMPLE"
+                )
+
+            else:
+
+                clasificacion_periodo = (
+                    "OK"
+                )
 
             # GUARDAR PERÍODO
             # =================================================

@@ -49,6 +49,14 @@ async function iniciarDashboard() {
             dashboard
         );
 
+        // -------------------------------
+        // INFORMACION DEL SISTEMA
+        // Se carga primero para que un error posterior
+        // no impida mostrar fecha y ultima importacion
+        // -------------------------------
+
+        cargarInformacionSistema();
+
 
         // -------------------------------
         // KPIs
@@ -1174,7 +1182,7 @@ function cargarInformacionSistema() {
     ) {
 
         fechaActual.textContent =
-            formatearFecha(fecha);
+            String(fecha);
 
     }
 
@@ -1359,6 +1367,39 @@ async function descargarR16(unidad)
         </div>
         `;
 
+        // ==================================================
+        // REFRESCAR DASHBOARD DESDE LA BD ACTUALIZADA
+        // ==================================================
+
+        console.log(
+            "Resultado procesamiento R1.6:",
+            datos
+        );
+
+        await iniciarDashboard();
+
+        estado.innerHTML =
+        `
+        <span style="color:#16a34a">
+        ?
+        </span>
+
+        <div>
+
+            <strong>
+                R1.6 ${unidad} actualizado
+            </strong>
+
+            <br>
+
+            <small>
+                Base de datos y Dashboard actualizados
+            </small>
+
+        </div>
+        `;
+
+
 
     }
     catch(error)
@@ -1405,3 +1446,240 @@ async function descargarR16(unidad)
 
 
 
+
+/* ==========================================================
+   INDICADORES OPERACIONALES REALES - VERSION GERENCIA
+   ========================================================== */
+
+function actualizarIndicadoresReales() {
+
+    const g = dashboard?.general || {};
+
+    const asignar = (id, valor) => {
+
+        const elemento =
+            document.getElementById(id);
+
+        if (elemento) {
+            elemento.textContent = valor;
+        }
+
+    };
+
+    asignar(
+        "auditExpediciones",
+        Number(g.expediciones || 0)
+            .toLocaleString("es-CL")
+    );
+
+    asignar(
+        "auditRegistros",
+        Number(g.registros || 0)
+            .toLocaleString("es-CL")
+    );
+
+    asignar(
+        "auditBuses",
+        Number(g.buses || 0)
+            .toLocaleString("es-CL")
+    );
+
+    asignar(
+        "auditVelocidadReal",
+        Number(g.velocidad_real || 0)
+            .toFixed(2) + " km/h"
+    );
+
+    asignar(
+        "auditVelocidadTeorica",
+        Number(g.velocidad_teorica || 0)
+            .toFixed(2) + " km/h"
+    );
+
+    asignar(
+        "auditReduccion",
+        Number(g.reduccion || 0)
+            .toFixed(2) + "%"
+    );
+
+}
+
+
+/* Actualizar cuando el dashboard termine de cargar */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        setTimeout(
+            actualizarIndicadoresReales,
+            800
+        );
+
+    }
+);
+
+
+
+// ==========================================================
+// DASHBOARD -> MATRIZ OPERACIONAL
+// NAVEGACION DESDE EVENTOS PRIORITARIOS
+// ==========================================================
+
+document.addEventListener(
+    "click",
+    event => {
+
+        // --------------------------------------------------
+        // VER DETALLE
+        // --------------------------------------------------
+
+        const botonDetalle =
+            event.target.closest(
+                ".prioritario-detalle"
+            );
+
+        if (botonDetalle) {
+
+            const indice = Number(
+                botonDetalle.dataset.prioritarioIndex
+            );
+
+            const eventos =
+                Array.isArray(
+                    dashboard?.prioritarios
+                )
+                    ? dashboard.prioritarios
+                    : [];
+
+            const evento =
+                eventos[indice];
+
+            if (!evento) {
+
+                console.error(
+                    "No se encontro el evento prioritario.",
+                    indice
+                );
+
+                return;
+            }
+
+            const params =
+                new URLSearchParams();
+
+            const unidad =
+                evento.unidad ||
+                dashboard?.unidad ||
+                "";
+
+            const servicio =
+                evento.servicio ||
+                evento.servicio_usuario ||
+                "";
+
+            const fecha =
+                evento.fecha_operacional ||
+                dashboard?.fecha ||
+                "";
+
+            if (unidad) {
+                params.set(
+                    "unidad",
+                    unidad
+                );
+            }
+
+            if (servicio) {
+                params.set(
+                    "servicio",
+                    servicio
+                );
+            }
+
+            if (evento.ruta) {
+                params.set(
+                    "ruta",
+                    evento.ruta
+                );
+            }
+
+            if (evento.sentido) {
+                params.set(
+                    "sentido",
+                    evento.sentido
+                );
+            }
+
+            if (
+                evento.periodo !== null &&
+                evento.periodo !== undefined &&
+                evento.periodo !== ""
+            ) {
+                params.set(
+                    "periodo",
+                    evento.periodo
+                );
+            }
+
+            if (fecha) {
+                params.set(
+                    "fecha",
+                    fecha
+                );
+            }
+
+            window.location.href =
+                "/matriz?" +
+                params.toString();
+
+            return;
+        }
+
+
+        // --------------------------------------------------
+        // VER TODOS LOS EVENTOS
+        // --------------------------------------------------
+
+        const botonTodos =
+            event.target.closest(
+                "#btnVerTodosEventos"
+            );
+
+        if (botonTodos) {
+
+            const params =
+                new URLSearchParams();
+
+            const unidad =
+                dashboard?.unidad || "";
+
+            const fecha =
+                dashboard?.fecha || "";
+
+            if (
+                unidad &&
+                unidad !== "--"
+            ) {
+                params.set(
+                    "unidad",
+                    unidad
+                );
+            }
+
+            if (
+                fecha &&
+                fecha !== "--"
+            ) {
+                params.set(
+                    "fecha",
+                    fecha
+                );
+            }
+
+            window.location.href =
+                "/matriz?" +
+                params.toString();
+        }
+    }
+);

@@ -1,0 +1,1088 @@
+﻿
+/* =========================================================
+   SWAV - DASHBOARD PRESENTACION V2
+   OVERRIDE FINAL EXCLUSIVO DASHBOARD
+   ========================================================= */
+
+/*
+   OBJETIVO:
+
+   - Sidebar normal: 64px
+   - Sidebar hover: 250px
+   - Main ocupa todo el espacio restante
+   - Sidebar expandido se superpone al contenido
+   - No desplazar el dashboard al abrir menu
+   ========================================================= */
+
+
+/* =========================================================
+   VARIABLES
+   ========================================================= */
+
+:root {
+
+    --dashboard-sidebar-collapsed: 64px;
+    --dashboard-sidebar-expanded: 250px;
+
+}
+
+
+/* =========================================================
+   PAGINA
+   ========================================================= */
+
+html,
+body {
+
+    width: 100% !important;
+    min-width: 100% !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow-x: hidden !important;
+
+}
+
+
+/* =========================================================
+   SIDEBAR DASHBOARD
+   ========================================================= */
+
+html body .sidebar {
+
+    position: fixed !important;
+
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+
+    width:
+        var(--dashboard-sidebar-collapsed)
+        !important;
+
+    min-width:
+        var(--dashboard-sidebar-collapsed)
+        !important;
+
+    max-width:
+        var(--dashboard-sidebar-collapsed)
+        !important;
+
+    flex:
+        0 0
+        var(--dashboard-sidebar-collapsed)
+        !important;
+
+    overflow: hidden !important;
+
+    z-index: 2000 !important;
+
+    transition:
+        width .22s ease,
+        min-width .22s ease,
+        max-width .22s ease
+        !important;
+
+}
+
+
+/* =========================================================
+   SIDEBAR ABIERTO
+   ========================================================= */
+
+html body .sidebar:hover {
+
+    width:
+        var(--dashboard-sidebar-expanded)
+        !important;
+
+    min-width:
+        var(--dashboard-sidebar-expanded)
+        !important;
+
+    max-width:
+        var(--dashboard-sidebar-expanded)
+        !important;
+
+}
+
+
+/* =========================================================
+   CONTENIDO PRINCIPAL
+   ========================================================= */
+
+html body main.main-content,
+html body .main-content {
+
+    display: block !important;
+
+    position: relative !important;
+
+    flex: none !important;
+
+    margin-left:
+        var(--dashboard-sidebar-collapsed)
+        !important;
+
+    width:
+        calc(
+            100% -
+            var(--dashboard-sidebar-collapsed)
+        )
+        !important;
+
+    min-width: 0 !important;
+    max-width: none !important;
+
+    padding:
+        18px 22px
+        !important;
+
+    box-sizing:
+        border-box
+        !important;
+
+    overflow-x:
+        hidden
+        !important;
+
+}
+
+
+/* =========================================================
+   IMPORTANTE:
+   ABRIR SIDEBAR NO MUEVE EL DASHBOARD
+   ========================================================= */
+
+html body .sidebar:hover ~ .main-content {
+
+    margin-left:
+        var(--dashboard-sidebar-collapsed)
+        !important;
+
+    width:
+        calc(
+            100% -
+            var(--dashboard-sidebar-collapsed)
+        )
+        !important;
+
+}
+
+
+/* =========================================================
+   SIDEBAR CERRADO
+   OCULTAR TEXTOS
+   ========================================================= */
+
+html body .sidebar:not(:hover)
+.sidebar-title,
+
+html body .sidebar:not(:hover)
+.sidebar-subtitle,
+
+html body .sidebar:not(:hover)
+.sidebar-description,
+
+html body .sidebar:not(:hover)
+.sidebar-item span,
+
+html body .sidebar:not(:hover)
+.sidebar-footer {
+
+    opacity: 0 !important;
+
+    visibility: hidden !important;
+
+}
+
+
+/* =========================================================
+   MOSTRAR TEXTOS AL ABRIR
+   ========================================================= */
+
+html body .sidebar:hover
+.sidebar-title,
+
+html body .sidebar:hover
+.sidebar-subtitle,
+
+html body .sidebar:hover
+.sidebar-description,
+
+html body .sidebar:hover
+.sidebar-item span,
+
+html body .sidebar:hover
+.sidebar-footer {
+
+    opacity: 1 !important;
+
+    visibility: visible !important;
+
+    transition:
+        opacity .15s ease .08s
+        !important;
+
+}
+
+
+/* =========================================================
+   LOGO SIDEBAR CERRADO
+   ========================================================= */
+
+html body .sidebar:not(:hover)
+.sidebar-brand {
+
+    padding:
+        18px 6px
+        !important;
+
+}
+
+
+html body .sidebar:not(:hover)
+.sidebar-logo {
+
+    width: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+
+    height: 48px !important;
+    min-height: 48px !important;
+
+    margin:
+        0 auto
+        !important;
+
+}
+
+
+html body .sidebar:not(:hover)
+.sidebar-logo img {
+
+    width: 46px !important;
+    max-width: 46px !important;
+
+    height: auto !important;
+
+}
+
+
+/* =========================================================
+   MENU CERRADO
+   SOLO ICONOS
+   ========================================================= */
+
+html body .sidebar:not(:hover)
+.sidebar-menu {
+
+    padding:
+        12px 7px
+        !important;
+
+}
+
+
+html body .sidebar:not(:hover)
+.sidebar-item {
+
+    width: 50px !important;
+
+    padding:
+        12px 0
+        !important;
+
+    justify-content:
+        center
+        !important;
+
+    gap: 0 !important;
+
+}
+
+
+html body .sidebar:not(:hover)
+.sidebar-item i {
+
+    width: 24px !important;
+    min-width: 24px !important;
+
+    margin: 0 !important;
+
+    font-size:
+        18px
+        !important;
+
+}
+
+
+/* =========================================================
+   MENU ABIERTO
+   ========================================================= */
+
+html body .sidebar:hover
+.sidebar-menu {
+
+    padding:
+        18px 12px
+        !important;
+
+}
+
+
+html body .sidebar:hover
+.sidebar-item {
+
+    width: 100% !important;
+
+    justify-content:
+        flex-start
+        !important;
+
+}
+
+
+/* =========================================================
+   DASHBOARD FULL WIDTH
+   ========================================================= */
+
+html body .main-content > *,
+html body .kpi-grid,
+html body .dashboard-row,
+html body .dashboard-graficos,
+html body .panel,
+html body .panel-eventos-prioritarios,
+html body .footer {
+
+    max-width:
+        none
+        !important;
+
+    box-sizing:
+        border-box
+        !important;
+
+}
+
+
+/* =========================================================
+   FILAS BOOTSTRAP
+   ========================================================= */
+
+html body .main-content .row {
+
+    margin-left:
+        0
+        !important;
+
+    margin-right:
+        0
+        !important;
+
+}
+
+
+/* =========================================================
+   PANTALLAS GRANDES
+   ========================================================= */
+
+@media (min-width: 1200px) {
+
+    html body main.main-content,
+    html body .main-content {
+
+        padding:
+            18px 24px
+            !important;
+
+    }
+
+}
+
+
+/* =========================================================
+   MOVIL
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    html body .sidebar {
+
+        display:
+            none
+            !important;
+
+    }
+
+    html body main.main-content,
+    html body .main-content {
+
+        margin-left:
+            0
+            !important;
+
+        width:
+            100%
+            !important;
+
+        padding:
+            12px
+            !important;
+
+    }
+
+}
+
+/* =========================================================
+   SWAV - ESTADO DEL SISTEMA COMPACTO
+   ========================================================= */
+
+html body .panel.panel-small {
+
+    min-height: 0 !important;
+
+    height: auto !important;
+
+    margin-top: 14px !important;
+
+    margin-bottom: 14px !important;
+
+    padding: 0 !important;
+
+}
+
+
+html body .panel.panel-small .panel-title {
+
+    padding:
+        10px 16px
+        !important;
+
+    min-height: 42px !important;
+
+    display: flex !important;
+
+    align-items: center !important;
+
+    gap: 8px !important;
+
+    font-size:
+        14px
+        !important;
+
+}
+
+
+html body .panel.panel-small .panel-content {
+
+    padding:
+        8px 16px
+        !important;
+
+}
+
+
+html body .panel.panel-small table {
+
+    width: 100% !important;
+
+    max-width: 560px !important;
+
+    margin:
+        0 auto
+        !important;
+
+    table-layout:
+        fixed
+        !important;
+
+}
+
+
+html body .panel.panel-small table tr {
+
+    height:
+        34px
+        !important;
+
+}
+
+
+html body .panel.panel-small table td {
+
+    padding:
+        6px 10px
+        !important;
+
+    vertical-align:
+        middle
+        !important;
+
+    border: 0 !important;
+
+    font-size:
+        13px
+        !important;
+
+}
+
+
+html body .panel.panel-small table td:first-child {
+
+    width:
+        52%
+        !important;
+
+    text-align:
+        left
+        !important;
+
+    font-weight:
+        600
+        !important;
+
+    color:
+        #475569
+        !important;
+
+}
+
+
+html body .panel.panel-small table td:last-child {
+
+    width:
+        48%
+        !important;
+
+    text-align:
+        left
+        !important;
+
+    font-weight:
+        700
+        !important;
+
+    color:
+        #0f172a
+        !important;
+
+}
+
+
+html body .panel.panel-small .badge {
+
+    font-size:
+        11px
+        !important;
+
+    padding:
+        4px 9px
+        !important;
+
+}
+
+/* =========================================================
+   SWAV - DASHBOARD AJUSTE FINAL PRESENTACION
+   ========================================================= */
+
+/*
+   OBJETIVOS:
+   - Evitar contenido cortado a la izquierda
+   - Separar correctamente tarjetas del borde
+   - Mejorar Estado del Sistema
+   - Corregir footer
+   ========================================================= */
+
+
+/* =========================================================
+   CONTENEDOR PRINCIPAL
+   ========================================================= */
+
+html body main.main-content,
+html body .main-content {
+
+    box-sizing: border-box !important;
+
+    padding-left: 26px !important;
+    padding-right: 26px !important;
+
+    overflow-x: hidden !important;
+}
+
+
+/* =========================================================
+   TODOS LOS BLOQUES DEL DASHBOARD
+   ========================================================= */
+
+html body .main-content > * {
+
+    box-sizing: border-box !important;
+
+    max-width: 100% !important;
+}
+
+
+/* =========================================================
+   FILAS
+   ELIMINAR DESPLAZAMIENTO NEGATIVO
+   ========================================================= */
+
+html body .main-content .row {
+
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+
+/* =========================================================
+   GRID KPI
+   ========================================================= */
+
+html body .kpi-grid {
+
+    width: 100% !important;
+
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+
+    box-sizing: border-box !important;
+}
+
+
+/* =========================================================
+   TARJETAS
+   ========================================================= */
+
+html body .kpi-card,
+html body .card {
+
+    box-sizing: border-box !important;
+
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+
+/* =========================================================
+   ESTADO DEL SISTEMA
+   ========================================================= */
+
+html body .panel.panel-small {
+
+    width: 100% !important;
+
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+
+    box-sizing: border-box !important;
+
+    overflow: hidden !important;
+}
+
+
+/* TITULO */
+
+html body .panel.panel-small .panel-title {
+
+    box-sizing: border-box !important;
+
+    width: 100% !important;
+
+    padding:
+
+        11px 22px
+
+        !important;
+
+    margin: 0 !important;
+
+    min-height: 44px !important;
+
+    display: flex !important;
+
+    align-items: center !important;
+
+    justify-content: flex-start !important;
+
+    font-size: 14px !important;
+
+    font-weight: 700 !important;
+}
+
+
+/* CONTENIDO */
+
+html body .panel.panel-small .panel-content {
+
+    box-sizing: border-box !important;
+
+    width: 100% !important;
+
+    padding:
+
+        10px 22px 12px 22px
+
+        !important;
+}
+
+
+/* TABLA ESTADO */
+
+html body .panel.panel-small table {
+
+    width: 100% !important;
+
+    max-width: 720px !important;
+
+    margin:
+
+        0 auto
+
+        !important;
+
+    table-layout: fixed !important;
+}
+
+
+/* FILAS */
+
+html body .panel.panel-small table tr {
+
+    height: 31px !important;
+}
+
+
+/* CELDAS */
+
+html body .panel.panel-small table td {
+
+    padding:
+
+        5px 12px
+
+        !important;
+
+    vertical-align: middle !important;
+
+    border: 0 !important;
+
+    font-size: 13px !important;
+}
+
+
+/* NOMBRE */
+
+html body .panel.panel-small table td:first-child {
+
+    width: 48% !important;
+
+    text-align: left !important;
+
+    padding-left: 20px !important;
+}
+
+
+/* VALOR */
+
+html body .panel.panel-small table td:last-child {
+
+    width: 52% !important;
+
+    text-align: left !important;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+html body .footer {
+
+    box-sizing: border-box !important;
+
+    width: 100% !important;
+
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+
+    padding-left: 22px !important;
+    padding-right: 22px !important;
+
+    overflow: visible !important;
+}
+
+
+/* =========================================================
+   PROTECCION EXTRA BORDE IZQUIERDO
+   ========================================================= */
+
+html body .main-content .panel,
+html body .main-content .dashboard-panel,
+html body .main-content .panel-eventos-prioritarios {
+
+    margin-left: 0 !important;
+
+    transform: none !important;
+
+    left: auto !important;
+
+    box-sizing: border-box !important;
+}
+
+
+/* =========================================================
+   PANTALLAS GRANDES
+   ========================================================= */
+
+@media (min-width: 1200px) {
+
+    html body main.main-content,
+    html body .main-content {
+
+        padding-left: 30px !important;
+        padding-right: 30px !important;
+    }
+
+}
+
+
+/* =========================================================
+   MOVIL
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    html body main.main-content,
+    html body .main-content {
+
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    html body .panel.panel-small table {
+
+        max-width: 100% !important;
+    }
+
+}
+
+
+/* =========================================================
+   SWAV - FIX FINAL ESTADO DEL SISTEMA
+   ========================================================= */
+
+html body main.main-content > .panel.panel-small {
+
+    min-height: 0 !important;
+    height: auto !important;
+
+    width: 100% !important;
+
+    margin:
+        16px 0 14px 0
+        !important;
+
+    padding: 0 !important;
+
+    position: relative !important;
+
+    left: 0 !important;
+
+    transform: none !important;
+
+    box-sizing: border-box !important;
+
+    overflow: hidden !important;
+}
+
+
+/* CABECERA */
+
+html body main.main-content > .panel.panel-small > .panel-title {
+
+    margin: 0 !important;
+
+    padding:
+        12px 18px
+        !important;
+
+    min-height: 44px !important;
+
+    width: 100% !important;
+
+    box-sizing: border-box !important;
+
+    display: flex !important;
+
+    flex-direction: row !important;
+
+    align-items: center !important;
+
+    justify-content: flex-start !important;
+
+    gap: 9px !important;
+}
+
+
+html body main.main-content > .panel.panel-small > .panel-title span {
+
+    flex: none !important;
+
+    margin: 0 !important;
+
+    padding: 0 !important;
+
+    font-size: 15px !important;
+
+    font-weight: 700 !important;
+}
+
+
+html body main.main-content > .panel.panel-small > .panel-title i {
+
+    margin: 0 !important;
+
+    font-size: 16px !important;
+}
+
+
+/* CONTENIDO */
+
+html body main.main-content > .panel.panel-small > .panel-content {
+
+    padding:
+        8px 18px 10px 18px
+        !important;
+
+    margin: 0 !important;
+
+    width: 100% !important;
+
+    box-sizing: border-box !important;
+}
+
+
+/* TABLA */
+
+html body main.main-content
+> .panel.panel-small
+> .panel-content
+> table {
+
+    width: 520px !important;
+
+    max-width: 100% !important;
+
+    margin:
+        0 auto
+        !important;
+
+    border-collapse: collapse !important;
+
+    table-layout: fixed !important;
+}
+
+
+/* FILAS */
+
+html body main.main-content
+> .panel.panel-small
+> .panel-content
+> table tr {
+
+    height: 30px !important;
+}
+
+
+/* CELDAS */
+
+html body main.main-content
+> .panel.panel-small
+> .panel-content
+> table td {
+
+    padding:
+        5px 10px
+        !important;
+
+    border: none !important;
+
+    vertical-align: middle !important;
+
+    font-size: 13px !important;
+}
+
+
+/* COLUMNA NOMBRE */
+
+html body main.main-content
+> .panel.panel-small
+> .panel-content
+> table td:first-child {
+
+    width: 55% !important;
+
+    text-align: left !important;
+
+    font-weight: 600 !important;
+}
+
+
+/* COLUMNA VALOR */
+
+html body main.main-content
+> .panel.panel-small
+> .panel-content
+> table td:last-child {
+
+    width: 45% !important;
+
+    text-align: left !important;
+
+    font-weight: 700 !important;
+}
+
+
+/* =========================================================
+   FOOTER FINAL
+   ========================================================= */
+
+html body main.main-content > footer.footer {
+
+    width: 100% !important;
+
+    max-width: 100% !important;
+
+    margin:
+        10px 0 0 0
+        !important;
+
+    padding:
+        14px 18px
+        !important;
+
+    box-sizing: border-box !important;
+
+    position: relative !important;
+
+    left: 0 !important;
+
+    transform: none !important;
+}
+
+
+/* =========================================================
+   EVITAR CORTE GENERAL IZQUIERDO
+   ========================================================= */
+
+html body main.main-content {
+
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+}
+

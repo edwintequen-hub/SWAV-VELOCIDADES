@@ -94,6 +94,55 @@ class Configuracion(Base):
     )
 
 
+
+
+# =========================================================
+# CREDENCIALES SINOPTICO
+# =========================================================
+#
+# Credencial utilizada para la descarga automatica R1.6.
+#
+# IMPORTANTE:
+# - No pertenece exclusivamente a U8 ni U9.
+# - Puede corresponder a cualquier supervisor autorizado.
+# - Solo una credencial debe mantenerse activa.
+# - La clave puede actualizarse desde Configuracion.
+#
+# =========================================================
+
+class CredencialSinoptico(Base):
+
+    __tablename__ = "credenciales_sinoptico"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    usuario = Column(
+        String(150),
+        nullable=False
+    )
+
+    password = Column(
+        String(500),
+        nullable=False
+    )
+
+    activo = Column(
+        Boolean,
+        default=True,
+        nullable=False
+    )
+
+    fecha_actualizacion = Column(
+        DateTime,
+        server_default=func.now(),
+        onupdate=func.now()
+    )
+
+
 # =========================================================
 # RUTAS NORMALIZADAS
 # =========================================================

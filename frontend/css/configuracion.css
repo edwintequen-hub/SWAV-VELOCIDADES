@@ -252,44 +252,25 @@
    ========================================================== */
 
 .sidebar .sidebar-brand .sidebar-logo {
-
-    position: relative !important;
-
-    width: 68px !important;
-
-    min-width: 68px !important;
-
-    max-width: 68px !important;
-
-    height: 68px !important;
-
-    min-height: 68px !important;
-
-    max-height: 68px !important;
-
-    margin:
-        0 auto 14px auto !important;
-
-    padding: 0 !important;
-
-    background: #ffffff !important;
-
-    border-radius: 16px !important;
-
     display: flex !important;
-
+    justify-content: center !important;
     align-items: center !important;
 
-    justify-content: center !important;
+    position: static !important;
 
-    overflow: hidden !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
 
-    box-sizing: border-box !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
 
-    flex-shrink: 0 !important;
+    margin: 0 0 12px 0 !important;
+
+    overflow: visible !important;
 
     transform: none !important;
-
 }
 
 
@@ -298,35 +279,23 @@
    ========================================================== */
 
 .sidebar .sidebar-brand .sidebar-logo > img {
+    display: block !important;
 
     position: static !important;
 
-    display: block !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 150px !important;
 
-    width: 52px !important;
-
-    min-width: 52px !important;
-
-    max-width: 52px !important;
-
-    height: 52px !important;
-
-    min-height: 52px !important;
-
-    max-height: 52px !important;
-
-    margin: 0 !important;
-
-    padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: 58px !important;
 
     object-fit: contain !important;
 
-    object-position: center !important;
+    margin: 0 auto !important;
 
     transform: none !important;
-
-    float: none !important;
-
 }
 
 

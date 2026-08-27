@@ -146,12 +146,36 @@ def _aplicar_filtros_registro(
 
     if tipo_dia:
 
-        consulta = consulta.filter(
-            HistoricoRegistro.tipo_dia
-            == _normalizar_mayuscula(
+        tipo_dia_normalizado = (
+            _normalizar_mayuscula(
                 tipo_dia
             )
         )
+
+        # =============================================
+        # NORMALIZACION OPERACIONAL TIPO DE DIA
+        # =============================================
+        # LABORAL agrupa registros historicos
+        # almacenados como LABORAL o DIA NORMAL.
+        # =============================================
+
+        if tipo_dia_normalizado == "LABORAL":
+
+            consulta = consulta.filter(
+                HistoricoRegistro.tipo_dia.in_(
+                    [
+                        "LABORAL",
+                        "DIA NORMAL",
+                    ]
+                )
+            )
+
+        else:
+
+            consulta = consulta.filter(
+                HistoricoRegistro.tipo_dia
+                == tipo_dia_normalizado
+            )
 
     if servicio_usuario:
 
@@ -403,12 +427,33 @@ def consultar_expediciones_historicas(
 
     if tipo_dia:
 
-        consulta = consulta.filter(
-            HistoricoExpedicion.tipo_dia
-            == _normalizar_mayuscula(
+        tipo_dia_normalizado = (
+            _normalizar_mayuscula(
                 tipo_dia
             )
         )
+
+        # =============================================
+        # NORMALIZACION OPERACIONAL TIPO DE DIA
+        # =============================================
+
+        if tipo_dia_normalizado == "LABORAL":
+
+            consulta = consulta.filter(
+                HistoricoExpedicion.tipo_dia.in_(
+                    [
+                        "LABORAL",
+                        "DIA NORMAL",
+                    ]
+                )
+            )
+
+        else:
+
+            consulta = consulta.filter(
+                HistoricoExpedicion.tipo_dia
+                == tipo_dia_normalizado
+            )
 
     if servicio_usuario:
 
@@ -529,23 +574,20 @@ def obtener_filtros_reportes(
         )
     ]
 
+    # =============================================
+    # TIPOS DE DIA OPERACIONALES
+    # =============================================
+    #
+    # No exponer nombres tecnicos provenientes
+    # directamente del historico.
+    #
+    # DIA NORMAL se considera LABORAL.
+    # =============================================
+
     tipos_dia = [
-        fila[0]
-        for fila in (
-            db.query(
-                HistoricoRegistro.tipo_dia
-            )
-            .filter(
-                HistoricoRegistro.tipo_dia.isnot(
-                    None
-                )
-            )
-            .distinct()
-            .order_by(
-                HistoricoRegistro.tipo_dia
-            )
-            .all()
-        )
+        "LABORAL",
+        "SABADO",
+        "DOMINGO",
     ]
 
     servicios = [

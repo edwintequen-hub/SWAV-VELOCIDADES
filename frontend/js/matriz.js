@@ -27,6 +27,216 @@ document.addEventListener(
 
 
 // ======================================================
+// CONTEXTO RECIBIDO DESDE DASHBOARD
+// ======================================================
+
+function aplicarContextoDesdeDashboard() {
+
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
+
+    const normalizar = valor =>
+        String(valor ?? "")
+        .trim()
+        .toUpperCase();
+
+    const unidad =
+        normalizar(
+            params.get("unidad")
+        );
+
+    const servicioRecibido =
+        normalizar(
+            params.get("servicio")
+        );
+
+    const ruta =
+        normalizar(
+            params.get("ruta")
+        );
+
+    const sentido =
+        normalizar(
+            params.get("sentido")
+        );
+
+    const periodoValor =
+        params.get("periodo");
+
+    const periodo =
+        periodoValor !== null
+            ? Number(periodoValor)
+            : null;
+
+    const fecha =
+        String(
+            params.get("fecha") || ""
+        )
+        .trim();
+
+    // ==================================================
+    // UNIDAD
+    // ==================================================
+
+    if (unidad) {
+
+        const comboUnidad =
+            document.getElementById(
+                "cmbUnidad"
+            );
+
+        if (comboUnidad) {
+
+            const opcion =
+                [...comboUnidad.options]
+                .find(
+                    item =>
+                        normalizar(
+                            item.value
+                        ) === unidad
+                );
+
+            if (opcion) {
+                comboUnidad.value =
+                    opcion.value;
+            }
+        }
+    }
+
+    // ==================================================
+    // RESOLVER SERVICIO USUARIO REAL DE LA MATRIZ
+    //
+    // El Dashboard puede traer el servicio operacional
+    // de HistoricoRegistro.
+    //
+    // La Matriz filtra por fila.servicio_usuario.
+    //
+    // Usamos la RUTA para encontrar la fila correcta
+    // y obtener el servicio_usuario oficial.
+    // ==================================================
+
+    let servicioUsuario =
+        servicioRecibido;
+
+    if (ruta) {
+
+        const filaPorRuta =
+            datosOriginales.find(
+                fila =>
+                    normalizar(
+                        fila.servicio_empresa
+                    ) === ruta
+            );
+
+        if (
+            filaPorRuta &&
+            filaPorRuta.servicio_usuario
+        ) {
+            servicioUsuario =
+                normalizar(
+                    filaPorRuta.servicio_usuario
+                );
+        }
+    }
+
+    console.log(
+        "Contexto Dashboard -> Matriz",
+        {
+            unidad,
+            servicioRecibido,
+            servicioUsuario,
+            ruta,
+            sentido,
+            periodo,
+            fecha
+        }
+    );
+
+    // ==================================================
+    // FILTRAR SERVICIO USUARIO
+    // ==================================================
+
+    if (servicioUsuario) {
+
+        const todos =
+            document.getElementById(
+                "servicioUsuarioTodos"
+            );
+
+        const checks = [
+            ...document.querySelectorAll(
+                ".servicio-usuario-checkbox"
+            )
+        ];
+
+        let encontrados = 0;
+
+        checks.forEach(
+            check => {
+
+                const coincide =
+                    normalizar(
+                        check.value
+                    ) === servicioUsuario;
+
+                check.checked =
+                    coincide;
+
+                if (coincide) {
+                    encontrados++;
+                }
+            }
+        );
+
+        if (todos) {
+
+            todos.checked =
+                encontrados ===
+                checks.length &&
+                checks.length > 0;
+        }
+
+        if (encontrados === 0) {
+
+            console.warn(
+                "No se encontro servicio_usuario:",
+                servicioUsuario,
+                "Ruta:",
+                ruta
+            );
+
+        } else {
+
+            console.log(
+                "Servicio Matriz filtrado:",
+                servicioUsuario
+            );
+        }
+
+        actualizarTextoServicioUsuario();
+    }
+
+    return {
+        unidad,
+        servicio:
+            servicioUsuario,
+        servicioRecibido,
+        ruta,
+        sentido,
+        periodo:
+            Number.isFinite(periodo)
+            && periodo >= 1
+            && periodo <= 24
+                ? periodo
+                : null,
+        fecha
+    };
+}
+
+
+// ======================================================
 // CARGAR MATRIZ
 // ======================================================
 
@@ -50,7 +260,241 @@ async function cargarMatriz() {
 
         cargarCombos();
 
+        // ==================================================
+        // UNIDAD ACTIVA = ULTIMA UNIDAD R1.6 PROCESADA
+        // ==================================================
+        //
+        // Dashboard y Matriz deben abrir mostrando
+        // la misma unidad operacional.
+        //
+        // El usuario puede cambiar manualmente a
+        // U8, U9 o Todas posteriormente.
+        // ==================================================
+
+        try {
+
+            const responseDashboard =
+                await fetch(
+                    "/api/dashboard"
+                );
+
+            if (responseDashboard.ok) {
+
+                const dashboard =
+                    await responseDashboard.json();
+
+                // ==============================================
+                // CONTEXTO OPERACIONAL DE LA MATRIZ
+                // MISMA FUENTE QUE EL DASHBOARD
+                // ==============================================
+
+                const ponerTexto = (
+                    id,
+                    valor
+                ) => {
+
+                    const elemento =
+                        document.getElementById(id);
+
+                    if (elemento) {
+                        elemento.textContent =
+                            valor ?? "-";
+                    }
+
+                };
+
+                ponerTexto(
+                    "matrizTotalExpediciones",
+                    dashboard.general?.expediciones ?? 0
+                );
+
+                ponerTexto(
+                    "matrizUnidadActiva",
+                    dashboard.unidad || "-"
+                );
+
+                ponerTexto(
+                    "matrizFechaOperacional",
+                    dashboard.fecha || "-"
+                );
+
+                ponerTexto(
+                    "matrizUltimaActualizacion",
+                    dashboard.ultima_importacion || "-"
+                );
+
+                const estadoOperacional =
+                    document.getElementById(
+                        "matrizEstadoOperacional"
+                    );
+
+                if (estadoOperacional) {
+                    estadoOperacional.textContent =
+                        "Operativo";
+                }
+
+                const unidadActiva =
+                    String(
+                        dashboard.unidad || ""
+                    )
+                    .trim()
+                    .toUpperCase();
+
+                const comboUnidad =
+                    document.getElementById(
+                        "cmbUnidad"
+                    );
+
+                if (
+                    comboUnidad &&
+                    unidadActiva &&
+                    unidadActiva !== "--"
+                ) {
+
+                    const existeUnidad = [
+                        ...comboUnidad.options
+                    ].some(
+                        opcion =>
+                            String(
+                                opcion.value || ""
+                            )
+                            .trim()
+                            .toUpperCase()
+                            === unidadActiva
+                    );
+
+                    if (existeUnidad) {
+
+                        comboUnidad.value =
+                            unidadActiva;
+
+                    }
+
+                }
+
+            }
+
+        }
+        catch (errorUnidad) {
+
+            console.warn(
+                "No fue posible determinar "
+                + "la ultima unidad procesada.",
+                errorUnidad
+            );
+
+        }
+
+        const contextoDashboard =
+            aplicarContextoDesdeDashboard();
+
         aplicarFiltros();
+
+        // ==================================================
+        // SI VIENE DESDE "VER DETALLE"
+        // ABRIR AUTOMATICAMENTE EL PERIODO DEL EVENTO
+        // ==================================================
+
+        if (
+            contextoDashboard.periodo !== null
+        ) {
+
+            setTimeout(
+                () => {
+
+                    const celdas = [
+                        ...document.querySelectorAll(
+                            `.celda-matriz[data-periodo="${contextoDashboard.periodo}"]`
+                        )
+                    ];
+
+                    let celdaObjetivo = null;
+
+                    // --------------------------------------
+                    // BUSCAR CELDA DEL SERVICIO FILTRADO
+                    // --------------------------------------
+
+                    for (const celda of celdas) {
+
+                        const fila =
+                            celda.closest("tr");
+
+                        if (!fila) {
+                            continue;
+                        }
+
+                        const rutaCelda =
+                            String(
+                                celda.dataset.servicio || ""
+                            )
+                            .trim()
+                            .toUpperCase();
+
+                        // ----------------------------------
+                        // PRIORIDAD 1:
+                        // RUTA EXACTA DEL EVENTO
+                        // ----------------------------------
+
+                        if (
+                            contextoDashboard.ruta &&
+                            rutaCelda !==
+                                contextoDashboard.ruta
+                        ) {
+                            continue;
+                        }
+
+                        const textoFila =
+                            String(
+                                fila.textContent || ""
+                            )
+                            .trim()
+                            .toUpperCase();
+
+                        // ----------------------------------
+                        // PRIORIDAD 2:
+                        // SERVICIO USUARIO RESUELTO
+                        // ----------------------------------
+
+                        if (
+                            contextoDashboard.servicio &&
+                            !textoFila.includes(
+                                contextoDashboard.servicio
+                            )
+                        ) {
+                            continue;
+                        }
+
+                        celdaObjetivo = celda;
+                        break;
+                    }
+
+                    // Si no encontramos por texto,
+                    // usar primera celda del periodo.
+                    if (
+                        !celdaObjetivo &&
+                        celdas.length > 0
+                    ) {
+                        celdaObjetivo =
+                            celdas[0];
+                    }
+
+                    if (celdaObjetivo) {
+
+                        celdaObjetivo.scrollIntoView(
+                            {
+                                behavior: "smooth",
+                                block: "center",
+                                inline: "center"
+                            }
+                        );
+
+                        celdaObjetivo.click();
+                    }
+
+                },
+                250
+            );
+        }
 
     }
 
@@ -1213,101 +1657,155 @@ function aplicarFiltros() {
 // CONTADORES
 // ======================================================
 
-function actualizarContadores(
+async function actualizarContadores(
     datos
 ) {
 
-    let normales = 0;
+    // ==================================================
+    // CONTADORES OFICIALES DEL DASHBOARD
+    // ==================================================
+    //
+    // Matriz y Dashboard deben mostrar exactamente
+    // el mismo universo operacional:
+    //
+    // NORMAL   = dashboard.clasificacion.ok
+    // SIMPLE   = dashboard.clasificacion.simple
+    // COMPLEJO = dashboard.clasificacion.complejo
+    //
+    // Adicionalmente se muestran los eventos
+    // separados por indicador IP / IE.
+    // ==================================================
 
-    let simples = 0;
+    try {
 
-    let complejos = 0;
+        const response =
+            await fetch(
+                "/api/dashboard"
+            );
 
+        if (!response.ok) {
 
-    datos.forEach(
-        fila => {
-
-            Object.values(
-                fila.periodos || {}
-            )
-            .forEach(
-                dato => {
-
-                    if (
-                        !dato ||
-                        !dato.clasificacion
-                    ) {
-
-                        return;
-
-                    }
-
-
-                    const estado =
-                        String(
-                            dato.clasificacion
-                        )
-                        .toUpperCase();
-
-
-                    if (
-                        estado === "OK"
-                    ) {
-
-                        normales++;
-
-                    }
-
-                    else if (
-                        estado === "SIMPLE"
-                    ) {
-
-                        simples++;
-
-                    }
-
-                    else if (
-                        estado === "COMPLEJO"
-                    ) {
-
-                        complejos++;
-
-                    }
-
-                }
+            throw new Error(
+                "HTTP " + response.status
             );
 
         }
-    );
+
+        const dashboard =
+            await response.json();
 
 
-    const normal =
-        document.getElementById(
-            "contadorNormal"
+        // --------------------------------------------------
+        // CONTADORES GENERALES
+        // --------------------------------------------------
+
+        const normal =
+            document.getElementById(
+                "contadorNormal"
+            );
+
+        const simple =
+            document.getElementById(
+                "contadorSimple"
+            );
+
+        const complejo =
+            document.getElementById(
+                "contadorComplejo"
+            );
+
+
+        if (normal) {
+
+            normal.textContent =
+                Number(
+                    dashboard.clasificacion?.ok
+                    ?? 0
+                );
+
+        }
+
+
+        if (simple) {
+
+            simple.textContent =
+                Number(
+                    dashboard.clasificacion?.simple
+                    ?? 0
+                );
+
+        }
+
+
+        if (complejo) {
+
+            complejo.textContent =
+                Number(
+                    dashboard.clasificacion?.complejo
+                    ?? 0
+                );
+
+        }
+
+
+        // --------------------------------------------------
+        // CONTADORES IP / IE
+        // --------------------------------------------------
+
+        const contadores = {
+
+            contadorIpSimple:
+                dashboard.ip?.simples ?? 0,
+
+            contadorIpComplejo:
+                dashboard.ip?.complejos ?? 0,
+
+            contadorIeSimple:
+                dashboard.ie?.simples ?? 0,
+
+            contadorIeComplejo:
+                dashboard.ie?.complejos ?? 0,
+
+            contadorIpTotal:
+                dashboard.ip?.eventos ?? 0,
+
+            contadorIeTotal:
+                dashboard.ie?.eventos ?? 0
+
+        };
+
+
+        Object.entries(
+            contadores
+        ).forEach(
+            ([id, valor]) => {
+
+                const elemento =
+                    document.getElementById(
+                        id
+                    );
+
+                if (elemento) {
+
+                    elemento.textContent =
+                        Number(valor);
+
+                }
+
+            }
         );
 
-    const simple =
-        document.getElementById(
-            "contadorSimple"
+    }
+
+    catch (error) {
+
+        console.error(
+            "Error actualizando contadores "
+            + "oficiales de Matriz:",
+            error
         );
 
-    const complejo =
-        document.getElementById(
-            "contadorComplejo"
-        );
-
-
-    if (normal)
-        normal.textContent =
-            normales;
-
-    if (simple)
-        simple.textContent =
-            simples;
-
-    if (complejo)
-        complejo.textContent =
-            complejos;
+    }
 
 }
 

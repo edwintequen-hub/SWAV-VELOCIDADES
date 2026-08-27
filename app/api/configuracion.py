@@ -13,8 +13,13 @@ from fastapi import File
 from fastapi import UploadFile
 from fastapi import HTTPException
 
+from pydantic import BaseModel
+
 from app.database import SessionLocal
-from app.models import HistorialImportacion
+from app.models import (
+    HistorialImportacion,
+    CredencialSinoptico,
+)
 
 #--------------------------------------------------------
 # IMPORTADORES
@@ -412,6 +417,154 @@ async def estado_importaciones():
         raise HTTPException(
             status_code=500,
             detail=str(e)
+        )
+
+    finally:
+
+        db.close()
+
+
+
+
+# =========================================================
+# CREDENCIALES SINOPTICO
+# =========================================================
+
+class CredencialSinopticoRequest(BaseModel):
+
+    usuario: str
+    password: str
+
+
+@router.get("/sinoptico")
+def obtener_credencial_sinoptico():
+
+    db = SessionLocal()
+
+    try:
+
+        credencial = (
+            db.query(CredencialSinoptico)
+            .filter(
+                CredencialSinoptico.activo == True
+            )
+            .order_by(
+                CredencialSinoptico.id.desc()
+            )
+            .first()
+        )
+
+        if not credencial:
+
+            return {
+                "configurado": False,
+                "usuario": None,
+                "activo": False,
+                "fecha_actualizacion": None,
+            }
+
+        return {
+            "configurado": True,
+            "usuario": credencial.usuario,
+            "activo": bool(
+                credencial.activo
+            ),
+            "fecha_actualizacion": (
+                credencial.fecha_actualizacion.isoformat()
+                if credencial.fecha_actualizacion
+                else None
+            ),
+        }
+
+    finally:
+
+        db.close()
+
+
+@router.post("/sinoptico")
+def guardar_credencial_sinoptico(
+    datos: CredencialSinopticoRequest
+):
+
+    usuario = (
+        str(datos.usuario or "")
+        .strip()
+    )
+
+    password = (
+        str(datos.password or "")
+        .strip()
+    )
+
+    if not usuario:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Usuario Sinoptico requerido."
+        )
+
+    if not password:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Clave Sinoptico requerida."
+        )
+
+    db = SessionLocal()
+
+    try:
+
+        # Desactivar cualquier credencial anterior.
+        (
+            db.query(CredencialSinoptico)
+            .filter(
+                CredencialSinoptico.activo == True
+            )
+            .update(
+                {
+                    CredencialSinoptico.activo:
+                        False
+                },
+                synchronize_session=False
+            )
+        )
+
+        nueva = CredencialSinoptico(
+            usuario=usuario,
+            password=password,
+            activo=True
+        )
+
+        db.add(nueva)
+
+        db.commit()
+
+        db.refresh(nueva)
+
+        return {
+            "estado": "OK",
+            "configurado": True,
+            "usuario": nueva.usuario,
+            "activo": True,
+            "fecha_actualizacion": (
+                nueva.fecha_actualizacion.isoformat()
+                if nueva.fecha_actualizacion
+                else None
+            ),
+        }
+
+    except HTTPException:
+
+        db.rollback()
+        raise
+
+    except Exception as exc:
+
+        db.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(exc)
         )
 
     finally:

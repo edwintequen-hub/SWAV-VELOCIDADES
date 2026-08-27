@@ -26,46 +26,115 @@ class MotorComparacion:
     # PROCESAR
     # =====================================================
 
-    def procesar(self):
+    def procesar(self, unidad=None):
 
         print("=" * 80)
         print("MOTOR COMPARACION")
         print("=" * 80)
 
-        expediciones = (
+        # =====================================================
+        # EXPEDICIONES VALIDAS DE LA UNIDAD SOLICITADA
+        # =====================================================
+
+        consulta = (
             self.db.query(Expedicion)
             .filter(
                 Expedicion.procesado == True,
                 Expedicion.valido == True,
                 Expedicion.periodo != None
             )
-            .all()
         )
 
-        print(f"Expediciones encontradas : {len(expediciones)}")
+        if unidad:
 
-        # ATENCIÃ“N:
-        # Este borrado se mantiene solamente para la tabla
-        # de trabajo actual.
-        #
-        # El histÃ³rico SIMPLE/COMPLEJO se implementarÃ¡
-        # posteriormente con anti-duplicidad.
-        self.db.query(Registro).delete()
-        self.db.commit()
+            unidad = (
+                str(unidad)
+                .strip()
+                .upper()
+            )
 
-        grupos = self.agrupar_expediciones(expediciones)
+            consulta = consulta.filter(
+                Expedicion.unidad == unidad
+            )
 
-        print(f"Grupos encontrados       : {len(grupos)}")
+        expediciones = consulta.all()
+
+        print(
+            "Unidad procesada          :",
+            unidad if unidad else "TODAS"
+        )
+
+        print(
+            f"Expediciones encontradas : "
+            f"{len(expediciones)}"
+        )
+
+        # =====================================================
+        # REGISTRO ACTUAL
+        # SOLO SE REEMPLAZA LA UNIDAD PROCESADA
+        # =====================================================
+
+        consulta_registro = (
+            self.db.query(Registro)
+        )
+
+        if unidad:
+
+            consulta_registro = (
+                consulta_registro.filter(
+                    Registro.unidad == unidad
+                )
+            )
+
+        eliminados = (
+            consulta_registro.delete(
+                synchronize_session=False
+            )
+        )
+
+        print(
+            "Registros actuales "
+            "eliminados       :",
+            eliminados
+        )
+
+        # IMPORTANTE:
+        # no hacemos commit aqui.
+        # El commit final del motor confirma
+        # Registro + HistoricoExpedicion
+        # + HistoricoRegistro + HistoricoPPU.
+
+        grupos = self.agrupar_expediciones(
+            expediciones
+        )
+
+        print(
+            f"Grupos encontrados       : "
+            f"{len(grupos)}"
+        )
 
         velocidades = self.cargar_velocidades()
 
-        print(f"Velocidades cargadas     : {len(velocidades)}")
+        print(
+            f"Velocidades cargadas     : "
+            f"{len(velocidades)}"
+        )
 
-        carga_hash = self.obtener_hash_carga(expediciones)
+        carga_hash = self.obtener_hash_carga(
+            expediciones,
+            unidad=unidad
+        )
 
-        # =================================================
-        # HISTORIZAR TODAS LAS EXPEDICIONES VALIDAS
-        # =================================================
+        print(
+            "Carga hash               :",
+            carga_hash
+            if carga_hash
+            else "NO DISPONIBLE"
+        )
+
+        # =====================================================
+        # HISTORIZAR EXPEDICIONES VALIDAS
+        # =====================================================
 
         self.guardar_historico_expediciones(
             expediciones=expediciones,
@@ -78,6 +147,7 @@ class MotorComparacion:
             velocidades,
             carga_hash
         )
+
 
     # =====================================================
     # AGRUPAR EXPEDICIONES
@@ -849,7 +919,7 @@ class MotorComparacion:
 
             registros += 1
 
-        self.db.commit()
+        self.db.flush()
 
         print("=" * 80)
         print("REGISTROS GENERADOS")
@@ -866,10 +936,20 @@ class MotorComparacion:
     # IDENTIDAD DE CARGA R1.6
     # =====================================================
 
-    def obtener_hash_carga(self, expediciones):
-        if not expediciones:
+    def obtener_hash_carga(
+        self,
+        expediciones,
+        unidad=None
+    ):
+        if unidad:
+            unidad = str(unidad).strip().upper()
+
+        elif expediciones:
+            unidad = expediciones[0].unidad
+
+        else:
             return None
-        unidad = expediciones[0].unidad
+
         historial = (
             self.db.query(HistorialImportacion)
             .filter(
@@ -879,7 +959,12 @@ class MotorComparacion:
             .order_by(HistorialImportacion.id.desc())
             .first()
         )
-        return historial.carga_hash if historial else None
+
+        return (
+            historial.carga_hash
+            if historial
+            else None
+        )
 
     # =====================================================
     # HISTÃ“RICO SIN DUPLICIDAD

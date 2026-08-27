@@ -24,46 +24,88 @@ class ProcesadorSWAV:
 
     def procesar(self, archivo, unidad):
 
-        # ---------------------------------------------
-        # 1. IMPORTAR
-        # ---------------------------------------------
-        importador = ImportadorR16(self.db)
+        try:
 
-        resultado_importacion = importador.importar(
-            archivo=archivo,
-            unidad=unidad,
-        )
+            # ---------------------------------------------
+            # 1. IMPORTAR
+            # ---------------------------------------------
 
-        if resultado_importacion.get("estado") != "OK":
+            importador = ImportadorR16(
+                self.db
+            )
 
-            return resultado_importacion
+            resultado_importacion = (
+                importador.importar(
+                    archivo=archivo,
+                    unidad=unidad,
+                )
+            )
 
-        # ---------------------------------------------
-        # 2. PREPARAR
-        # ---------------------------------------------
-        preparador = PreparadorR16(self.db)
+            if (
+                resultado_importacion.get(
+                    "estado"
+                )
+                != "OK"
+            ):
 
-        resultado_preparacion = preparador.procesar()
+                # DUPLICADO u otra respuesta
+                # que no requiere modificar la BD.
 
-        # ---------------------------------------------
-        # 3. COMPARACION Y REGISTRO
-        # ---------------------------------------------
+                self.db.rollback()
 
-        motor = MotorComparacion(self.db)
+                return resultado_importacion
 
-        resultado_registro = motor.procesar()
+            # ---------------------------------------------
+            # 2. PREPARAR
+            # ---------------------------------------------
 
-        # ---------------------------------------------
-        # 4. RESPUESTA
-        # ---------------------------------------------
-        return {
+            preparador = PreparadorR16(
+                self.db
+            )
 
-            "estado": "OK",
+            resultado_preparacion = (
+                preparador.procesar(
+                    unidad=unidad
+                )
+            )
 
-            "importacion": resultado_importacion,
+            # ---------------------------------------------
+            # 3. COMPARACION Y REGISTRO
+            # ---------------------------------------------
 
-            "preparacion": resultado_preparacion,
+            motor = MotorComparacion(
+                self.db
+            )
 
-            "registro": resultado_registro,
+            resultado_registro = (
+                motor.procesar(
+                    unidad=unidad
+                )
+            )
 
-        }
+            # ---------------------------------------------
+            # 4. CONFIRMACION UNICA
+            # ---------------------------------------------
+
+            self.db.commit()
+
+            return {
+
+                "estado": "OK",
+
+                "importacion":
+                    resultado_importacion,
+
+                "preparacion":
+                    resultado_preparacion,
+
+                "registro":
+                    resultado_registro,
+            }
+
+        except Exception:
+
+            self.db.rollback()
+
+            raise
+

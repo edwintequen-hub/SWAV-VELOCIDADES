@@ -84,44 +84,25 @@ body {
    ========================================================= */
 
 .sidebar .sidebar-brand .sidebar-logo {
-
-    position: relative !important;
-
-    width: 68px !important;
-
-    min-width: 68px !important;
-
-    max-width: 68px !important;
-
-    height: 68px !important;
-
-    min-height: 68px !important;
-
-    max-height: 68px !important;
-
-    margin:
-        0 auto 14px auto !important;
-
-    padding: 0 !important;
-
-    background: #ffffff !important;
-
-    border-radius: 16px !important;
-
     display: flex !important;
-
+    justify-content: center !important;
     align-items: center !important;
 
-    justify-content: center !important;
+    position: static !important;
 
-    overflow: hidden !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
 
-    box-sizing: border-box !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
 
-    flex-shrink: 0 !important;
+    margin: 0 0 12px 0 !important;
+
+    overflow: visible !important;
 
     transform: none !important;
-
 }
 
 
@@ -130,35 +111,23 @@ body {
    ========================================================= */
 
 .sidebar .sidebar-brand .sidebar-logo > img {
+    display: block !important;
 
     position: static !important;
 
-    display: block !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 150px !important;
 
-    width: 52px !important;
-
-    min-width: 52px !important;
-
-    max-width: 52px !important;
-
-    height: 52px !important;
-
-    min-height: 52px !important;
-
-    max-height: 52px !important;
-
-    margin: 0 !important;
-
-    padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: 58px !important;
 
     object-fit: contain !important;
 
-    object-position: center !important;
+    margin: 0 auto !important;
 
     transform: none !important;
-
-    float: none !important;
-
 }
 
 
@@ -1431,5 +1400,185 @@ tbody tr:hover {
 .estado-ppu-complejo {
     background: #ff1616;
     color: #ffffff;
+}
+
+
+
+/* =========================================================
+   SWAV - MATRIZ MODO PANTALLA AMPLIA
+   SIDEBAR AUTO-OCULTABLE
+   ========================================================= */
+
+@media (min-width: 769px) {
+
+    /* -----------------------------------------------------
+       SIDEBAR
+
+       Cerrado:
+       queda una pequena franja azul visible.
+
+       Hover:
+       vuelve a sus 250px originales.
+       ----------------------------------------------------- */
+
+    body .sidebar {
+
+        width: 250px !important;
+        min-width: 250px !important;
+        max-width: 250px !important;
+
+        transform:
+            translateX(-232px) !important;
+
+        transition:
+            transform 0.22s ease,
+            box-shadow 0.22s ease !important;
+
+        z-index: 5000 !important;
+
+        overflow: hidden !important;
+    }
+
+
+    body .sidebar:hover {
+
+        transform:
+            translateX(0) !important;
+
+        box-shadow:
+            8px 0 24px
+            rgba(0, 0, 0, 0.18) !important;
+    }
+
+
+    /* -----------------------------------------------------
+       FRANJA DE APERTURA
+
+       Permite identificar visualmente que existe menu.
+       ----------------------------------------------------- */
+
+    body .sidebar::after {
+
+        content: "?";
+
+        position: absolute;
+
+        top: 50%;
+        right: 0;
+
+        transform:
+            translateY(-50%);
+
+        width: 18px;
+        height: 54px;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        background:
+            rgba(255, 255, 255, 0.14);
+
+        color: #ffffff;
+
+        font-size: 20px;
+        font-weight: 700;
+
+        border-radius:
+            8px 0 0 8px;
+
+        pointer-events: none;
+    }
+
+
+    body .sidebar:hover::after {
+
+        content: "?";
+    }
+
+
+    /* -----------------------------------------------------
+       CONTENIDO MATRIZ
+
+       Ya no reserva 250px permanentemente.
+       ----------------------------------------------------- */
+
+    body .content {
+
+        margin-left: 18px !important;
+
+        width:
+            calc(100% - 18px) !important;
+
+        max-width: none !important;
+
+        min-width: 0 !important;
+
+        box-sizing:
+            border-box !important;
+
+        transition:
+            margin-left 0.22s ease,
+            width 0.22s ease !important;
+    }
+
+
+    /*
+       Si existiera main-content dentro de esta pagina,
+       aplicar el mismo comportamiento.
+    */
+
+    body .main-content {
+
+        margin-left: 18px !important;
+
+        width:
+            calc(100% - 18px) !important;
+
+        max-width: none !important;
+
+        min-width: 0 !important;
+
+        flex:
+            0 0 calc(100% - 18px) !important;
+
+        box-sizing:
+            border-box !important;
+    }
+
+}
+
+
+/* =========================================================
+   MOVIL / TABLET
+
+   Mantener comportamiento existente.
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    body .sidebar {
+
+        transform:
+            none !important;
+    }
+
+    body .sidebar::after {
+
+        display:
+            none !important;
+    }
+
+    body .content,
+    body .main-content {
+
+        margin-left:
+            0 !important;
+
+        width:
+            100% !important;
+    }
+
 }
 

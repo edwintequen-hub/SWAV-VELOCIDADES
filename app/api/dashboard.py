@@ -7,9 +7,11 @@ Dashboard API
 
 from fastapi import APIRouter
 from sqlalchemy import func, case
+from datetime import timezone
+from zoneinfo import ZoneInfo
 
 from app.database import SessionLocal
-from app.models import HistoricoRegistro
+from app.models import HistoricoRegistro, HistorialImportacion
 
 router = APIRouter(
     prefix="/api",
@@ -41,34 +43,79 @@ def dashboard():
             .scalar()
         )
 
-        filtro_fecha = (
-            HistoricoRegistro.fecha_operacional
-            == ultima_fecha_operacional
-        )
+        # =====================================================
+        # UNIDAD DE LA ULTIMA IMPORTACION R1.6
+        # =====================================================
 
-        unidad_actual = (
-            db.query(HistoricoRegistro.unidad)
+        ultima_importacion_registro = (
+            db.query(HistorialImportacion)
             .filter(
-                filtro_fecha,
-                HistoricoRegistro.unidad.isnot(None)
+                HistorialImportacion.tipo_archivo == "R1.6"
             )
-            .order_by(HistoricoRegistro.unidad)
+            .order_by(
+                HistorialImportacion.fecha.desc(),
+                HistorialImportacion.id.desc(),
+            )
             .first()
         )
 
         unidad_actual = (
-            unidad_actual[0]
-            if unidad_actual
-            else "--"
+            str(
+                ultima_importacion_registro.unidad
+                or ""
+            ).strip()
+            if ultima_importacion_registro
+            else ""
         )
 
         ultima_importacion = (
-            db.query(
-                func.max(HistoricoRegistro.fecha_proceso)
-            )
-            .filter(filtro_fecha)
-            .scalar()
+            ultima_importacion_registro.fecha
+            if ultima_importacion_registro
+            else None
         )
+
+        # =====================================================
+        # FILTRO OPERACIONAL DEL DASHBOARD
+        #
+        # Todo el Dashboard debe pertenecer a:
+        #   - ultima fecha operacional
+        #   - ultima unidad procesada
+        # =====================================================
+
+        if unidad_actual:
+
+            filtro_fecha = (
+                (
+                    HistoricoRegistro.fecha_operacional
+                    == ultima_fecha_operacional
+                )
+                &
+                (
+                    HistoricoRegistro.unidad
+                    == unidad_actual
+                )
+            )
+
+        else:
+
+            unidad_actual = "--"
+
+            filtro_fecha = (
+                HistoricoRegistro.fecha_operacional
+                == ultima_fecha_operacional
+            )
+
+        # SQLite CURRENT_TIMESTAMP se guarda en UTC.
+        # Convertimos a hora oficial de Santiago para la UI.
+        if ultima_importacion is not None:
+
+            ultima_importacion = (
+                ultima_importacion
+                .replace(tzinfo=timezone.utc)
+                .astimezone(
+                    ZoneInfo("America/Santiago")
+                )
+            )
 
         # =====================================================
         # 1. INDICADORES GENERALES

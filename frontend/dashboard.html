@@ -30,6 +30,25 @@
         rel="stylesheet"
         href="/css/dashboard.css">
 
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        rel="stylesheet"
+    >
+
+    <!-- SIDEBAR OFICIAL SWAV - MODELO REPORTES -->
+    <link
+        rel="stylesheet"
+        href="/frontend/css/sidebar_unificado.css?v=20260826153205"
+    >
+
+
+    <!-- DASHBOARD PRESENTACION -->
+    <link
+        rel="stylesheet"
+        href="/frontend/css/dashboard_presentacion.css?v=20260827_110605"
+    >
+
 </head>
 
 <body>
@@ -42,92 +61,93 @@
 
     <aside class="sidebar">
 
-        <div class="sidebar-header">
+    <div class="sidebar-brand">
+
+        <div class="sidebar-logo">
 
             <img
-                src="/img/logo_metropol.png"
+                src="/frontend/img/logo_metropol.png"
                 alt="Metropol"
-                class="logo">
-
-            <h2>METROPOL</h2>
-
-            <p>
-
-                Centro de Control<br>
-
-                <small>
-                    Sistema Web de Análisis de Velocidades
-                </small>
-
-            </p>
+            >
 
         </div>
-
-        <nav class="sidebar-menu">
-
-            <a href="/dashboard" class="active">
-
-                <i class="fa-solid fa-house"></i>
-
-                <span>Dashboard</span>
-
-            </a>
-
-            <a href="/registro">
-
-                <i class="fa-solid fa-triangle-exclamation"></i>
-
-                <span>Eventos Operacionales</span>
-
-            </a>
-
-            <a href="/importaciones">
-
-                <i class="fa-solid fa-upload"></i>
-
-                <span>Importaciones</span>
-
-            </a>
-
-            <a href="/reportes">
-
-                <i class="fa-solid fa-chart-column"></i>
-
-                <span>Reportes</span>
-
-            </a>
-
-            <a href="/matriz" class="nav-item">
-
-                <i class="fa-solid fa-table-cells-large"></i>
-
-                <span>Matriz Operacional</span>
-
-            </a>
-
-            <a href="/configuracion">
-
-                <i class="fa-solid fa-gear"></i>
-
-                <span>Configuración</span>
-
-            </a>
-
-        </nav>
-
-        <div class="sidebar-footer">
-
-            <small>
-                Centro de Control Operacional
-            </small>
-
-            <small>
-                Versión 2.0
-            </small>
-
+<div class="sidebar-subtitle">
+            Centro de Control
         </div>
 
-    </aside>
+        <div class="sidebar-description">
+            Sistema Web de An?lisis de<br>
+            Velocidades
+        </div>
+
+    </div>
+
+
+    <nav class="sidebar-menu">
+
+        <a
+            href="/dashboard"
+            class="sidebar-item active"
+        >
+            <i class="bi bi-house-fill"></i>
+
+            <span>
+                Dashboard
+            </span>
+        </a>
+
+
+        <a
+            href="/reportes"
+            class="sidebar-item"
+        >
+            <i class="bi bi-bar-chart-fill"></i>
+
+            <span>
+                Reportes
+            </span>
+        </a>
+
+
+        <a
+            href="/matriz"
+            class="sidebar-item"
+        >
+            <i class="bi bi-grid-3x3-gap-fill"></i>
+
+            <span>
+                Matriz Operacional
+            </span>
+        </a>
+
+
+        <a
+            href="/configuracion"
+            class="sidebar-item"
+        >
+            <i class="bi bi-gear-fill"></i>
+
+            <span>
+                Configuraci?n
+            </span>
+        </a>
+
+    </nav>
+
+
+    <div class="sidebar-footer">
+
+        <small>
+            Centro de Control Operacional
+        </small>
+
+        <small>
+            SWAV
+        </small>
+
+    </div>
+
+</aside>
 
 
     <!-- ============================================= -->
@@ -505,6 +525,9 @@
      PANEL COMBINADO IP + IE
      ========================================================== -->
 
+
+
+
 <section class="panel panel-eventos-prioritarios">
 
     <div class="panel-title">
@@ -524,6 +547,8 @@
         </div>
 
     </div>
+
+
 
     <!-- ======================================================
          RESUMEN DE EVENTOS
@@ -687,23 +712,56 @@
         <!-- ============================================= -->
 
 
-        <div class="panel">
+        <!-- ==========================================================
+     GRAFICOS EJECUTIVOS
+     ========================================================== -->
 
-            <div class="panel-title">
 
-                <i class="fa-solid fa-circle-info"></i>
+<section class="dashboard-graficos">
 
-                <span>
-                    DETALLE DEL EVENTO
-                </span>
+    <div class="grafico-card">
 
+        <div class="grafico-card-header">
+            <div>
+                <h3>DISTRIBUCI?N DE EVENTOS IP / IE</h3>
+                <p>
+                    Eventos simples y complejos detectados
+                    en la operaci?n actual.
+                </p>
             </div>
 
-            <div id="detalleEventoSeleccionado">
+            <i class="fa-solid fa-chart-pie"></i>
+        </div>
 
-                Seleccione un evento...
+        <div class="grafico-canvas-wrapper">
+            <canvas id="graficoDistribucionEventos"></canvas>
+        </div>
 
+    </div>
+
+    <div class="grafico-card">
+
+        <div class="grafico-card-header">
+            <div>
+                <h3>SERVICIOS CON M?S EVENTOS</h3>
+                <p>
+                    Ranking de servicios con mayor cantidad
+                    de eventos operacionales.
+                </p>
             </div>
+
+            <i class="fa-solid fa-chart-bar"></i>
+        </div>
+
+        <div class="grafico-canvas-wrapper">
+            <canvas id="graficoTopServicios"></canvas>
+        </div>
+
+    </div>
+
+</section>
+
+
 
         </div>
 
@@ -721,25 +779,7 @@
         <!-- ============================================= -->
 
 
-        <div class="panel">
-
-            <div class="panel-title">
-
-                <i class="fa-solid fa-circle-info"></i>
-
-                <span>
-                    DETALLE DEL EVENTO
-                </span>
-
-            </div>
-
-            <div id="detalleEventoSeleccionado">
-
-                Seleccione un evento...
-
-            </div>
-
-        </div>
+        
 
 
         <!-- ============================================= -->
@@ -762,74 +802,62 @@
                             0
                         </h2>
 
-                        <span>
-                            Expediciones
-                        </span>
+                        <span>Expediciones</span>
 
                     </div>
 
 
                     <div class="audit-card">
 
-                        <h2 id="auditProcesadas">
+                        <h2 id="auditRegistros">
                             0
                         </h2>
 
-                        <span>
-                            Procesadas
-                        </span>
+                        <span>Registros</span>
 
                     </div>
 
 
                     <div class="audit-card">
 
-                        <h2 id="auditDescartadas">
+                        <h2 id="auditBuses">
                             0
                         </h2>
 
-                        <span>
-                            Descartadas
-                        </span>
+                        <span>Buses</span>
 
                     </div>
 
 
                     <div class="audit-card">
 
-                        <h2 id="auditVelocidad0">
+                        <h2 id="auditVelocidadReal">
                             0
                         </h2>
 
-                        <span>
-                            Velocidad 0
-                        </span>
+                        <span>Velocidad Real</span>
 
                     </div>
 
 
                     <div class="audit-card">
 
-                        <h2 id="auditSinTS">
+                        <h2 id="auditVelocidadTeorica">
                             0
                         </h2>
 
-                        <span>
-                            Sin Velocidad Teórica
-                        </span>
+                        <span>Velocidad Te&oacute;rica</span>
 
                     </div>
 
 
                     <div class="audit-card">
 
-                        <h2 id="auditProcesado">
+                        <h2 id="auditReduccion">
                             100%
                         </h2>
 
-                        <span>
-                            % Procesado
-                        </span>
+                        <span>Reducci&oacute;n Promedio</span>
 
                     </div>
 
@@ -1039,143 +1067,5 @@
 
 </html>
 
-
-
-
-
-
-
-
-
-
-
-
-/* =====================================================
-   BOTONES MODERNOS R1.6
-===================================================== */
-
-.panel-r16-header {
-
-    display:flex;
-
-    align-items:center;
-
-    gap:12px;
-
-    margin-left:20px;
-
-}
-
-
-
-.r16-btn {
-
-    min-width:125px;
-
-    height:48px;
-
-    border:none;
-
-    border-radius:14px;
-
-    color:white;
-
-    display:flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-    gap:10px;
-
-    font-weight:700;
-
-    cursor:pointer;
-
-    box-shadow:0 4px 12px rgba(0,0,0,.15);
-
-    transition:.25s;
-
-}
-
-
-
-.r16-btn i {
-
-    font-size:18px;
-
-}
-
-
-
-.r16-btn span {
-
-    display:flex;
-
-    flex-direction:column;
-
-    line-height:14px;
-
-}
-
-
-
-.r16-btn small {
-
-    font-size:9px;
-
-    opacity:.85;
-
-}
-
-
-
-.r16-u8 {
-
-    background:#2563eb;
-
-}
-
-
-
-.r16-u9 {
-
-    background:#16a34a;
-
-}
-
-
-
-.r16-btn:hover {
-
-    transform:translateY(-2px);
-
-}
-
-
-
-.r16-btn:disabled {
-
-    opacity:.45;
-
-    cursor:not-allowed;
-
-    transform:none;
-
-}
-
-
-
-.r16-estado {
-
-    font-size:13px;
-
-    font-weight:700;
-
-    color:#475569;
-
-    margin-left:8px;
-
-}
 
 

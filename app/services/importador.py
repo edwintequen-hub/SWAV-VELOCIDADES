@@ -1055,6 +1055,41 @@ class ImportadorR16:
                 # CONVERSIÃ“N NORMAL
                 # =================================================
 
+                # =================================================
+                # DESCARTAR EXPEDICIONES NO FINALIZADAS
+                # FIN SERVICIO = A?O 1900
+                # =================================================
+
+                fin = self.fecha_hora(
+                    fila[
+                        "FIN SERVICIO"
+                    ]
+                )
+
+                if (
+                    fin is None
+                    or fin.year == 1900
+                ):
+                    self.registros_descartados += 1
+                    continue
+
+                # =================================================
+                # DESCARTAR VELOCIDAD CERO O INVALIDA
+                # =================================================
+
+                velocidad_min = self.decimal(
+                    fila[
+                        "VELOCIDAD (Km/Min)"
+                    ]
+                )
+
+                if (
+                    velocidad_min is None
+                    or velocidad_min <= 0
+                ):
+                    self.registros_descartados += 1
+                    continue
+
                 expedicion = (
                     self.convertir_fila(
                         fila
@@ -1093,7 +1128,7 @@ class ImportadorR16:
                 expediciones
             )
 
-        self.db.commit()
+        self.db.flush()
 
         print(
             f"EXPEDICIONES IMPORTADAS: "
@@ -1159,7 +1194,7 @@ class ImportadorR16:
             historial
         )
 
-        self.db.commit()
+        self.db.flush()
 
     # =====================================================
     # IMPORTACIÃ“N COMPLETA
@@ -1261,7 +1296,10 @@ class ImportadorR16:
                 synchronize_session=False
             )
 
-            self.db.commit()
+            # IMPORTANTE:
+            # No hacer commit aqui.
+            # El borrado y la carga nueva deben quedar
+            # dentro de la misma transaccion.
 
             # -------------------------------------------------
             # Guardar nuevas expediciones

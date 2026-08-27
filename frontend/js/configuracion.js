@@ -1654,3 +1654,341 @@ document.addEventListener(
 
     }
 );
+/* ==========================================================
+   CREDENCIALES SINOPTICO
+   ========================================================== */
+
+async function cargarCredencialSinoptico() {
+
+    const usuario =
+        document.getElementById(
+            "usuarioSinoptico"
+        );
+
+    const password =
+        document.getElementById(
+            "passwordSinoptico"
+        );
+
+    const estado =
+        document.getElementById(
+            "estadoSinoptico"
+        );
+
+    if (
+        !usuario ||
+        !password ||
+        !estado
+    ) {
+        return;
+    }
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/configuracion/sinoptico"
+            );
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Error HTTP " +
+                response.status
+            );
+
+        }
+
+        const datos =
+            await response.json();
+
+        if (datos.configurado) {
+
+            usuario.value =
+                datos.usuario || "";
+
+            password.value = "";
+
+            estado.innerHTML =
+            `
+            <span class="badge text-bg-success">
+                Configurado
+            </span>
+
+            <span class="ms-2 text-muted small">
+                Usuario: ${datos.usuario || "-"}
+            </span>
+            `;
+
+        }
+        else {
+
+            usuario.value = "";
+            password.value = "";
+
+            estado.innerHTML =
+            `
+            <span class="badge text-bg-secondary">
+                Sin configurar
+            </span>
+            `;
+
+        }
+
+    }
+    catch (error) {
+
+        console.error(
+            "Error cargando credencial Sinoptico:",
+            error
+        );
+
+        estado.innerHTML =
+        `
+        <span class="badge text-bg-danger">
+            Error cargando configuración
+        </span>
+        `;
+
+    }
+
+}
+
+
+/* ==========================================================
+   GUARDAR CREDENCIAL
+   ========================================================== */
+
+async function guardarCredencialSinoptico() {
+
+    const usuario =
+        document.getElementById(
+            "usuarioSinoptico"
+        );
+
+    const password =
+        document.getElementById(
+            "passwordSinoptico"
+        );
+
+    const boton =
+        document.getElementById(
+            "btnGuardarSinoptico"
+        );
+
+    const estado =
+        document.getElementById(
+            "estadoSinoptico"
+        );
+
+    if (
+        !usuario ||
+        !password ||
+        !boton ||
+        !estado
+    ) {
+        return;
+    }
+
+    const valorUsuario =
+        usuario.value.trim();
+
+    const valorPassword =
+        password.value;
+
+    if (!valorUsuario) {
+
+        estado.innerHTML =
+        `
+        <span class="badge text-bg-warning">
+            Ingrese usuario
+        </span>
+        `;
+
+        usuario.focus();
+
+        return;
+    }
+
+    if (!valorPassword) {
+
+        estado.innerHTML =
+        `
+        <span class="badge text-bg-warning">
+            Ingrese contraseña
+        </span>
+        `;
+
+        password.focus();
+
+        return;
+    }
+
+    const textoOriginal =
+        boton.innerHTML;
+
+    boton.disabled = true;
+
+    boton.innerHTML =
+    `
+    <span
+        class="spinner-border spinner-border-sm"
+        role="status">
+    </span>
+
+    Guardando...
+    `;
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/configuracion/sinoptico",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify(
+                        {
+                            usuario:
+                                valorUsuario,
+
+                            password:
+                                valorPassword
+                        }
+                    )
+                }
+            );
+
+        const datos =
+            await response.json();
+
+        if (!response.ok) {
+
+            throw new Error(
+                datos.detail ||
+                "Error guardando credencial"
+            );
+
+        }
+
+        password.value = "";
+
+        estado.innerHTML =
+        `
+        <span class="badge text-bg-success">
+            Credencial guardada
+        </span>
+
+        <span class="ms-2 text-muted small">
+            Usuario: ${datos.usuario || valorUsuario}
+        </span>
+        `;
+
+    }
+    catch (error) {
+
+        console.error(
+            "Error guardando credencial Sinoptico:",
+            error
+        );
+
+        estado.innerHTML =
+        `
+        <span class="badge text-bg-danger">
+            ${error.message}
+        </span>
+        `;
+
+    }
+    finally {
+
+        boton.disabled = false;
+
+        boton.innerHTML =
+            textoOriginal;
+
+    }
+
+}
+
+
+/* ==========================================================
+   MOSTRAR / OCULTAR PASSWORD
+   ========================================================== */
+
+function configurarPasswordSinoptico() {
+
+    const password =
+        document.getElementById(
+            "passwordSinoptico"
+        );
+
+    const boton =
+        document.getElementById(
+            "btnMostrarPasswordSinoptico"
+        );
+
+    if (
+        !password ||
+        !boton
+    ) {
+        return;
+    }
+
+    boton.addEventListener(
+        "click",
+        () => {
+
+            const visible =
+                password.type === "text";
+
+            password.type =
+                visible
+                    ? "password"
+                    : "text";
+
+            boton.innerHTML =
+                visible
+                    ? '<i class="bi bi-eye-fill"></i>'
+                    : '<i class="bi bi-eye-slash-fill"></i>';
+
+        }
+    );
+
+}
+
+
+/* ==========================================================
+   INICIALIZACION
+   ========================================================== */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        cargarCredencialSinoptico();
+
+        configurarPasswordSinoptico();
+
+        const botonGuardar =
+            document.getElementById(
+                "btnGuardarSinoptico"
+            );
+
+        if (botonGuardar) {
+
+            botonGuardar.addEventListener(
+                "click",
+                guardarCredencialSinoptico
+            );
+
+        }
+
+    }
+);
+

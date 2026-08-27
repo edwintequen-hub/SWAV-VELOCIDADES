@@ -19,6 +19,8 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.services.procesador import ProcesadorSWAV
+from app.services.sinoptico_r16_service import SinopticoR16Service
+from app.models import CredencialSinoptico
 
 from pydantic import BaseModel
 
@@ -120,52 +122,72 @@ def descargar_r16(
         )
 
     # =====================================================
-    # 1. DESCARGAR R1.6 Y ESPERAR TERMINO REAL
+    # CREDENCIAL SINOPTICO ACTIVA
+    # =====================================================
+
+    credencial = (
+        db.query(CredencialSinoptico)
+        .filter(
+            CredencialSinoptico.activo == True
+        )
+        .order_by(
+            CredencialSinoptico.id.desc()
+        )
+        .first()
+    )
+
+    if not credencial:
+
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "No existe una credencial "
+                "Sinoptico activa. "
+                "Configure usuario y clave "
+                "en Configuracion."
+            )
+        )
+
+    usuario_sinoptico = (
+        str(credencial.usuario or "")
+        .strip()
+    )
+
+    password_sinoptico = (
+        str(credencial.password or "")
+    )
+
+    if (
+        not usuario_sinoptico
+        or not password_sinoptico
+    ):
+
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "La credencial Sinoptico "
+                "esta incompleta."
+            )
+        )
+
+
+    # =====================================================
+    # 1. DESCARGAR R1.6 MEDIANTE SERVICE CERTIFICADO
     # =====================================================
 
     try:
 
-        proceso = subprocess.run(
-
-            [
-                str(bridge),
-
-                "r16download",
-
-                "edwin.tequen",
-
-                unidad,
-
-                fecha,
-
-                hora_inicio,
-
-                hora_fin,
-            ],
-
-            cwd=str(
-                bridge.parent
-            ),
-
-            capture_output=True,
-
-            text=True,
-
-            errors="replace",
-
-            timeout=300,
-
-            check=False,
+        servicio_r16 = SinopticoR16Service(
+            max_intentos=3,
+            espera_reintento=3,
         )
 
-    except subprocess.TimeoutExpired:
-
-        raise HTTPException(
-            status_code=504,
-            detail=(
-                "La descarga R1.6 excedio "
-                "el tiempo maximo de espera."
-            )
+        datos_bridge = servicio_r16.descargar(
+            usuario=usuario_sinoptico,
+            unidad=unidad,
+            fecha=fecha,
+            hora_desde=hora_inicio,
+            hora_hasta=hora_fin,
         )
 
     except Exception as exc:
@@ -173,106 +195,41 @@ def descargar_r16(
         raise HTTPException(
             status_code=500,
             detail=(
-                "Error ejecutando "
-                "SinopticoBridge: "
+                "No fue posible descargar "
+                "el R1.6 desde Sinoptico: "
                 + str(exc)
             )
         )
 
-    salida = (
-        proceso.stdout
-        or ""
-    ).strip()
-
-    error_bridge = (
-        proceso.stderr
-        or ""
-    ).strip()
-
-    if proceso.returncode != 0:
-
-        raise HTTPException(
-            status_code=500,
-            detail={
-                "mensaje":
-                    "SinopticoBridge termino con error",
-
-                "codigo":
-                    proceso.returncode,
-
-                "stdout":
-                    salida,
-
-                "stderr":
-                    error_bridge,
-            }
-        )
-
     # =====================================================
-    # 2. LEER RESPUESTA JSON DEL BRIDGE
+    # 2. VALIDAR RESULTADO DEL SERVICE
     # =====================================================
 
-    inicio_json = salida.find("{")
-
-    fin_json = salida.rfind("}")
-
-    if (
-        inicio_json < 0
-        or fin_json < inicio_json
+    if not datos_bridge.get(
+        "ok",
+        False
     ):
-
         raise HTTPException(
             status_code=500,
             detail={
                 "mensaje":
-                    "SinopticoBridge no devolvio JSON valido",
-
-                "stdout":
-                    salida,
-
-                "stderr":
-                    error_bridge,
-            }
-        )
-
-    try:
-
-        datos_bridge = json.loads(
-            salida[
-                inicio_json:
-                fin_json + 1
-            ]
-        )
-
-    except Exception as exc:
-
-        raise HTTPException(
-            status_code=500,
-            detail={
-                "mensaje":
-                    "No fue posible interpretar "
-                    "la respuesta del Bridge",
-
-                "error":
-                    str(exc),
-
-                "stdout":
-                    salida,
+                    "El servicio Sinoptico "
+                    "no confirmo la descarga R1.6",
+                "bridge":
+                    datos_bridge,
             }
         )
 
     if not datos_bridge.get(
-        "descargado",
+        "validado",
         False
     ):
-
         raise HTTPException(
             status_code=500,
             detail={
                 "mensaje":
-                    "El Bridge no confirmo "
-                    "la descarga R1.6",
-
+                    "El R1.6 descargado "
+                    "no fue validado",
                 "bridge":
                     datos_bridge,
             }
@@ -292,7 +249,7 @@ def descargar_r16(
         raise HTTPException(
             status_code=500,
             detail=(
-                "El Bridge informo la descarga, "
+                "El servicio informo la descarga, "
                 "pero el archivo no existe: "
                 + str(archivo)
             )
@@ -308,6 +265,104 @@ def descargar_r16(
                 + str(archivo)
             )
         )
+
+    # =====================================================
+    # DIAGNOSTICO ARCHIVO REAL RECIBIDO DEL BRIDGE
+    # =====================================================
+
+    print()
+    print("=" * 100)
+    print("DIAGNOSTICO R1.6 - ARCHIVO RECIBIDO DEL BRIDGE")
+    print("=" * 100)
+    print("RUTA :", archivo)
+    print("EXISTE :", archivo.exists())
+
+    if archivo.exists():
+
+        print(
+            "TAMANO :",
+            archivo.stat().st_size
+        )
+
+        try:
+
+            contenido_debug = archivo.read_text(
+                encoding="utf-8-sig",
+                errors="replace"
+            )
+
+            lineas_debug = (
+                contenido_debug.splitlines()
+            )
+
+            print("LINEAS :", len(lineas_debug))
+
+            print("-" * 100)
+
+            for numero, linea in enumerate(
+                lineas_debug[:15],
+                start=1
+            ):
+
+                print(
+                    f"{numero:03d}:",
+                    repr(linea)
+                )
+
+            print("-" * 100)
+
+            encabezados = [
+                (
+                    i + 1,
+                    linea
+                )
+                for i, linea
+                in enumerate(lineas_debug)
+                if (
+                    "SERVICIO" in linea.upper()
+                    and
+                    "CODIGO BUS" in linea.upper()
+                    and
+                    "PATENTE BUS" in linea.upper()
+                )
+            ]
+
+            print(
+                "ENCABEZADOS DETECTADOS:",
+                len(encabezados)
+            )
+
+            for numero, linea in encabezados[:3]:
+
+                print(
+                    "HEADER LINEA:",
+                    numero
+                )
+
+                print(
+                    "HEADER REPR:",
+                    repr(linea)
+                )
+
+                print(
+                    "TABS:",
+                    linea.count("\t"),
+                    "| ;:",
+                    linea.count(";"),
+                    "| ,:",
+                    linea.count(",")
+                )
+
+        except Exception as exc_debug:
+
+            print(
+                "ERROR LEYENDO ARCHIVO DEBUG:",
+                repr(exc_debug)
+            )
+
+    print("=" * 100)
+    print()
+
 
     # =====================================================
     # 3. PROCESAMIENTO COMPLETO SWAV

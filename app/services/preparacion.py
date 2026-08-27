@@ -316,28 +316,19 @@ class PreparadorR16:
 
     def buscar_servicio_info(self, expedicion):
         """
-        INFO es la fuente maestra.
+        INFO es la fuente maestra para homologar la identidad
+        operacional de una expedicion R1.6.
 
-        Busca primero coincidencia exacta.
+        Orden de resolucion:
 
-        Si la ruta de R1.6 no coincide exactamente,
-        se intenta homologar usando:
+        1. Servicio + ruta exacta.
+        2. Ruta exacta unica dentro de la unidad.
+        3. Familia de ruta dentro del mismo servicio.
+        4. Homologaciones operacionales certificadas.
+        5. Familia de ruta unica dentro de la unidad.
 
-            unidad
-            servicio usuario
-            cÃ³digo base
-            sentido
-
-        Ejemplo:
-
-            R1.6 : T808 03R
-            INFO : T808 00R
-
-        Resultado:
-
-            T808 00R
-            CÃ³digo TS 808
-            Sentido RET
+        Nunca se inventa una homologacion cuando existen
+        multiples candidatos.
         """
 
         unidad = self.normalizar_unidad(
@@ -352,80 +343,35 @@ class PreparadorR16:
             expedicion.ruta
         )
 
-        if not unidad or not servicio_usuario:
-            return None
-
-        servicios = (
-            self.db.query(Servicio)
-            .filter(
-                Servicio.unidad == unidad,
-                Servicio.servicio == servicio_usuario,
-            )
-            .all()
-        )
-
-        if not servicios:
+        if not unidad or not ruta_r16:
             return None
 
         # -------------------------------------------------
-        # 1. COINCIDENCIA EXACTA
+        # FUNCIONES AUXILIARES LOCALES
         # -------------------------------------------------
 
-        for servicio in servicios:
+        def obtener_sentido(ruta):
 
-            ruta_ida = self.normalizar_texto(
-                getattr(
-                    servicio,
-                    "ruta_ida",
-                    "",
-                )
-            )
+            ruta = self.normalizar_texto(ruta)
 
-            ruta_regreso = self.normalizar_texto(
-                getattr(
-                    servicio,
-                    "ruta_regreso",
-                    "",
-                )
-            )
+            if not ruta:
+                return ""
 
-            if ruta_r16 in (
-                ruta_ida,
-                ruta_regreso,
-            ):
-                return servicio
+            ultimo = ruta[-1:]
 
-        # -------------------------------------------------
-        # 2. HOMOLOGACIÃ“N POR CÃ“DIGO + SENTIDO
-        #
-        # T808 03R -> T808 00R
-        # -------------------------------------------------
+            if ultimo == "I":
+                return "IDA"
 
-        partes = ruta_r16.split()
+            if ultimo == "R":
+                return "RET"
 
-        if len(partes) < 2:
-            return None
+            return ""
 
-        codigo_base = partes[0]
-        ultimo = partes[-1][-1:]
-
-        if ultimo == "I":
-            sentido = "IDA"
-
-        elif ultimo == "R":
-            sentido = "RET"
-
-        else:
-            # FS no se homologa.
-            return None
-
-        candidatos = []
-
-        for servicio in servicios:
+        def obtener_ruta_sentido(servicio, sentido):
 
             if sentido == "IDA":
 
-                ruta_info = self.normalizar_texto(
+                return self.normalizar_texto(
                     getattr(
                         servicio,
                         "ruta_ida",
@@ -433,9 +379,9 @@ class PreparadorR16:
                     )
                 )
 
-            else:
+            if sentido == "RET":
 
-                ruta_info = self.normalizar_texto(
+                return self.normalizar_texto(
                     getattr(
                         servicio,
                         "ruta_regreso",
@@ -443,24 +389,330 @@ class PreparadorR16:
                     )
                 )
 
+            return ""
+
+        def obtener_familia(ruta):
+            """
+            Elimina solamente la variante final NN+sentido.
+
+            Ejemplos:
+
+                T808 03R       -> T808
+                T923 C0 06I    -> T923 C0
+                T923 C0 00I    -> T923 C0
+                T945 E0 00I    -> T945 E0
+                T950 E3 00R    -> T950 E3
+            """
+
+            ruta = self.normalizar_texto(ruta)
+
+            partes = ruta.split()
+
+            if len(partes) < 2:
+                return ruta
+
+            ultimo = partes[-1]
+
+            if (
+                len(ultimo) >= 2
+                and ultimo[-1:] in ("I", "R")
+            ):
+                return " ".join(partes[:-1])
+
+            return ruta
+
+        def seleccionar_unico(candidatos):
+            """
+            Permite filas duplicadas fisicamente en INFO,
+            pero exige una unica identidad operacional.
+            """
+
+            if not candidatos:
+                return None
+
+            identidades = {}
+
+            for servicio in candidatos:
+
+                clave = (
+                    self.normalizar_texto(
+                        getattr(
+                            servicio,
+                            "servicio",
+                            "",
+                        )
+                    ),
+                    self.normalizar_codigo_ts(
+                        getattr(
+                            servicio,
+                            "codigo_ts",
+                            "",
+                        )
+                    ),
+                    self.normalizar_texto(
+                        getattr(
+                            servicio,
+                            "ruta_ida",
+                            "",
+                        )
+                    ),
+                    self.normalizar_texto(
+                        getattr(
+                            servicio,
+                            "ruta_regreso",
+                            "",
+                        )
+                    ),
+                )
+
+                if clave not in identidades:
+                    identidades[clave] = servicio
+
+            if len(identidades) == 1:
+                return next(
+                    iter(
+                        identidades.values()
+                    )
+                )
+
+            return None
+
+        sentido = obtener_sentido(
+            ruta_r16
+        )
+
+        if sentido not in (
+            "IDA",
+            "RET",
+        ):
+            # FS no se homologa.
+            return None
+
+        servicios_unidad = (
+            self.db.query(Servicio)
+            .filter(
+                Servicio.unidad == unidad
+            )
+            .all()
+        )
+
+        if not servicios_unidad:
+            return None
+
+        servicios_mismo_nombre = [
+            servicio
+            for servicio in servicios_unidad
+            if self.normalizar_texto(
+                getattr(
+                    servicio,
+                    "servicio",
+                    "",
+                )
+            )
+            == servicio_usuario
+        ]
+
+        # -------------------------------------------------
+        # 1. SERVICIO + RUTA EXACTA
+        # -------------------------------------------------
+
+        candidatos = []
+
+        for servicio in servicios_mismo_nombre:
+
+            ruta_info = obtener_ruta_sentido(
+                servicio,
+                sentido,
+            )
+
+            if ruta_info == ruta_r16:
+                candidatos.append(
+                    servicio
+                )
+
+        encontrado = seleccionar_unico(
+            candidatos
+        )
+
+        if encontrado is not None:
+            return encontrado
+
+        # -------------------------------------------------
+        # 2. RUTA EXACTA UNICA EN INFO
+        # -------------------------------------------------
+
+        candidatos = []
+
+        for servicio in servicios_unidad:
+
+            ruta_info = obtener_ruta_sentido(
+                servicio,
+                sentido,
+            )
+
+            if ruta_info == ruta_r16:
+                candidatos.append(
+                    servicio
+                )
+
+        encontrado = seleccionar_unico(
+            candidatos
+        )
+
+        if encontrado is not None:
+            return encontrado
+
+        # -------------------------------------------------
+        # 3. FAMILIA DENTRO DEL MISMO SERVICIO
+        #
+        # Ejemplo:
+        # T808 03R -> T808 00R
+        # -------------------------------------------------
+
+        familia_r16 = obtener_familia(
+            ruta_r16
+        )
+
+        candidatos = []
+
+        for servicio in servicios_mismo_nombre:
+
+            ruta_info = obtener_ruta_sentido(
+                servicio,
+                sentido,
+            )
+
+            if (
+                ruta_info
+                and obtener_familia(
+                    ruta_info
+                )
+                == familia_r16
+            ):
+                candidatos.append(
+                    servicio
+                )
+
+        encontrado = seleccionar_unico(
+            candidatos
+        )
+
+        if encontrado is not None:
+            return encontrado
+
+        # -------------------------------------------------
+        # 4. HOMOLOGACIONES OPERACIONALES CERTIFICADAS
+        #
+        # NO es una regla global E3 -> N.
+        #
+        # Estas tres equivalencias fueron certificadas
+        # contra Macro + INFO + Anexo 3 + Anexo 4.
+        # -------------------------------------------------
+
+        homologaciones_certificadas = {
+
+            (
+                "U8",
+                "T841 C2",
+            ): "841",
+
+            (
+                "U8",
+                "T830 E3",
+            ): "830N",
+
+            (
+                "U9",
+                "T902 E3",
+            ): "902N",
+
+            (
+                "U9",
+                "T950 E3",
+            ): "950N",
+        }
+
+        codigo_objetivo = (
+            homologaciones_certificadas.get(
+                (
+                    unidad,
+                    familia_r16,
+                )
+            )
+        )
+
+        if codigo_objetivo:
+
+            candidatos = []
+
+            for servicio in servicios_unidad:
+
+                codigo_info = (
+                    self.normalizar_codigo_ts(
+                        getattr(
+                            servicio,
+                            "codigo_ts",
+                            "",
+                        )
+                    )
+                )
+
+                if (
+                    codigo_info
+                    == codigo_objetivo
+                ):
+                    candidatos.append(
+                        servicio
+                    )
+
+            encontrado = seleccionar_unico(
+                candidatos
+            )
+
+            if encontrado is not None:
+                return encontrado
+
+        # -------------------------------------------------
+        # 5. FAMILIA UNICA EN TODA LA UNIDAD
+        #
+        # Ejemplos:
+        # T923 C0 06I -> T923 C0 00I
+        # T930 C0 00I -> T930 C0 00I
+        # -------------------------------------------------
+
+        candidatos = []
+
+        for servicio in servicios_unidad:
+
+            ruta_info = obtener_ruta_sentido(
+                servicio,
+                sentido,
+            )
+
             if not ruta_info:
                 continue
 
-            partes_info = ruta_info.split()
+            if (
+                obtener_familia(
+                    ruta_info
+                )
+                == familia_r16
+            ):
+                candidatos.append(
+                    servicio
+                )
 
-            if len(partes_info) < 2:
-                continue
+        encontrado = seleccionar_unico(
+            candidatos
+        )
 
-            if partes_info[0] == codigo_base:
-                candidatos.append(servicio)
+        if encontrado is not None:
+            return encontrado
 
-        # No inventamos si existen varias alternativas.
-        if len(candidatos) == 1:
-            return candidatos[0]
-
+        # No inventar cuando no existe una solucion unica.
         return None
 
-        # =====================================================
+    # =====================================================
     # RESOLVER INFO
     # =====================================================
 
@@ -1376,9 +1628,9 @@ class PreparadorR16:
     # PROCESAR TODAS
     # =====================================================
 
-    def procesar(self):
+    def procesar(self, unidad=None):
 
-        expediciones = (
+        consulta = (
             self.db.query(
                 Expedicion
             )
@@ -1386,8 +1638,19 @@ class PreparadorR16:
                 Expedicion.procesado
                 == False
             )
-            .all()
         )
+
+        if unidad:
+
+            unidad = self.normalizar_unidad(
+                unidad
+            )
+
+            consulta = consulta.filter(
+                Expedicion.unidad == unidad
+            )
+
+        expediciones = consulta.all()
 
         procesadas = 0
         eliminadas = 0
@@ -1417,7 +1680,7 @@ class PreparadorR16:
 
                 procesadas += 1
 
-        self.db.commit()
+        self.db.flush()
 
         return {
             "estado": "OK",

@@ -1,0 +1,895 @@
+/* =========================================================
+   SWAV - SIDEBAR OFICIAL
+   FUENTE MAESTRA: REPORTES.CSS
+   ========================================================= */
+
+:root {
+    --sidebar-width: 250px;
+    --sidebar-bg: #123a63;
+    --sidebar-bg-dark: #0c2b4a;
+    --border-soft: #dfe6ee;
+    --page-bg: #f4f7fb;
+    --card-radius: 12px;
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+
+    width: var(--sidebar-width);
+
+    background:
+        linear-gradient(
+            180deg,
+            var(--sidebar-bg) 0%,
+            var(--sidebar-bg-dark) 100%
+        );
+
+    color: #ffffff;
+
+    overflow-y: auto;
+
+    z-index: 1000;
+
+    box-shadow:
+        3px 0 15px
+        rgba(0, 0, 0, 0.12);
+}
+
+
+.sidebar-brand {
+    padding:
+        28px
+        20px
+        24px;
+
+    text-align: center;
+
+    border-bottom:
+        1px solid
+        rgba(255, 255, 255, 0.12);
+}
+
+
+.sidebar-logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    margin-bottom: 12px;
+}
+
+
+.sidebar-logo img {
+    display: block;
+
+    max-width: 150px;
+    max-height: 58px;
+
+    object-fit: contain;
+}
+
+
+.sidebar-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+
+.sidebar-subtitle {
+    margin-top: 3px;
+
+    font-size: 0.9rem;
+    font-weight: 600;
+
+    opacity: 0.95;
+}
+
+
+.sidebar-description {
+    margin-top: 8px;
+
+    font-size: 0.72rem;
+    line-height: 1.35;
+
+    opacity: 0.72;
+}
+
+
+.sidebar-menu {
+    padding: 18px 12px;
+}
+
+
+.sidebar-item {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    min-height: 46px;
+
+    margin-bottom: 5px;
+    padding: 10px 14px;
+
+    color: rgba(255, 255, 255, 0.82);
+
+    text-decoration: none;
+
+    border-radius: 9px;
+
+    transition:
+        background 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease;
+}
+
+
+.sidebar-item i {
+    width: 22px;
+
+    font-size: 1.05rem;
+
+    text-align: center;
+}
+
+
+.sidebar-item:hover {
+    color: #ffffff;
+
+    background:
+        rgba(255, 255, 255, 0.10);
+
+    transform: translateX(2px);
+}
+
+
+.sidebar-item.active {
+    color: #ffffff;
+
+    font-weight: 700;
+
+    background:
+        rgba(255, 255, 255, 0.17);
+
+    box-shadow:
+        inset 3px 0 0 #ffffff;
+}
+
+
+/* =========================================================
+   CONTENIDO
+   ========================================================= */
+
+
+
+
+
+/* =========================================================
+   SWAV
+   LAYOUT COMPARTIDO
+   NO OCULTAR CONTENIDO
+   ========================================================= */
+
+:root {
+    --swav-sidebar-width: 250px;
+}
+
+
+/* ---------------------------------------------------------
+   SIDEBAR
+   --------------------------------------------------------- */
+
+.sidebar {
+
+    width:
+        var(--swav-sidebar-width) !important;
+
+    min-width:
+        var(--swav-sidebar-width) !important;
+
+    max-width:
+        var(--swav-sidebar-width) !important;
+
+    box-sizing: border-box !important;
+
+}
+
+
+/* ---------------------------------------------------------
+   REPORTES / MATRIZ / CONFIGURACION
+   --------------------------------------------------------- */
+
+.content {
+
+    margin-left:
+        var(--swav-sidebar-width) !important;
+
+    width:
+        calc(
+            100% - var(--swav-sidebar-width)
+        ) !important;
+
+    min-width: 0 !important;
+
+    max-width: none !important;
+
+    box-sizing: border-box !important;
+
+}
+
+
+/* ---------------------------------------------------------
+   DASHBOARD
+   --------------------------------------------------------- */
+
+.main-content {
+
+    margin-left:
+        var(--swav-sidebar-width) !important;
+
+    width:
+        calc(
+            100% - var(--swav-sidebar-width)
+        ) !important;
+
+    min-width: 0 !important;
+
+    max-width: none !important;
+
+    box-sizing: border-box !important;
+
+    flex:
+        0 0
+        calc(
+            100% - var(--swav-sidebar-width)
+        ) !important;
+
+}
+
+
+/* ---------------------------------------------------------
+   NO PERDER INFORMACION HORIZONTAL
+   --------------------------------------------------------- */
+
+.content,
+.main-content {
+
+    overflow-x: auto;
+
+}
+
+.table-responsive,
+.table-wrapper,
+.prioritarios-table-wrapper {
+
+    max-width: 100% !important;
+
+    overflow-x: auto !important;
+
+}
+
+
+/* ---------------------------------------------------------
+   PIE DEL SIDEBAR
+   --------------------------------------------------------- */
+
+.sidebar-footer {
+
+    margin-top: auto;
+
+    padding: 16px;
+
+    text-align: center;
+
+    border-top:
+        1px solid
+        rgba(255,255,255,.10);
+
+}
+
+.sidebar-footer small {
+
+    display: block;
+
+    font-size: 10px;
+
+    line-height: 1.45;
+
+    color:
+        rgba(255,255,255,.65);
+
+}
+
+
+/* ---------------------------------------------------------
+   ESCRITORIO
+   Mantener el menu completo.
+   --------------------------------------------------------- */
+
+@media (min-width: 769px) {
+
+    .sidebar {
+
+        position: fixed !important;
+
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+
+        height: 100vh !important;
+
+    }
+
+}
+
+
+/* ---------------------------------------------------------
+   PANTALLA PEQUE?A
+   No cortar el contenido.
+   --------------------------------------------------------- */
+
+@media (max-width: 768px) {
+
+    .sidebar {
+
+        position: relative !important;
+
+        width: 100% !important;
+
+        min-width: 100% !important;
+
+        max-width: 100% !important;
+
+        height: auto !important;
+
+    }
+
+    .content,
+    .main-content {
+
+        margin-left: 0 !important;
+
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+    }
+
+}
+
+
+/* =========================================================
+   SWAV - AJUSTE VISUAL FINAL SIDEBAR
+   MISMO LOGO Y MISMAS SEPARACIONES EN TODAS LAS PAGINAS
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   MARCA / LOGO
+   --------------------------------------------------------- */
+
+.sidebar .sidebar-brand {
+    width: 100% !important;
+
+    padding:
+        24px
+        16px
+        22px !important;
+
+    box-sizing: border-box !important;
+
+    text-align: center !important;
+}
+
+
+.sidebar .sidebar-logo {
+    position: static !important;
+
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+
+    height: 64px !important;
+    min-height: 64px !important;
+    max-height: 64px !important;
+
+    margin:
+        0
+        auto
+        10px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    overflow: visible !important;
+
+    transform: none !important;
+}
+
+
+.sidebar .sidebar-logo img,
+.sidebar .sidebar-brand .sidebar-logo > img {
+    position: static !important;
+
+    display: block !important;
+
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 150px !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: 58px !important;
+
+    object-fit: contain !important;
+
+    margin: 0 auto !important;
+
+    transform: none !important;
+}
+
+
+/* ---------------------------------------------------------
+   TEXTOS DE MARCA
+   --------------------------------------------------------- */
+
+.sidebar .sidebar-title {
+    margin: 0 !important;
+
+    font-size: 20px !important;
+    font-weight: 800 !important;
+
+    line-height: 1.2 !important;
+
+    letter-spacing: .08em !important;
+}
+
+
+.sidebar .sidebar-subtitle {
+    margin-top: 3px !important;
+    margin-bottom: 0 !important;
+
+    font-size: 14px !important;
+    font-weight: 600 !important;
+
+    line-height: 1.3 !important;
+}
+
+
+.sidebar .sidebar-description {
+    margin-top: 7px !important;
+    margin-bottom: 0 !important;
+
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+}
+
+
+/* ---------------------------------------------------------
+   MENU
+   MISMA POSICION Y SEPARACION
+   --------------------------------------------------------- */
+
+.sidebar .sidebar-menu {
+    width: 100% !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+
+    gap: 0 !important;
+
+    padding:
+        18px
+        12px !important;
+
+    margin: 0 !important;
+
+    box-sizing: border-box !important;
+}
+
+
+.sidebar .sidebar-menu .sidebar-item,
+.sidebar .sidebar-menu > a {
+    width: 100% !important;
+
+    min-height: 46px !important;
+
+    margin:
+        0
+        0
+        6px
+        0 !important;
+
+    padding:
+        10px
+        14px !important;
+
+    display: flex !important;
+    align-items: center !important;
+
+    gap: 12px !important;
+
+    border-radius: 8px !important;
+
+    box-sizing: border-box !important;
+
+    font-size: 13px !important;
+
+    line-height: 1.2 !important;
+}
+
+
+/* El ultimo boton no necesita margen inferior */
+
+.sidebar .sidebar-menu .sidebar-item:last-child,
+.sidebar .sidebar-menu > a:last-child {
+    margin-bottom: 0 !important;
+}
+
+
+/* ---------------------------------------------------------
+   ICONOS
+   --------------------------------------------------------- */
+
+.sidebar .sidebar-item i,
+.sidebar .sidebar-menu > a i {
+    width: 22px !important;
+    min-width: 22px !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    font-size: 17px !important;
+
+    text-align: center !important;
+}
+
+
+/* ---------------------------------------------------------
+   ACTIVO
+   MISMO RESALTADO EN TODAS
+   --------------------------------------------------------- */
+
+.sidebar .sidebar-item.active,
+.sidebar .sidebar-menu > a.active {
+    color: #ffffff !important;
+
+    font-weight: 700 !important;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            .17
+        ) !important;
+
+    box-shadow:
+        inset 3px 0 0
+        #ffffff !important;
+}
+
+
+/* ---------------------------------------------------------
+   FOOTER
+   --------------------------------------------------------- */
+
+.sidebar .sidebar-footer {
+    margin-top: auto !important;
+
+    padding:
+        16px
+        14px
+        18px !important;
+
+    text-align: center !important;
+}
+
+
+/* =========================================================
+   SWAV - LOGO UNIFICADO FINAL
+   ========================================================= */
+
+.sidebar .sidebar-brand {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+
+.sidebar .sidebar-logo {
+    width: 92px !important;
+    min-width: 92px !important;
+    max-width: 92px !important;
+
+    height: 72px !important;
+    min-height: 72px !important;
+    max-height: 72px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    margin:
+        0
+        auto
+        10px !important;
+
+    padding: 0 !important;
+
+    overflow: visible !important;
+}
+
+
+.sidebar .sidebar-logo img,
+.sidebar .sidebar-brand .sidebar-logo > img {
+
+    width: 72px !important;
+    min-width: 72px !important;
+    max-width: 72px !important;
+
+    height: 72px !important;
+    min-height: 72px !important;
+    max-height: 72px !important;
+
+    object-fit: contain !important;
+
+    display: block !important;
+
+    margin: 0 auto !important;
+
+    position: static !important;
+
+    transform: none !important;
+}
+
+
+/* =========================================================
+   SWAV - LOGO GRANDE DEFINITIVO
+   ========================================================= */
+
+.sidebar .sidebar-logo {
+
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+
+    height: 78px !important;
+    min-height: 78px !important;
+    max-height: 78px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    margin:
+        0
+        auto
+        10px !important;
+
+    padding: 0 !important;
+
+    overflow: visible !important;
+}
+
+
+.sidebar .sidebar-logo img,
+.sidebar .sidebar-brand .sidebar-logo > img {
+
+    width: auto !important;
+    min-width: 0 !important;
+
+    max-width: 165px !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+
+    max-height: 76px !important;
+
+    object-fit: contain !important;
+
+    display: block !important;
+
+    margin: 0 auto !important;
+
+    position: static !important;
+
+    transform: none !important;
+}
+
+
+/* =========================================================
+   SWAV - LOGO OFICIAL FINAL
+   MISMO DISEÑO EN TODAS LAS PANTALLAS
+   ========================================================= */
+
+.sidebar .sidebar-brand {
+
+    width: 100% !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+
+    padding:
+        22px
+        16px
+        20px !important;
+
+    box-sizing: border-box !important;
+}
+
+
+/* CONTENEDOR DEL LOGO */
+
+.sidebar .sidebar-logo {
+
+    width: 100% !important;
+
+    height: 82px !important;
+    min-height: 82px !important;
+    max-height: 82px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    margin:
+        0
+        auto
+        8px !important;
+
+    padding: 0 !important;
+
+    overflow: visible !important;
+
+    position: static !important;
+
+    transform: none !important;
+}
+
+
+/* IMAGEN METROPOL */
+
+.sidebar .sidebar-logo img,
+.sidebar .sidebar-brand .sidebar-logo > img {
+
+    display: block !important;
+
+    width: auto !important;
+    height: auto !important;
+
+    min-width: 0 !important;
+    min-height: 0 !important;
+
+    max-width: 175px !important;
+    max-height: 80px !important;
+
+    object-fit: contain !important;
+
+    margin: 0 auto !important;
+
+    padding: 0 !important;
+
+    position: static !important;
+
+    transform: none !important;
+}
+
+
+/* METROPOL */
+
+.sidebar .sidebar-title {
+
+    margin: 0 !important;
+
+    text-align: center !important;
+
+    font-size: 20px !important;
+    font-weight: 800 !important;
+
+    line-height: 1.2 !important;
+
+    letter-spacing: .08em !important;
+}
+
+
+/* CENTRO DE CONTROL */
+
+.sidebar .sidebar-subtitle {
+
+    margin:
+        3px
+        0
+        0 !important;
+
+    text-align: center !important;
+
+    font-size: 14px !important;
+    font-weight: 600 !important;
+
+    line-height: 1.25 !important;
+}
+
+
+/* SISTEMA WEB... */
+
+.sidebar .sidebar-description {
+
+    margin:
+        6px
+        0
+        0 !important;
+
+    text-align: center !important;
+
+    font-size: 11px !important;
+
+    line-height: 1.35 !important;
+}
+
+
+/* =========================================================
+   LOGO OFICIAL
+   MATRIZ OPERACIONAL + CONFIGURACION
+   ========================================================= */
+
+.sidebar .sidebar-brand .sidebar-logo >
+img.logo-metropol-oficial {
+
+    display: block !important;
+
+    position: static !important;
+
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 175px !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: 80px !important;
+
+    object-fit: contain !important;
+
+    margin: 0 auto !important;
+    padding: 0 !important;
+
+    transform: none !important;
+}
+
+
+.sidebar .sidebar-logo:has(
+    img.logo-metropol-oficial
+) {
+
+    width: 100% !important;
+
+    height: 82px !important;
+    min-height: 82px !important;
+    max-height: 82px !important;
+
+    display: flex !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+
+    margin: 0 auto 8px !important;
+
+    overflow: visible !important;
+}
+
+
+/* =========================================================
+   SWAV - MARCA METROPOL EN ROJO
+   ========================================================= */
+
+.sidebar .sidebar-title {
+    color: #e31e24 !important;
+}
+

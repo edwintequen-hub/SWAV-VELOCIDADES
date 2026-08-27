@@ -37,9 +37,268 @@
          CSS MATRIZ
          ===================================================== -->
 
+
+
+<style>
+
+    /* ================================================
+       MATRIZ - CONTEXTO OPERACIONAL COMPACTO
+       ================================================ */
+
+    #contextoOperacionalMatriz .card-body {
+        padding-top: 6px !important;
+        padding-bottom: 6px !important;
+    }
+
+    #contextoOperacionalMatriz .contexto-mini {
+        min-height: 62px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding-top: 6px !important;
+        padding-bottom: 6px !important;
+    }
+
+    #contextoOperacionalMatriz small {
+        font-size: 10px;
+        line-height: 1.15;
+    }
+
+    #contextoOperacionalMatriz .fw-bold {
+        font-size: 13px;
+        line-height: 1.2;
+        margin-top: 2px;
+    }
+
+    #matrizTotalExpediciones {
+        font-size: 18px !important;
+    }
+
+    #matrizEstadoOperacional {
+        font-size: 10px;
+        padding: 3px 8px;
+        margin-top: 3px;
+    }
+
+</style>
+
+
+<style>
+
+    /* =====================================================
+       MATRIZ - TARJETAS CONTEXTO TIPO DASHBOARD
+       ===================================================== */
+
+    .matriz-contexto-dashboard {
+        display: flex;
+        align-items: stretch;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .matriz-info-card {
+        min-width: 130px;
+        min-height: 72px;
+
+        background: #f8fafc;
+
+        border: 1px solid #e3e8ef;
+        border-radius: 12px;
+
+        padding: 10px 14px;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        box-shadow:
+            0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .matriz-info-principal {
+        min-width: 165px;
+
+        flex-direction: row;
+        gap: 10px;
+
+        border-color: #cfe0ff;
+        background: #f5f9ff;
+    }
+
+    .matriz-info-icono {
+        width: 32px;
+        height: 32px;
+
+        border-radius: 9px;
+
+        background: #2563eb;
+        color: white;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 16px;
+    }
+
+    .matriz-info-contenido {
+        text-align: center;
+    }
+
+    .matriz-info-titulo {
+        font-size: 9px;
+        line-height: 1.15;
+
+        color: #738198;
+
+        text-transform: uppercase;
+        letter-spacing: .2px;
+
+        margin-bottom: 3px;
+    }
+
+    .matriz-info-valor {
+        font-size: 13px;
+        font-weight: 700;
+
+        color: #172033;
+
+        line-height: 1.2;
+
+        text-align: center;
+    }
+
+    .matriz-info-total {
+        font-size: 18px;
+    }
+
+    .matriz-info-subtexto {
+        margin-top: 1px;
+
+        font-size: 9px;
+        color: #8792a5;
+    }
+
+    .matriz-info-actualizacion {
+        min-width: 155px;
+    }
+
+    #matrizEstadoOperacional {
+        font-size: 9px;
+        padding: 3px 8px;
+    }
+
+    @media (max-width: 1000px) {
+
+        .matriz-info-card,
+        .matriz-info-principal,
+        .matriz-info-actualizacion {
+            flex: 1 1 140px;
+        }
+
+    }
+
+</style>
+
+
+<style>
+
+    /* =====================================================
+       MATRIZ - RESUMEN IP / IE
+       ===================================================== */
+
+    .resumen-indicadores {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+
+        padding: 6px 10px;
+
+        background: #ffffff;
+        border: 1px solid #e5e9ef;
+        border-radius: 9px;
+
+        font-size: 11px;
+    }
+
+    .indicador-resumen {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .indicador-nombre {
+        min-width: 24px;
+
+        font-size: 12px;
+        color: #1d4ed8;
+    }
+
+    .indicador-simple {
+        color: #725500;
+    }
+
+    .indicador-complejo {
+        color: #9f1d2b;
+    }
+
+    .indicador-total {
+        color: #536174;
+    }
+
+    .indicador-separador {
+        width: 1px;
+        height: 20px;
+        background: #dfe4ea;
+    }
+
+</style>
+
+
+<style>
+
+    .mini-semaforo {
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        margin-right: 4px;
+        vertical-align: middle;
+    }
+
+    .mini-semaforo-simple {
+        background: #f4b400;
+    }
+
+    .mini-semaforo-complejo {
+        background: #dc3545;
+    }
+
+</style>
+
+    <!-- SIDEBAR OFICIAL SWAV - MODELO REPORTES -->
     <link
         rel="stylesheet"
-        href="/frontend/css/matriz.css?v=2"
+        href="/frontend/css/sidebar_unificado.css?v=20260826153205"
+    >
+
+    <!-- =====================================================
+         CSS MATRIZ - CARGAR AL FINAL
+         SOBRESCRIBE LAYOUT SIDEBAR SOLO EN MATRIZ
+         ===================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="/frontend/css/matriz.css?v=202608271040"
+    >
+
+
+    <!-- CSS PRESENTACION MATRIZ - SIEMPRE ULTIMO -->
+    <link
+        rel="stylesheet"
+        href="/frontend/css/matriz_presentacion.css?v=202608271050"
     >
 
 </head>
@@ -54,13 +313,7 @@
 
 <aside class="sidebar">
 
-
-    <!-- =====================================================
-         MARCA
-         ===================================================== -->
-
     <div class="sidebar-brand">
-
 
         <div class="sidebar-logo">
 
@@ -70,132 +323,81 @@
             >
 
         </div>
-
-
-        <div class="sidebar-title">
-            METROPOL
-        </div>
-
-
-        <div class="sidebar-subtitle">
+<div class="sidebar-subtitle">
             Centro de Control
         </div>
 
-
         <div class="sidebar-description">
-            Sistema Web de Análisis de<br>
+            Sistema Web de An?lisis de<br>
             Velocidades
         </div>
-
 
     </div>
 
 
-    <!-- =====================================================
-         MENU
-         ===================================================== -->
-
     <nav class="sidebar-menu">
-
-
-        <!-- DASHBOARD -->
 
         <a
             href="/dashboard"
             class="sidebar-item"
         >
-
             <i class="bi bi-house-fill"></i>
 
             <span>
                 Dashboard
             </span>
-
         </a>
 
-
-        <!-- EVENTOS OPERACIONALES -->
-
-        <a
-            href="/eventos"
-            class="sidebar-item"
-        >
-
-            <i class="bi bi-exclamation-triangle-fill"></i>
-
-            <span>
-                Eventos Operacionales
-            </span>
-
-        </a>
-
-
-        <!-- IMPORTACIONES -->
-
-        <a
-            href="/configuracion"
-            class="sidebar-item"
-        >
-
-            <i class="bi bi-upload"></i>
-
-            <span>
-                Importaciones
-            </span>
-
-        </a>
-
-
-        <!-- REPORTES -->
 
         <a
             href="/reportes"
             class="sidebar-item"
         >
-
             <i class="bi bi-bar-chart-fill"></i>
 
             <span>
                 Reportes
             </span>
-
         </a>
 
-
-        <!-- MATRIZ OPERACIONAL -->
 
         <a
             href="/matriz"
             class="sidebar-item active"
         >
-
             <i class="bi bi-grid-3x3-gap-fill"></i>
 
             <span>
                 Matriz Operacional
             </span>
-
         </a>
 
-
-        <!-- CONFIGURACION -->
 
         <a
             href="/configuracion"
             class="sidebar-item"
         >
-
             <i class="bi bi-gear-fill"></i>
 
             <span>
-                Configuración
+                Configuraci?n
             </span>
-
         </a>
-
 
     </nav>
 
+
+    <div class="sidebar-footer">
+
+        <small>
+            Centro de Control Operacional
+        </small>
+
+        <small>
+            SWAV
+        </small>
+
+    </div>
 
 </aside>
 
@@ -232,13 +434,6 @@
         </div>
 
 
-        <a
-            href="/dashboard"
-            class="btn btn-primary"
-        >
-            <i class="bi bi-arrow-left"></i>
-            Dashboard
-        </a>
 
 
     </div>
@@ -250,6 +445,122 @@
     <!-- =====================================================
          LEYENDA
          ===================================================== -->
+
+    <!-- =====================================================
+         CONTEXTO OPERACIONAL ACTUAL
+         ===================================================== -->
+
+    <!-- =====================================================
+         CONTEXTO OPERACIONAL - ESTILO DASHBOARD
+         ===================================================== -->
+
+    <div
+        id="contextoOperacionalMatriz"
+        class="matriz-contexto-dashboard mb-3"
+    >
+
+        <!-- TOTAL EXPEDICIONES -->
+        <div class="matriz-info-card matriz-info-principal">
+
+            <div class="matriz-info-icono">
+                <i class="bi bi-bus-front-fill"></i>
+            </div>
+
+            <div class="matriz-info-contenido">
+
+                <div class="matriz-info-titulo">
+                    TOTAL DE EXPEDICIONES
+                </div>
+
+                <div
+                    id="matrizTotalExpediciones"
+                    class="matriz-info-valor matriz-info-total"
+                >
+                    -
+                </div>
+
+                <div class="matriz-info-subtexto">
+                    del d?a
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- UNIDAD -->
+        <div class="matriz-info-card">
+
+            <div class="matriz-info-titulo">
+                UNIDAD
+            </div>
+
+            <div
+                id="matrizUnidadActiva"
+                class="matriz-info-valor"
+            >
+                -
+            </div>
+
+        </div>
+
+
+        <!-- ESTADO -->
+        <div class="matriz-info-card">
+
+            <div class="matriz-info-titulo">
+                ESTADO
+            </div>
+
+            <div class="matriz-info-valor">
+
+                <span
+                    id="matrizEstadoOperacional"
+                    class="badge bg-success"
+                >
+                    Operativo
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- FECHA -->
+        <div class="matriz-info-card">
+
+            <div class="matriz-info-titulo">
+                FECHA
+            </div>
+
+            <div
+                id="matrizFechaOperacional"
+                class="matriz-info-valor"
+            >
+                -
+            </div>
+
+        </div>
+
+
+        <!-- ULTIMA ACTUALIZACION -->
+        <div class="matriz-info-card matriz-info-actualizacion">
+
+            <div class="matriz-info-titulo">
+                ?LTIMA ACTUALIZACI?N
+            </div>
+
+            <div
+                id="matrizUltimaActualizacion"
+                class="matriz-info-valor"
+            >
+                -
+            </div>
+
+        </div>
+
+    </div>
+
 
     <div
         id="resumenEstados"
@@ -303,6 +614,80 @@
 
 
     <!-- =====================================================
+         RESUMEN POR INDICADOR IP / IE
+         ===================================================== -->
+
+    <div
+        class="resumen-indicadores mb-2"
+        id="resumenIndicadores"
+    >
+
+        <div class="indicador-resumen">
+
+            <strong class="indicador-nombre">
+                IP
+            </strong>
+
+            <span class="indicador-simple">
+                <span class="mini-semaforo mini-semaforo-simple"></span> Simple:
+                <strong id="contadorIpSimple">
+                    0
+                </strong>
+            </span>
+
+            <span class="indicador-complejo">
+                <span class="mini-semaforo mini-semaforo-complejo"></span> Complejo:
+                <strong id="contadorIpComplejo">
+                    0
+                </strong>
+            </span>
+
+            <span class="indicador-total">
+                Total:
+                <strong id="contadorIpTotal">
+                    0
+                </strong>
+            </span>
+
+        </div>
+
+
+        <div class="indicador-separador"></div>
+
+
+        <div class="indicador-resumen">
+
+            <strong class="indicador-nombre">
+                IE
+            </strong>
+
+            <span class="indicador-simple">
+                <span class="mini-semaforo mini-semaforo-simple"></span> Simple:
+                <strong id="contadorIeSimple">
+                    0
+                </strong>
+            </span>
+
+            <span class="indicador-complejo">
+                <span class="mini-semaforo mini-semaforo-complejo"></span> Complejo:
+                <strong id="contadorIeComplejo">
+                    0
+                </strong>
+            </span>
+
+            <span class="indicador-total">
+                Total:
+                <strong id="contadorIeTotal">
+                    0
+                </strong>
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
          FILTROS
          ===================================================== -->
 
@@ -316,50 +701,23 @@
 
 
                 <!-- =================================================
-                     UNIDAD
+                     CONTEXTO OPERACIONAL AUTOMATICO
+                     Unidad y tipo de dia se mantienen ocultos
+                     para conservar la logica interna de matriz.js
                      ================================================= -->
 
-                <div class="col-md-2">
+                <div style="display:none;">
 
-                    <label class="form-label">
-                        Unidad
-                    </label>
-
-
-                    <select
-                        id="cmbUnidad"
-                        class="form-select"
-                    >
-
+                    <select id="cmbUnidad">
                         <option value="">
                             Todas
                         </option>
-
                     </select>
 
-                </div>
-
-
-                <!-- =================================================
-                     TIPO DIA
-                     ================================================= -->
-
-                <div class="col-md-2">
-
-                    <label class="form-label">
-                        Tipo Día
-                    </label>
-
-
-                    <select
-                        id="cmbTipoDia"
-                        class="form-select"
-                    >
-
+                    <select id="cmbTipoDia">
                         <option value="">
                             Todos
                         </option>
-
                     </select>
 
                 </div>

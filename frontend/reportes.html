@@ -29,7 +29,7 @@
     <!-- CSS REPORTES -->
     <link
         rel="stylesheet"
-        href="/frontend/css/reportes.css?v=1"
+        href="/frontend/css/reportes.css?v=20260826_1613"
     >
 
 
@@ -85,6 +85,13 @@
     }
 
 </style>
+
+    <!-- SIDEBAR OFICIAL SWAV - MODELO REPORTES -->
+    <link
+        rel="stylesheet"
+        href="/frontend/css/sidebar_unificado.css?v=20260826153205"
+    >
+
 </head>
 
 <body>
@@ -106,17 +113,12 @@
             >
 
         </div>
-
-        <div class="sidebar-title">
-            METROPOL
-        </div>
-
-        <div class="sidebar-subtitle">
+<div class="sidebar-subtitle">
             Centro de Control
         </div>
 
         <div class="sidebar-description">
-            Sistema Web de Análisis de<br>
+            Sistema Web de An?lisis de<br>
             Velocidades
         </div>
 
@@ -125,103 +127,67 @@
 
     <nav class="sidebar-menu">
 
-
-        <!-- DASHBOARD -->
-
         <a
             href="/dashboard"
             class="sidebar-item"
         >
-
             <i class="bi bi-house-fill"></i>
 
             <span>
                 Dashboard
             </span>
-
         </a>
 
-
-        <!-- EVENTOS OPERACIONALES -->
-
-        <a
-            href="/eventos"
-            class="sidebar-item"
-        >
-
-            <i class="bi bi-exclamation-triangle-fill"></i>
-
-            <span>
-                Eventos Operacionales
-            </span>
-
-        </a>
-
-
-        <!-- IMPORTACIONES -->
-
-        <a
-            href="/configuracion"
-            class="sidebar-item"
-        >
-
-            <i class="bi bi-upload"></i>
-
-            <span>
-                Importaciones
-            </span>
-
-        </a>
-
-
-        <!-- REPORTES -->
 
         <a
             href="/reportes"
             class="sidebar-item active"
         >
-
             <i class="bi bi-bar-chart-fill"></i>
 
             <span>
                 Reportes
             </span>
-
         </a>
 
-
-        <!-- MATRIZ OPERACIONAL -->
 
         <a
             href="/matriz"
             class="sidebar-item"
         >
-
             <i class="bi bi-grid-3x3-gap-fill"></i>
 
             <span>
                 Matriz Operacional
             </span>
-
         </a>
 
-
-        <!-- CONFIGURACION -->
 
         <a
             href="/configuracion"
             class="sidebar-item"
         >
-
             <i class="bi bi-gear-fill"></i>
 
             <span>
-                Configuración
+                Configuraci?n
             </span>
-
         </a>
 
     </nav>
+
+
+    <div class="sidebar-footer">
+
+        <small>
+            Centro de Control Operacional
+        </small>
+
+        <small>
+            SWAV
+        </small>
+
+    </div>
 
 </aside>
 
@@ -233,66 +199,47 @@
 <main class="content">
 
 
-    <!-- CABECERA -->
+    <!-- =====================================================
+         CABECERA COMPACTA REPORTES
+         ===================================================== -->
 
     <div
-        class="d-flex justify-content-between align-items-center mb-4"
+        class="report-header-final d-flex
+               justify-content-between
+               align-items-center mb-2"
     >
 
-        <div>
+        <div class="d-flex align-items-center gap-3">
 
-            <h2 class="fw-bold text-primary mb-0">
-                SWAV
-            </h2>
+            <div class="report-header-icon">
+                <i class="bi bi-bar-chart-line-fill"></i>
+            </div>
 
-            <h5 class="mb-0">
-                Sistema Web de Análisis de Velocidades
-            </h5>
+            <div>
 
-            <small class="text-secondary">
-                Reportes Históricos · Metropol
-            </small>
+                <div class="report-header-title">
+                    Reportes Hist?ricos
+                </div>
+
+                <div class="report-header-subtitle">
+                    Consulta resultados hist?ricos, PPU y
+                    expediciones procesadas por SWAV.
+                </div>
+
+            </div>
 
         </div>
 
 
-        <div class="text-end">
+        <div class="text-end report-header-right">
 
             <div class="fw-semibold">
-                Consulta Histórica
+                Consulta Hist?rica
             </div>
 
             <small class="text-secondary">
                 Registro operacional SWAV
             </small>
-
-        </div>
-
-    </div>
-
-
-    <!-- =====================================================
-         TITULO
-         ===================================================== -->
-
-    <div class="report-title mb-4">
-
-        <div>
-
-            <h4 class="mb-1 fw-bold">
-
-                <i class="bi bi-bar-chart-line-fill me-2"></i>
-
-                Reportes Históricos
-
-            </h4>
-
-            <p class="mb-0 text-secondary">
-
-                Consulta resultados históricos, PPU y
-                expediciones procesadas por SWAV.
-
-            </p>
 
         </div>
 
@@ -919,6 +866,8 @@
 </body>
 
 </html>
+
+
 
 
 

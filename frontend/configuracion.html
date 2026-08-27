@@ -32,6 +32,12 @@
         rel="stylesheet"
         href="/frontend/css/configuracion.css?v=2">
 
+    <!-- SIDEBAR OFICIAL SWAV - MODELO REPORTES -->
+    <link
+        rel="stylesheet"
+        href="/frontend/css/sidebar_unificado.css?v=20260826153205"
+    >
+
 </head>
 
 <body>
@@ -48,35 +54,30 @@
 
 <aside class="sidebar">
 
-    <!-- LOGO -->
     <div class="sidebar-brand">
 
         <div class="sidebar-logo">
+
             <img
                 src="/frontend/img/logo_metropol.png"
-                alt="Metropol">
-        </div>
-
-            <div class="sidebar-title">
-                METROPOL
-            </div>
-
-            <div class="sidebar-subtitle">
-                Centro de Control
-            </div>
-
-            <div class="sidebar-description">
-                Sistema Web de Análisis de<br>
-                Velocidades
-            </div>
+                alt="Metropol"
+            >
 
         </div>
+<div class="sidebar-subtitle">
+            Centro de Control
+        </div>
+
+        <div class="sidebar-description">
+            Sistema Web de An?lisis de<br>
+            Velocidades
+        </div>
+
+    </div>
 
 
-    <!-- MENU -->
     <nav class="sidebar-menu">
 
-        <!-- DASHBOARD -->
         <a
             href="/dashboard"
             class="sidebar-item"
@@ -89,33 +90,6 @@
         </a>
 
 
-        <!-- EVENTOS -->
-        <a
-            href="/eventos"
-            class="sidebar-item"
-        >
-            <i class="bi bi-exclamation-triangle-fill"></i>
-
-            <span>
-                Eventos Operacionales
-            </span>
-        </a>
-
-
-        <!-- IMPORTACIONES -->
-        <a
-            href="/configuracion"
-            class="sidebar-item active"
-        >
-            <i class="bi bi-upload"></i>
-
-            <span>
-                Importaciones
-            </span>
-        </a>
-
-
-        <!-- REPORTES -->
         <a
             href="/reportes"
             class="sidebar-item"
@@ -128,7 +102,6 @@
         </a>
 
 
-        <!-- MATRIZ -->
         <a
             href="/matriz"
             class="sidebar-item"
@@ -141,19 +114,31 @@
         </a>
 
 
-        <!-- CONFIGURACIÓN -->
         <a
             href="/configuracion"
-            class="sidebar-item sidebar-configuracion"
+            class="sidebar-item active"
         >
             <i class="bi bi-gear-fill"></i>
 
             <span>
-                Configuración
+                Configuraci?n
             </span>
         </a>
 
     </nav>
+
+
+    <div class="sidebar-footer">
+
+        <small>
+            Centro de Control Operacional
+        </small>
+
+        <small>
+            SWAV
+        </small>
+
+    </div>
 
 </aside>
 
@@ -452,6 +437,145 @@
     </div>
 
 </div>
+
+
+<!-- ===================================================== -->
+<!-- CREDENCIALES SINOPTICO -->
+<!-- ===================================================== -->
+
+<div class="col-12">
+
+    <div class="card shadow-sm">
+
+        <div class="card-header bg-dark text-white">
+
+            <h5 class="mb-0">
+
+                <i class="bi bi-shield-lock-fill"></i>
+
+                Credenciales Sin?ptico
+
+            </h5>
+
+        </div>
+
+        <div class="card-body">
+
+            <p class="text-muted">
+
+                Credenciales del supervisor autorizado para
+                descargar autom?ticamente el reporte R1.6
+                desde Sin?ptico.
+
+            </p>
+
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+
+                    <label
+                        for="usuarioSinoptico"
+                        class="form-label">
+
+                        Usuario supervisor
+
+                    </label>
+
+                    <input
+                        type="text"
+                        id="usuarioSinoptico"
+                        class="form-control"
+                        autocomplete="username"
+                        placeholder="Ingrese usuario">
+
+                </div>
+
+
+                <div class="col-md-6">
+
+                    <label
+                        for="passwordSinoptico"
+                        class="form-label">
+
+                        Contrase?a
+
+                    </label>
+
+                    <div class="input-group">
+
+                        <input
+                            type="password"
+                            id="passwordSinoptico"
+                            class="form-control"
+                            autocomplete="current-password"
+                            placeholder="Ingrese contrase?a">
+
+                        <button
+                            type="button"
+                            id="btnMostrarPasswordSinoptico"
+                            class="btn btn-outline-secondary"
+                            title="Mostrar u ocultar contrase?a">
+
+                            <i class="bi bi-eye-fill"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="d-flex flex-wrap gap-3 mt-4">
+
+                <button
+                    type="button"
+                    id="btnGuardarSinoptico"
+                    class="btn btn-dark">
+
+                    <i class="bi bi-floppy-fill"></i>
+
+                    Guardar credencial
+
+                </button>
+
+
+                <div
+                    id="estadoSinoptico"
+                    class="d-flex align-items-center">
+
+                    <span class="badge text-bg-secondary">
+
+                        Sin configurar
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="mt-3">
+
+                <small class="text-muted">
+
+                    La contrase?a no se mostrar? nuevamente
+                    despu?s de guardarla. Cuando cambie la
+                    contrase?a del supervisor, actual?cela
+                    desde esta secci?n.
+
+                </small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
 
 <!-- ===================================================== -->
 <!-- PANEL DE ESTADO -->
