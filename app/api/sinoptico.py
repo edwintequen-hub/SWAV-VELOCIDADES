@@ -98,29 +98,6 @@ def descargar_r16(
         "%H:%M"
     )
 
-    bridge = (
-        Path(__file__)
-        .resolve()
-        .parents[2]
-        /
-        "backend"
-        /
-        "sinoptico_bridge"
-        /
-        "SinopticoBridge.exe"
-    )
-
-    if not bridge.exists():
-
-        raise HTTPException(
-            status_code=500,
-            detail=(
-                "No existe "
-                "SinopticoBridge.exe: "
-                + str(bridge)
-            )
-        )
-
     # =====================================================
     # CREDENCIAL SINOPTICO ACTIVA
     # =====================================================

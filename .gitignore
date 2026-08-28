@@ -115,3 +115,31 @@ uploads/
 # Backend auxiliar / bridge Windows
 backend/
 
+
+# =========================================================
+# SWAV - SECRETOS Y ARCHIVOS LOCALES
+# =========================================================
+.sinoptico_reporte_secret.tmp
+.swav_bridge_token.tmp
+
+# Pruebas temporales Sinoptico
+ExtraerSecreto.cs
+ExtraerSecreto.exe
+Probe*.cs
+PRUEBA_BRIDGE_HTTP_*.csv
+probar_login_sinoptico_python.py
+probar_r16_python_directo.py
+
+# Archivos temporales / diagnostico
+dashboard_actual.json
+-ErrorAction
+0
+
+# Backups de desarrollo
+*_BACKUP_*.py
+*_PRE_PRUEBAS_*.py
+
+# Descargas R1.6 generadas
+backend/uploads/r16_directo/
+backend/uploads/r16_remoto/
+

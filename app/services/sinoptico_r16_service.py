@@ -1,8 +1,15 @@
 ﻿import json
+import os
 import subprocess
 import tempfile
 import time
 from pathlib import Path
+
+import requests
+
+from app.services.sinoptico_directo_service import (
+    SinopticoDirectoService,
+)
 
 
 class SinopticoR16Service:
@@ -11,7 +18,9 @@ class SinopticoR16Service:
         self,
         max_intentos=3,
         espera_reintento=3,
+        modo_remoto=None,
     ):
+
         self.root = (
             Path(__file__)
             .resolve()
@@ -37,8 +46,51 @@ class SinopticoR16Service:
             espera_reintento
         )
 
+        self.bridge_url = str(
+            os.getenv(
+                "SWAV_BRIDGE_URL",
+                ""
+            )
+        ).strip().rstrip("/")
 
-    def _ejecutar_bridge(
+        self.bridge_token = str(
+            os.getenv(
+                "SWAV_BRIDGE_TOKEN",
+                ""
+            )
+        ).strip()
+
+        self.sinoptico_report_secret = str(
+            os.getenv(
+                "SWAV_SINOPTICO_REPORT_SECRET",
+                ""
+            )
+        ).strip()
+
+        self.modo_directo = bool(
+            self.sinoptico_report_secret
+        )
+
+        if modo_remoto is None:
+
+            self.modo_remoto = bool(
+                self.bridge_url
+                and
+                self.bridge_token
+            )
+
+        else:
+
+            self.modo_remoto = bool(
+                modo_remoto
+            )
+
+
+    # ======================================================
+    # BRIDGE LOCAL WINDOWS
+    # ======================================================
+
+    def _ejecutar_bridge_local(
         self,
         usuario,
         unidad,
@@ -46,17 +98,20 @@ class SinopticoR16Service:
         hora_desde,
         hora_hasta,
     ):
+
         with tempfile.NamedTemporaryFile(
             mode="w+",
             encoding="utf-8",
             suffix=".json",
             delete=False,
         ) as temporal:
+
             temporal_path = Path(
                 temporal.name
             )
 
         try:
+
             with open(
                 temporal_path,
                 "w",
@@ -78,12 +133,7 @@ class SinopticoR16Service:
                         self.bridge_dir
                     ),
                     stdout=salida,
-
-                    # IMPORTANTE:
-                    # capture_output=True fue descartado
-                    # porque produjo timeout con este Bridge.
                     stderr=None,
-
                     timeout=120,
                     check=False,
                 )
@@ -103,13 +153,172 @@ class SinopticoR16Service:
             )
 
         finally:
+
             try:
+
                 temporal_path.unlink(
                     missing_ok=True
                 )
+
             except Exception:
+
                 pass
 
+
+    # ======================================================
+    # BRIDGE REMOTO HTTPS
+    # ======================================================
+
+    def _ejecutar_bridge_remoto(
+        self,
+        usuario,
+        unidad,
+        fecha,
+        hora_desde,
+        hora_hasta,
+    ):
+
+        if not self.bridge_url:
+
+            raise RuntimeError(
+                "SWAV_BRIDGE_URL no configurado"
+            )
+
+        if not self.bridge_token:
+
+            raise RuntimeError(
+                "SWAV_BRIDGE_TOKEN no configurado"
+            )
+
+        url = (
+            self.bridge_url
+            + "/r16download"
+        )
+
+        payload = {
+            "usuario": usuario,
+            "unidad": unidad,
+            "fecha": str(fecha),
+            "hora_desde": str(hora_desde),
+            "hora_hasta": str(hora_hasta),
+        }
+
+        headers = {
+            "X-SWAV-TOKEN":
+                self.bridge_token
+        }
+
+        respuesta = requests.post(
+            url,
+            json=payload,
+            headers=headers,
+            timeout=180,
+        )
+
+        if respuesta.status_code != 200:
+
+            raise RuntimeError(
+                "Bridge remoto fallo. "
+                f"HTTP={respuesta.status_code} "
+                f"respuesta={respuesta.text[:500]!r}"
+            )
+
+        if len(respuesta.content) < 1000:
+
+            raise RuntimeError(
+                "Bridge remoto devolvio "
+                "archivo demasiado pequeno: "
+                f"{len(respuesta.content)} bytes"
+            )
+
+        unidad_header = str(
+            respuesta.headers.get(
+                "X-SWAV-UNIDAD",
+                ""
+            )
+        ).strip().upper()
+
+        validado_header = str(
+            respuesta.headers.get(
+                "X-SWAV-VALIDADO",
+                ""
+            )
+        ).strip().lower()
+
+        if unidad_header and (
+            unidad_header != unidad
+        ):
+
+            raise RuntimeError(
+                "Bridge remoto devolvio "
+                f"unidad {unidad_header}, "
+                f"se esperaba {unidad}"
+            )
+
+        if validado_header != "true":
+
+            raise RuntimeError(
+                "Bridge remoto devolvio "
+                "archivo no validado"
+            )
+
+        carpeta_temporal = (
+            self.root
+            / "backend"
+            / "uploads"
+            / "r16_remoto"
+        )
+
+        carpeta_temporal.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        nombre = (
+            f"R16_{unidad}_"
+            f"{str(fecha).replace('/', '-')}_"
+            f"{str(hora_desde).replace(':', '')}_"
+            f"{str(hora_hasta).replace(':', '')}.csv"
+        )
+
+        archivo = (
+            carpeta_temporal
+            / nombre
+        )
+
+        archivo.write_bytes(
+            respuesta.content
+        )
+
+        if not archivo.exists():
+
+            raise RuntimeError(
+                "No fue posible guardar "
+                "el R1.6 remoto"
+            )
+
+        if archivo.stat().st_size < 1000:
+
+            raise RuntimeError(
+                "R1.6 remoto guardado "
+                "con tamano invalido"
+            )
+
+        return {
+            "ok": True,
+            "validado": True,
+            "archivo": str(
+                archivo.resolve()
+            ),
+            "modo": "REMOTO",
+            "bytes":
+                archivo.stat().st_size,
+        }
+
+
+    # ======================================================
+    # DESCARGA PRINCIPAL
+    # ======================================================
 
     def descargar(
         self,
@@ -119,6 +328,7 @@ class SinopticoR16Service:
         hora_desde,
         hora_hasta,
     ):
+
         usuario = str(
             usuario or ""
         ).strip()
@@ -140,6 +350,7 @@ class SinopticoR16Service:
         ).strip()
 
         if not usuario:
+
             raise RuntimeError(
                 "Usuario Sinoptico vacio"
             )
@@ -148,11 +359,58 @@ class SinopticoR16Service:
             "U8",
             "U9",
         ):
+
             raise RuntimeError(
-                f"Unidad no soportada: {unidad}"
+                f"Unidad no soportada: "
+                f"{unidad}"
             )
 
+
+        # ==================================================
+        # MODO DIRECTO PYTHON
+        # ==================================================
+
+        if self.modo_directo:
+
+            servicio_directo = (
+                SinopticoDirectoService(
+                    secreto=self.sinoptico_report_secret,
+                    timeout=90,
+                )
+            )
+
+            return servicio_directo.descargar(
+                usuario=usuario,
+                unidad=unidad,
+                fecha=fecha,
+                hora_desde=hora_desde,
+                hora_hasta=hora_hasta,
+            )
+
+
+        # ==================================================
+        # MODO REMOTO
+        # ==================================================
+
+        if self.modo_remoto:
+
+            return (
+                self._ejecutar_bridge_remoto(
+                    usuario=usuario,
+                    unidad=unidad,
+                    fecha=fecha,
+                    hora_desde=hora_desde,
+                    hora_hasta=hora_hasta,
+                )
+            )
+
+
+        # ==================================================
+        # MODO LOCAL
+        # ==================================================
+
         if not self.bridge.exists():
+
             raise FileNotFoundError(
                 "No existe SinopticoBridge.exe: "
                 f"{self.bridge}"
@@ -164,6 +422,7 @@ class SinopticoR16Service:
             1,
             self.max_intentos + 1,
         ):
+
             print(
                 f"R1.6 SINOPTICO - "
                 f"INTENTO {intento}/"
@@ -171,8 +430,9 @@ class SinopticoR16Service:
             )
 
             try:
+
                 returncode, stdout = (
-                    self._ejecutar_bridge(
+                    self._ejecutar_bridge_local(
                         usuario=usuario,
                         unidad=unidad,
                         fecha=fecha,
@@ -182,19 +442,24 @@ class SinopticoR16Service:
                 )
 
             except subprocess.TimeoutExpired:
+
                 ultimo_error = (
                     "Python excedio timeout "
                     "esperando al Bridge"
                 )
 
             else:
+
                 if returncode == 0:
+
                     try:
+
                         data = json.loads(
                             stdout
                         )
 
                     except json.JSONDecodeError as exc:
+
                         raise RuntimeError(
                             "Bridge no devolvio "
                             "JSON valido. "
@@ -202,6 +467,7 @@ class SinopticoR16Service:
                         ) from exc
 
                     if not data.get("ok"):
+
                         raise RuntimeError(
                             "Bridge devolvio "
                             "ok=false: "
@@ -214,6 +480,7 @@ class SinopticoR16Service:
                     if not data.get(
                         "validado"
                     ):
+
                         raise RuntimeError(
                             "Bridge devolvio "
                             "archivo R1.6 "
@@ -230,6 +497,7 @@ class SinopticoR16Service:
                     )
 
                     if not archivo.exists():
+
                         raise RuntimeError(
                             "Bridge reporto "
                             "archivo inexistente: "
@@ -240,6 +508,7 @@ class SinopticoR16Service:
                         archivo.stat().st_size
                         < 1000
                     ):
+
                         raise RuntimeError(
                             "Archivo R1.6 "
                             "demasiado pequeno: "
@@ -255,6 +524,8 @@ class SinopticoR16Service:
                         intento
                     )
 
+                    data["modo"] = "LOCAL"
+
                     return data
 
                 ultimo_error = (
@@ -263,8 +534,6 @@ class SinopticoR16Service:
                     f"stdout={stdout!r}"
                 )
 
-                # Solo reintentamos errores
-                # transitorios de red/timeout.
                 texto_error = (
                     stdout or ""
                 ).lower()
@@ -278,6 +547,7 @@ class SinopticoR16Service:
                 )
 
                 if not es_timeout:
+
                     raise RuntimeError(
                         ultimo_error
                     )
@@ -286,6 +556,7 @@ class SinopticoR16Service:
                 intento
                 < self.max_intentos
             ):
+
                 print(
                     "Timeout Sinoptico. "
                     f"Reintentando en "
@@ -303,3 +574,5 @@ class SinopticoR16Service:
             f"{self.max_intentos} intentos. "
             f"Ultimo error: {ultimo_error}"
         )
+
+
