@@ -7,6 +7,7 @@ API de integracion con Sinoptico
 
 from datetime import datetime
 from pathlib import Path
+import os
 import json
 import subprocess
 
@@ -102,37 +103,71 @@ def descargar_r16(
     # CREDENCIAL SINOPTICO ACTIVA
     # =====================================================
 
-    credencial = (
-        db.query(CredencialSinoptico)
-        .filter(
-            CredencialSinoptico.activo == True
+    # =====================================================
+    # CREDENCIAL SINOPTICO
+    #
+    # PRIORIDAD:
+    # 1. Variables de entorno (Render / produccion)
+    # 2. Base de datos (local / configuracion)
+    # =====================================================
+
+    usuario_env = str(
+        os.getenv(
+            "SWAV_SINOPTICO_USER",
+            ""
         )
-        .order_by(
-            CredencialSinoptico.id.desc()
+    ).strip()
+
+    password_env = str(
+        os.getenv(
+            "SWAV_SINOPTICO_PASSWORD",
+            ""
         )
-        .first()
     )
 
-    if not credencial:
+    if usuario_env and password_env:
 
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "No existe una credencial "
-                "Sinoptico activa. "
-                "Configure usuario y clave "
-                "en Configuracion."
+        usuario_sinoptico = usuario_env
+        password_sinoptico = password_env
+
+    else:
+
+        credencial = (
+            db.query(CredencialSinoptico)
+            .filter(
+                CredencialSinoptico.activo == True
+            )
+            .order_by(
+                CredencialSinoptico.id.desc()
+            )
+            .first()
+        )
+
+        if not credencial:
+
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "No existe una credencial "
+                    "Sinoptico activa y tampoco "
+                    "estan configuradas "
+                    "SWAV_SINOPTICO_USER / "
+                    "SWAV_SINOPTICO_PASSWORD."
+                )
+            )
+
+        usuario_sinoptico = (
+            str(
+                credencial.usuario or ""
+            )
+            .strip()
+        )
+
+        password_sinoptico = (
+            str(
+                credencial.password or ""
             )
         )
-
-    usuario_sinoptico = (
-        str(credencial.usuario or "")
-        .strip()
-    )
-
-    password_sinoptico = (
-        str(credencial.password or "")
-    )
 
     if (
         not usuario_sinoptico
@@ -146,7 +181,6 @@ def descargar_r16(
                 "esta incompleta."
             )
         )
-
 
     # =====================================================
     # 1. DESCARGAR R1.6 MEDIANTE SERVICE CERTIFICADO
@@ -722,4 +756,7 @@ def login_sinoptico(
 
 
         clave = None
+
+
+
 
