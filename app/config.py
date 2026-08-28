@@ -1,10 +1,11 @@
-"""
+﻿"""
 =========================================================
 SWAV
-Configuración General
+ConfiguraciÃ³n General
 =========================================================
 """
 
+import os
 from pathlib import Path
 
 
@@ -33,12 +34,23 @@ DATABASE_FILE = DATABASE_DIR / "swav.db"
 
 # =========================================================
 # SQLALCHEMY
+#
+# LOCAL:
+#   SQLite
+#
+# PRODUCCION / RENDER:
+#   DATABASE_URL desde variable de entorno
 # =========================================================
 
-DATABASE_URL = f"sqlite:///{DATABASE_FILE}"
+DATABASE_URL = str(
+    os.getenv(
+        "DATABASE_URL",
+        f"sqlite:///{DATABASE_FILE}",
+    )
+).strip()
 
 # =========================================================
-# CATÁLOGOS
+# CATÃLOGOS
 # =========================================================
 
 INFO_XLSX = CATALOGOS_DIR / "INFO.xlsx"
@@ -86,7 +98,7 @@ CSV_HEADER_ROW = 12
 
 
 # =========================================================
-# PARÁMETROS DEL SISTEMA
+# PARÃMETROS DEL SISTEMA
 # =========================================================
 
 DURACION_MINIMA_DEFAULT = 20
@@ -105,11 +117,11 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 # =========================================================
-# APLICACIÓN
+# APLICACIÃ“N
 # =========================================================
 
 APP_NAME = "METROPOL"
 
 APP_VERSION = "2.0"
 
-APP_DESCRIPTION = "Sistema Web de Análisis de Velocidades"
+APP_DESCRIPTION = "Sistema Web de AnÃ¡lisis de Velocidades"

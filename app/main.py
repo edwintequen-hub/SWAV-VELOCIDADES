@@ -304,7 +304,8 @@ def health():
 
 
 # ==========================================================
-# DEBUG SQLITE
+# DEBUG BASE DE DATOS
+# Compatible SQLite / PostgreSQL
 # ==========================================================
 
 @app.get("/debug")
@@ -314,39 +315,31 @@ def debug():
 
     try:
 
-        tablas = db.execute(
+        from sqlalchemy import inspect
 
-            text(
+        inspector = inspect(
+            db.bind
+        )
 
-                "SELECT name FROM sqlite_master WHERE type='table'"
-
-            )
-
-        ).fetchall()
+        tablas = inspector.get_table_names()
 
         total = db.execute(
-
             text(
-
                 "SELECT COUNT(*) FROM expediciones"
-
             )
-
         ).scalar()
 
         return {
-
             "database": str(db.bind.url),
-
-            "tablas": [t[0] for t in tablas],
-
+            "tablas": tablas,
             "expediciones": total,
-
         }
 
     finally:
 
         db.close()
+
+
 
 
 # ==========================================================

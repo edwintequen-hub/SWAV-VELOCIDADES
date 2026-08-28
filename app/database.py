@@ -1,6 +1,6 @@
-"""
+﻿"""
 =========================================================
-SWAV - Sistema Web de Análisis de Velocidades
+SWAV - Sistema Web de AnÃ¡lisis de Velocidades
 Base de Datos
 =========================================================
 """
@@ -16,13 +16,26 @@ from app.config import DATABASE_URL
 # ENGINE
 # ==========================================================
 
+# ==========================================================
+# ENGINE
+# Compatible SQLite / PostgreSQL
+# ==========================================================
+
+connect_args = {}
+
+if DATABASE_URL.startswith(
+    "sqlite"
+):
+    connect_args = {
+        "check_same_thread": False
+    }
+
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    echo=False,          # Cambiar a True para depuración SQL
+    connect_args=connect_args,
+    echo=False,
     future=True,
 )
-
 
 # ==========================================================
 # SESSION
