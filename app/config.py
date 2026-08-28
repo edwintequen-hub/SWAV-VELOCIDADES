@@ -49,6 +49,17 @@ DATABASE_URL = str(
     )
 ).strip()
 
+# Render entrega normalmente:
+# postgresql://usuario:password@host/database
+#
+# Forzamos psycopg v3 para PostgreSQL.
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgresql://",
+        "postgresql+psycopg://",
+        1,
+    )
+
 # =========================================================
 # CATÃLOGOS
 # =========================================================
