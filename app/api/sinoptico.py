@@ -760,3 +760,53 @@ def login_sinoptico(
 
 
 
+
+# =========================================================
+# DIAGNOSTICO SECRETO SINOPTICO
+# NO EXPONE EL VALOR DEL SECRETO
+# =========================================================
+
+@router.get("/secret-debug")
+def secret_debug():
+
+    import os
+
+    valor_crudo = os.getenv(
+        "SWAV_SINOPTICO_REPORT_SECRET",
+        ""
+    )
+
+    valor_trim = str(
+        valor_crudo or ""
+    ).strip()
+
+    servicio = SinopticoR16Service(
+        max_intentos=1,
+        espera_reintento=1,
+    )
+
+    return {
+        "variable_presente": bool(
+            valor_crudo
+        ),
+        "largo_crudo": len(
+            valor_crudo
+        ),
+        "largo_trim": len(
+            valor_trim
+        ),
+        "tiene_espacio_inicio": (
+            len(valor_crudo)
+            !=
+            len(valor_crudo.lstrip())
+        ),
+        "tiene_espacio_fin": (
+            len(valor_crudo)
+            !=
+            len(valor_crudo.rstrip())
+        ),
+        "modo_directo": servicio.modo_directo,
+        "largo_service_secret": len(
+            servicio.sinoptico_report_secret
+        ),
+    }
