@@ -6,6 +6,7 @@ API de integracion con Sinoptico
 """
 
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from pathlib import Path
 import os
 import json
@@ -87,7 +88,7 @@ def descargar_r16(
             )
         )
 
-    ahora = datetime.now()
+    ahora = datetime.now(ZoneInfo("America/Santiago"))
 
     fecha = ahora.strftime(
         "%d/%m/%Y"
