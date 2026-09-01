@@ -1,4 +1,4 @@
-﻿// ======================================================
+// ======================================================
 // SWAV
 // MATRIZ OPERACIONAL V3
 // ======================================================
@@ -3272,7 +3272,7 @@ function cargarRegistro(
                             <span>
 
                                 ${Number(encontrado.periodo)}
-                                Â· ${periodoARango(encontrado.periodo)}
+                                \u00B7 ${periodoARango(encontrado.periodo)}
 
                             </span>
 
