@@ -2636,55 +2636,61 @@ function cargarRegistro(
     // No se recalculan.
     // ==================================================
 
-    const velocidadesPPUTexto =
-        ppus.length > 0
+    // ==================================================
+    // PROMEDIOS PPU DEL PERIODO - PRESENTACION
+    // ==================================================
 
-            ? ppus
-                .map(
-                    ppu =>
+    const velocidadesValidas =
+        ppus
+            .filter(
+                ppu =>
+                    ppu.velocidad_real !== null &&
+                    ppu.velocidad_real !== undefined &&
+                    ppu.velocidad_real !== ""
+            )
+            .map(ppu => Number(ppu.velocidad_real))
+            .filter(valor => Number.isFinite(valor));
 
-                        `${
-                            ppu.patente ?? "PPU"
-                        }: ${
-                            ppu.velocidad_real !== null &&
-                            ppu.velocidad_real !== undefined
+    const reduccionesValidas =
+        ppus
+            .filter(
+                ppu =>
+                    ppu.reduccion !== null &&
+                    ppu.reduccion !== undefined &&
+                    ppu.reduccion !== ""
+            )
+            .map(ppu => Number(ppu.reduccion))
+            .filter(valor => Number.isFinite(valor));
 
-                                ? Number(
-                                    ppu.velocidad_real
-                                ).toFixed(1) + " km/h"
 
-                                : "-"
-                        }`
+    const velocidadPromedioPPU =
+        velocidadesValidas.length > 0
+
+            ? (
+                velocidadesValidas.reduce(
+                    (total, valor) => total + valor,
+                    0
                 )
-                .join(" | ")
+                /
+                velocidadesValidas.length
+              ).toFixed(1) + " km/h"
 
             : "-";
 
 
-    const reduccionesPPUTexto =
-        ppus.length > 0
+    const reduccionPromedioPPU =
+        reduccionesValidas.length > 0
 
-            ? ppus
-                .map(
-                    ppu =>
-
-                        `${
-                            ppu.patente ?? "PPU"
-                        }: ${
-                            ppu.reduccion !== null &&
-                            ppu.reduccion !== undefined
-
-                                ? Number(
-                                    ppu.reduccion
-                                ).toFixed(2) + " %"
-
-                                : "-"
-                        }`
+            ? (
+                reduccionesValidas.reduce(
+                    (total, valor) => total + valor,
+                    0
                 )
-                .join(" | ")
+                /
+                reduccionesValidas.length
+              ).toFixed(2) + " %"
 
             : "-";
-
 
     let htmlPPU =
         "";
@@ -3150,12 +3156,12 @@ function cargarRegistro(
                         <div>
 
                             <b>
-                                Velocidades Reales del Período
+                                Velocidad Real Promedio
                             </b>
 
                             <span>
 
-                                ${velocidadesPPUTexto}
+                                ${velocidadPromedioPPU}
 
                             </span>
 
@@ -3214,7 +3220,7 @@ function cargarRegistro(
                         <div>
 
                             <b>
-                                Reducciones del Período
+                                Reducción Promedio
                             </b>
 
                             <span class="${
@@ -3225,7 +3231,7 @@ function cargarRegistro(
                                     : ""
                             }">
 
-                                ${reduccionesPPUTexto}
+                                ${reduccionPromedioPPU}
 
                             </span>
 
@@ -3420,6 +3426,9 @@ function cargarRegistro(
     `;
 
 }
+
+
+
 
 
 
