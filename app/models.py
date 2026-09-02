@@ -1,4 +1,4 @@
-﻿"""
+"""
 =========================================================
 SWAV - Sistema Web de AnÃ¡lisis de Velocidades
 Modelos de Base de Datos
@@ -141,6 +141,67 @@ class CredencialSinoptico(Base):
         server_default=func.now(),
         onupdate=func.now()
     )
+
+
+# =========================================================
+# CONFIGURACION AUTOMATICA R1.6
+# =========================================================
+
+class ConfiguracionR16Automatica(Base):
+
+    __tablename__ = "configuracion_r16_automatica"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    activo = Column(
+        Boolean,
+        default=True,
+        nullable=False
+    )
+
+    intervalo_minutos = Column(
+        Integer,
+        default=30,
+        nullable=False
+    )
+
+    actualizar_u8 = Column(
+        Boolean,
+        default=True,
+        nullable=False
+    )
+
+    actualizar_u9 = Column(
+        Boolean,
+        default=True,
+        nullable=False
+    )
+
+    ultima_ejecucion = Column(
+        DateTime,
+        nullable=True
+    )
+
+    proxima_ejecucion = Column(
+        DateTime,
+        nullable=True
+    )
+
+    ultima_respuesta = Column(
+        String(1000),
+        nullable=True
+    )
+
+    fecha_actualizacion = Column(
+        DateTime,
+        server_default=func.now(),
+        onupdate=func.now()
+    )
+
 
 
 # =========================================================

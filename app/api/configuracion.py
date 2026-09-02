@@ -6,6 +6,8 @@ API Configuración
 """
 
 from pathlib import Path
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import shutil
 
 from fastapi import APIRouter
@@ -19,6 +21,7 @@ from app.database import SessionLocal
 from app.models import (
     HistorialImportacion,
     CredencialSinoptico,
+    ConfiguracionR16Automatica,
 )
 
 #--------------------------------------------------------
@@ -36,6 +39,11 @@ from app.importadores.importar_anexo4 import (
 )
 
 from app.services.procesador import ProcesadorSWAV
+
+from app.services.coordinador_operaciones import (
+    coordinador_swav,
+    OperacionSWAVEnCurso
+)
 
 
 router = APIRouter(
@@ -123,6 +131,8 @@ async def importar_info(
 
 async def importar_anexo3(
 
+    unidad: str,
+
     archivo: UploadFile = File(...)
 
 ):
@@ -133,7 +143,46 @@ async def importar_anexo3(
 
         ruta = guardar_archivo(archivo)
 
-        registros = ImportadorAnexo3(db).importar(ruta)
+        unidad = (
+            str(unidad)
+            .strip()
+            .upper()
+        )
+
+        if unidad not in {
+            "U8",
+            "U9"
+        }:
+
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Unidad invalida para Anexo 3. "
+                    "Use U8 o U9."
+                )
+            )
+
+        try:
+
+            with coordinador_swav.operacion(
+                "ANEXO 3 " + unidad,
+                esperar=False
+            ):
+
+                registros = (
+                    ImportadorAnexo3(db)
+                    .importar(
+                        ruta,
+                        unidad_objetivo=unidad
+                    )
+                )
+
+        except OperacionSWAVEnCurso as exc:
+
+            raise HTTPException(
+                status_code=409,
+                detail=str(exc)
+            )
 
         return {
 
@@ -166,6 +215,8 @@ async def importar_anexo3(
 
 async def importar_anexo4(
 
+    unidad: str,
+
     archivo: UploadFile = File(...)
 
 ):
@@ -176,7 +227,32 @@ async def importar_anexo4(
 
         ruta = guardar_archivo(archivo)
 
-        registros = ImportadorAnexo4(db).importar(ruta)
+        unidad = (
+            str(unidad)
+            .strip()
+            .upper()
+        )
+
+        if unidad not in {
+            "U8",
+            "U9"
+        }:
+
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Unidad invalida para Anexo 4. "
+                    "Use U8 o U9."
+                )
+            )
+
+        registros = (
+            ImportadorAnexo4(db)
+            .importar(
+                ruta,
+                unidad_objetivo=unidad
+            )
+        )
 
         return {
 
@@ -572,6 +648,240 @@ def guardar_credencial_sinoptico(
         db.close()
 
 
+# =========================================================
+# CONFIGURACION AUTOMATICA R1.6
+# =========================================================
+
+class ConfiguracionR16AutomaticaRequest(BaseModel):
+
+    activo: bool = True
+    intervalo_minutos: int = 30
+    actualizar_u8: bool = True
+    actualizar_u9: bool = True
+
+
+def obtener_o_crear_configuracion_r16_auto(
+    db
+):
+
+    configuracion = (
+        db.query(
+            ConfiguracionR16Automatica
+        )
+        .order_by(
+            ConfiguracionR16Automatica.id.asc()
+        )
+        .first()
+    )
+
+    if configuracion is None:
+
+        configuracion = (
+            ConfiguracionR16Automatica(
+                activo=True,
+                intervalo_minutos=30,
+                actualizar_u8=True,
+                actualizar_u9=True,
+            )
+        )
+
+        db.add(
+            configuracion
+        )
+
+        db.commit()
+
+        db.refresh(
+            configuracion
+        )
+
+    return configuracion
+
+
+@router.get("/r16-auto")
+def obtener_configuracion_r16_auto():
+
+    db = SessionLocal()
+
+    try:
+
+        configuracion = (
+            obtener_o_crear_configuracion_r16_auto(
+                db
+            )
+        )
+
+        return {
+            "activo":
+                bool(configuracion.activo),
+
+            "intervalo_minutos":
+                configuracion.intervalo_minutos,
+
+            "actualizar_u8":
+                bool(configuracion.actualizar_u8),
+
+            "actualizar_u9":
+                bool(configuracion.actualizar_u9),
+
+            "ultima_ejecucion":
+                (
+                    configuracion
+                    .ultima_ejecucion
+                    .isoformat()
+                    if configuracion.ultima_ejecucion
+                    else None
+                ),
+
+            "proxima_ejecucion":
+                (
+                    configuracion
+                    .proxima_ejecucion
+                    .isoformat()
+                    if configuracion.proxima_ejecucion
+                    else None
+                ),
+
+            "ultima_respuesta":
+                configuracion.ultima_respuesta,
+
+            "fecha_actualizacion":
+                (
+                    configuracion
+                    .fecha_actualizacion
+                    .isoformat()
+                    if configuracion.fecha_actualizacion
+                    else None
+                ),
+        }
+
+    finally:
+
+        db.close()
+
+
+@router.post("/r16-auto")
+def guardar_configuracion_r16_auto(
+    datos: ConfiguracionR16AutomaticaRequest
+):
+
+    if (
+        datos.intervalo_minutos < 5
+        or
+        datos.intervalo_minutos > 1440
+    ):
+
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "El intervalo debe estar entre "
+                "5 y 1440 minutos."
+            )
+        )
+
+    if not (
+        datos.actualizar_u8
+        or
+        datos.actualizar_u9
+    ):
+
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Debe seleccionar al menos "
+                "una unidad: U8 o U9."
+            )
+        )
+
+    db = SessionLocal()
+
+    try:
+
+        configuracion = (
+            obtener_o_crear_configuracion_r16_auto(
+                db
+            )
+        )
+
+        configuracion.activo = (
+            bool(datos.activo)
+        )
+
+        configuracion.intervalo_minutos = (
+            int(datos.intervalo_minutos)
+        )
+
+        configuracion.actualizar_u8 = (
+            bool(datos.actualizar_u8)
+        )
+
+        configuracion.actualizar_u9 = (
+            bool(datos.actualizar_u9)
+        )
+
+        ahora_chile = (
+            datetime.now(
+                ZoneInfo("America/Santiago")
+            )
+            .replace(tzinfo=None)
+        )
+
+        if configuracion.activo:
+
+            configuracion.proxima_ejecucion = (
+                ahora_chile
+                + timedelta(
+                    minutes=int(
+                        datos.intervalo_minutos
+                    )
+                )
+            )
+
+        else:
+
+            configuracion.proxima_ejecucion = None
+
+        db.commit()
+
+        db.refresh(
+            configuracion
+        )
+
+        return {
+            "estado": "OK",
+            "activo":
+                bool(configuracion.activo),
+
+            "intervalo_minutos":
+                configuracion.intervalo_minutos,
+
+            "actualizar_u8":
+                bool(configuracion.actualizar_u8),
+
+            "actualizar_u9":
+                bool(configuracion.actualizar_u9),
+        }
+
+    except HTTPException:
+
+        db.rollback()
+        raise
+
+    except Exception as exc:
+
+        db.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(exc)
+        )
+
+    finally:
+
+        db.close()
+
+
+
 #=========================================================
 # R1.6
 #=========================================================
@@ -590,19 +900,61 @@ async def importar_r16(
 
     try:
 
-        ruta = guardar_archivo(archivo)
-
-        resultado = ProcesadorSWAV(db).procesar(
-
-            archivo=ruta,
-
-            unidad=unidad
-
+        unidad = (
+            str(unidad)
+            .strip()
+            .upper()
         )
+
+        if unidad not in {
+            "U8",
+            "U9"
+        }:
+
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Unidad invalida para R1.6. "
+                    "Use U8 o U9."
+                )
+            )
+
+        ruta = guardar_archivo(
+            archivo
+        )
+
+        try:
+
+            with coordinador_swav.operacion(
+                "R1.6 MANUAL " + unidad,
+                esperar=False
+            ):
+
+                resultado = (
+                    ProcesadorSWAV(db)
+                    .procesar(
+                        archivo=ruta,
+                        unidad=unidad
+                    )
+                )
+
+        except OperacionSWAVEnCurso as exc:
+
+            raise HTTPException(
+                status_code=409,
+                detail=str(exc)
+            )
 
         return resultado
 
+    except HTTPException:
+
+        db.rollback()
+        raise
+
     except Exception as e:
+
+        db.rollback()
 
         import traceback
         traceback.print_exc()
@@ -615,3 +967,4 @@ async def importar_r16(
     finally:
 
         db.close()
+

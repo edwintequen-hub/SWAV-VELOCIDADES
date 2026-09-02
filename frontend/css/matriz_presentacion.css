@@ -152,3 +152,562 @@
         padding-right: 12px !important;
     }
 }
+
+/* =========================================================
+   SWAV - AJUSTE VISUAL MATRIZ
+   SOLO PRESENTACION
+   NO MODIFICA ESTRUCTURA NI FUNCIONALIDAD
+   ========================================================= */
+
+/* ENCABEZADO PRINCIPAL */
+
+#tablaMatriz > thead > tr > th {
+
+    background: #e8eef5 !important;
+
+    color: #18324a !important;
+
+    font-weight: 700 !important;
+
+}
+
+
+/* CUERPO DE LA MATRIZ */
+
+#tablaMatriz > tbody > tr > td {
+
+    color: #243746;
+
+    font-weight: 600 !important;
+
+}
+
+
+/* SERVICIO USUARIO / SERVICIO EMPRESA */
+
+#tablaMatriz > tbody > tr > td:first-child,
+#tablaMatriz > tbody > tr > td:nth-child(2) {
+
+    color: #16324a !important;
+
+    font-weight: 700 !important;
+
+}
+
+
+/* NUMERO DEL PERIODO */
+
+#tablaMatriz .periodo-numero {
+
+    color: #173b5e !important;
+
+    font-weight: 700 !important;
+
+}
+
+
+/* HORARIO DEL PERIODO */
+
+#tablaMatriz .periodo-hora {
+
+    color: #526779 !important;
+
+    font-weight: 600 !important;
+
+}
+
+
+/* =========================================================
+   SWAV - MATRIZ TABLA FINAL
+   SOLO PRESENTACION VISUAL
+   ========================================================= */
+
+#tablaMatriz {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+}
+
+/* =========================================================
+   ENCABEZADOS
+   ========================================================= */
+
+#tablaMatriz > thead > tr > th {
+
+    background: #dce8f4 !important;
+    color: #12324d !important;
+
+    font-size: 13px !important;
+    font-weight: 800 !important;
+
+    line-height: 1.15 !important;
+
+    padding: 5px 4px !important;
+
+    text-align: center !important;
+    vertical-align: middle !important;
+
+    border-color: #b7c8d8 !important;
+}
+
+/* =========================================================
+   CELDAS
+   ========================================================= */
+
+#tablaMatriz > tbody > tr > td {
+
+    font-size: 13px !important;
+    font-weight: 650 !important;
+
+    line-height: 1.12 !important;
+
+    padding: 4px 3px !important;
+
+    text-align: center !important;
+    vertical-align: middle !important;
+
+    border-color: #d0dbe5 !important;
+
+    color: #1d3345;
+}
+
+/* =========================================================
+   SERVICIOS
+   ========================================================= */
+
+#tablaMatriz > tbody > tr > td:first-child,
+#tablaMatriz > tbody > tr > td:nth-child(2) {
+
+    background: #f4f7fa !important;
+
+    color: #173650 !important;
+
+    font-weight: 800 !important;
+}
+
+/* =========================================================
+   PERIODOS
+   ========================================================= */
+
+#tablaMatriz .periodo-numero {
+
+    font-size: 13px !important;
+    font-weight: 800 !important;
+
+    color: #173a59 !important;
+
+    line-height: 1 !important;
+}
+
+#tablaMatriz .periodo-hora {
+
+    font-size: 9px !important;
+    font-weight: 600 !important;
+
+    color: #60788c !important;
+
+    line-height: 1.05 !important;
+}
+
+/* =========================================================
+   CELDAS SIN DATOS
+   ========================================================= */
+
+#tablaMatriz td:has(.sin-datos),
+#tablaMatriz td.sin-datos {
+
+    background: #f7f9fb !important;
+    color: #7d8c99 !important;
+}
+
+/* =========================================================
+   ESTADOS - TONOS MAS FRIOS Y VISIBLES
+   ========================================================= */
+
+#tablaMatriz .bg-success,
+#tablaMatriz td.bg-success {
+
+    background-color: #c9e8d0 !important;
+    color: #173a2a !important;
+}
+
+#tablaMatriz .bg-warning,
+#tablaMatriz td.bg-warning {
+
+    background-color: #f5e79d !important;
+    color: #4b410f !important;
+}
+
+#tablaMatriz .bg-danger,
+#tablaMatriz td.bg-danger {
+
+    background-color: #f3b6b6 !important;
+    color: #5d1b1b !important;
+}
+
+/* =========================================================
+   TEXTO INTERNO DE CELDAS OPERACIONALES
+   ========================================================= */
+
+#tablaMatriz .celda-matriz {
+
+    font-weight: 700 !important;
+}
+
+#tablaMatriz .celda-matriz strong {
+
+    font-weight: 800 !important;
+}
+
+
+/* =========================================================
+   SWAV - AJUSTE FINO MATRIZ
+   SOLO PRESENTACION
+   ========================================================= */
+
+/* Tabla un poco más compacta */
+
+#tablaMatriz > thead > tr > th {
+    padding: 4px 3px !important;
+}
+
+#tablaMatriz > tbody > tr > td {
+    padding: 3px 3px !important;
+}
+
+
+/* Mejor lectura del contenido operacional */
+
+#tablaMatriz .celda-matriz {
+    line-height: 1.08 !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+
+#tablaMatriz .celda-matriz strong {
+    font-size: 13px !important;
+    font-weight: 800 !important;
+}
+
+
+/* Separar visualmente indicador / reducción / velocidad */
+
+#tablaMatriz .celda-matriz > * {
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+
+/* Encabezado un poco más fuerte */
+
+#tablaMatriz > thead > tr > th {
+    background: #d2e1ef !important;
+    color: #102f49 !important;
+    border-color: #aebfce !important;
+}
+
+
+/* Verde más visible pero frío */
+
+#tablaMatriz .bg-success,
+#tablaMatriz td.bg-success {
+    background-color: #bfe3c8 !important;
+    color: #173a2a !important;
+}
+
+
+/* Amarillo más marcado, sin verse cálido en exceso */
+
+#tablaMatriz .bg-warning,
+#tablaMatriz td.bg-warning {
+    background-color: #efe39a !important;
+    color: #4a420f !important;
+}
+
+
+/* Rojo más visible */
+
+#tablaMatriz .bg-danger,
+#tablaMatriz td.bg-danger {
+    background-color: #efaaaa !important;
+    color: #541919 !important;
+}
+
+
+/* Celdas normales / sin datos más limpias */
+
+#tablaMatriz > tbody > tr > td:not(.bg-success):not(.bg-warning):not(.bg-danger) {
+    background-color: #f8fafc;
+}
+
+
+/* Servicios destacados */
+
+#tablaMatriz > tbody > tr > td:first-child,
+#tablaMatriz > tbody > tr > td:nth-child(2) {
+    background-color: #eef3f7 !important;
+    color: #16344d !important;
+    font-weight: 800 !important;
+}
+
+
+/* Horario del período más legible */
+
+#tablaMatriz .periodo-hora {
+    font-size: 9.5px !important;
+    color: #52697d !important;
+}
+
+
+/* =========================================================
+   SWAV - MATRIZ FINAL
+   COLORES OPERACIONALES + ENCABEZADO FIJO
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   ENCABEZADO FIJO AL HACER SCROLL
+   --------------------------------------------------------- */
+
+#tablaMatriz > thead {
+
+    position: sticky !important;
+    top: 0 !important;
+
+    z-index: 30 !important;
+}
+
+#tablaMatriz > thead > tr > th {
+
+    position: sticky !important;
+    top: 0 !important;
+
+    z-index: 31 !important;
+
+    background-color: #164f91 !important;
+    color: #ffffff !important;
+
+    font-weight: 800 !important;
+
+    border-color: #7fa5cc !important;
+}
+
+
+/* PRIMERAS DOS COLUMNAS FIJAS */
+
+#tablaMatriz > thead > tr > th:first-child {
+
+    left: 0 !important;
+    z-index: 34 !important;
+}
+
+#tablaMatriz > thead > tr > th:nth-child(2) {
+
+    left: 110px !important;
+    z-index: 34 !important;
+}
+
+#tablaMatriz > tbody > tr > td:first-child {
+
+    position: sticky !important;
+    left: 0 !important;
+
+    z-index: 20 !important;
+
+    background: #eef3f7 !important;
+}
+
+#tablaMatriz > tbody > tr > td:nth-child(2) {
+
+    position: sticky !important;
+    left: 110px !important;
+
+    z-index: 20 !important;
+
+    background: #eef3f7 !important;
+}
+
+
+/* ---------------------------------------------------------
+   COLORES OPERACIONALES
+   --------------------------------------------------------- */
+
+/* NORMAL / OK - VERDE */
+
+#tablaMatriz td.bg-success,
+#tablaMatriz .bg-success,
+#tablaMatriz td:has(.bg-success) {
+
+    background-color: #9fdaa9 !important;
+    color: #102d18 !important;
+}
+
+
+/* SIMPLE - AMARILLO */
+
+#tablaMatriz td.bg-warning,
+#tablaMatriz .bg-warning,
+#tablaMatriz td:has(.bg-warning) {
+
+    background-color: #ffd84d !important;
+    color: #332800 !important;
+}
+
+
+/* COMPLEJO - ROJO */
+
+#tablaMatriz td.bg-danger,
+#tablaMatriz .bg-danger,
+#tablaMatriz td:has(.bg-danger) {
+
+    background-color: #ff6262 !important;
+    color: #2f0909 !important;
+}
+
+
+/* ---------------------------------------------------------
+   SI EL COLOR VIENE EN LA CELDA MATRIZ
+   --------------------------------------------------------- */
+
+#tablaMatriz td.celda-normal,
+#tablaMatriz td.estado-ok,
+#tablaMatriz td.normal {
+
+    background-color: #9fdaa9 !important;
+}
+
+#tablaMatriz td.celda-simple,
+#tablaMatriz td.estado-simple,
+#tablaMatriz td.simple {
+
+    background-color: #ffd84d !important;
+}
+
+#tablaMatriz td.celda-complejo,
+#tablaMatriz td.estado-complejo,
+#tablaMatriz td.complejo {
+
+    background-color: #ff6262 !important;
+}
+
+
+/* ---------------------------------------------------------
+   TEXTO OPERACIONAL
+   --------------------------------------------------------- */
+
+#tablaMatriz .celda-matriz,
+#tablaMatriz .celda-matriz * {
+
+    font-weight: 700 !important;
+}
+
+#tablaMatriz .celda-matriz strong {
+
+    font-weight: 800 !important;
+}
+
+
+/* ---------------------------------------------------------
+   SEMAFOROS SUPERIORES
+   --------------------------------------------------------- */
+
+.normal-resumen {
+
+    color: #137333 !important;
+    font-weight: 800 !important;
+}
+
+.simple-resumen {
+
+    color: #a06b00 !important;
+    font-weight: 800 !important;
+}
+
+.complejo-resumen {
+
+    color: #d71920 !important;
+    font-weight: 800 !important;
+}
+
+
+/* CIRCULOS DE SEMAFORO */
+
+.normal-resumen::before,
+.simple-resumen::before,
+.complejo-resumen::before {
+
+    content: "";
+    display: inline-block;
+
+    width: 11px;
+    height: 11px;
+
+    margin-right: 6px;
+
+    border-radius: 50%;
+
+    vertical-align: middle;
+}
+
+.normal-resumen::before {
+
+    background: #16a34a;
+}
+
+.simple-resumen::before {
+
+    background: #f4c20d;
+}
+
+.complejo-resumen::before {
+
+    background: #e32636;
+}
+
+
+/* ---------------------------------------------------------
+   PROMEDIO
+   --------------------------------------------------------- */
+
+#tablaMatriz > tbody > tr > td:last-child {
+
+    font-weight: 800 !important;
+    color: #153e72 !important;
+}
+
+
+/* ---------------------------------------------------------
+   CELDAS SIN INFORMACION
+   NO TAPAR CELDAS COLOREADAS
+   --------------------------------------------------------- */
+
+#tablaMatriz > tbody > tr > td:not(:has(.bg-success))
+:not(:has(.bg-warning))
+:not(:has(.bg-danger)) {
+
+    color: #243746;
+}
+
+
+/* =========================================================
+   SWAV - ENCABEZADO MATRIZ
+   FORZAR TODO EL TEXTO A BLANCO
+   ========================================================= */
+
+#tablaMatriz > thead > tr > th,
+#tablaMatriz > thead > tr > th *,
+#tablaMatriz > thead .periodo-numero,
+#tablaMatriz > thead .periodo-hora {
+
+    color: #ffffff !important;
+    font-weight: 800 !important;
+}
+
+
+/* Mantener encabezado azul institucional */
+
+#tablaMatriz > thead > tr > th {
+
+    background-color: #164f91 !important;
+}
+

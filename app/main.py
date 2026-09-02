@@ -1,4 +1,4 @@
-﻿"""
+"""
 =========================================================
 SWAV - Sistema Web de AnÃ¡lisis de Velocidades
 AplicaciÃ³n Principal
@@ -6,6 +6,8 @@ AplicaciÃ³n Principal
 """
 
 from pathlib import Path
+import threading
+import time
 
 from fastapi import FastAPI, Depends
 from fastapi.responses import FileResponse
@@ -20,6 +22,10 @@ from app.database import Base
 from app.database import engine
 from app.database import SessionLocal
 from sqlalchemy.orm import Session
+
+from app.services.r16_scheduler import (
+    scheduler_r16_tick,
+)
 
 # Modelos
 import app.models
@@ -98,9 +104,48 @@ print("=" * 80)
 Base.metadata.create_all(bind=engine)
 
 
+
+# ==========================================================
+# SCHEDULER AUTOMATICO R1.6
+# ==========================================================
+
+_scheduler_r16_iniciado = False
+
+
+def ejecutar_scheduler_r16():
+
+    print(
+        "[R16 AUTO] Hilo scheduler iniciado"
+    )
+
+    while True:
+
+        try:
+
+            scheduler_r16_tick()
+
+        except Exception as exc:
+
+            print(
+                "[R16 AUTO] Error scheduler:",
+                exc
+            )
+
+        # El hilo consulta cada 10 segundos si corresponde
+        # iniciar una nueva ejecucion R1.6.
+        #
+        # IMPORTANTE:
+        # esto NO cambia el intervalo configurado por el usuario.
+        # El intervalo real (5, 30, 60 minutos, etc.)
+        # sigue almacenado en configuracion_r16_automatica.
+
+        time.sleep(10)
+
+
 # ==========================================================
 # FASTAPI
 # ==========================================================
+
 
 app = FastAPI(
 
@@ -111,6 +156,34 @@ app = FastAPI(
     version=APP_VERSION,
 
 )
+
+@app.on_event("startup")
+def iniciar_scheduler_r16():
+
+    global _scheduler_r16_iniciado
+
+    if _scheduler_r16_iniciado:
+
+        print(
+            "[R16 AUTO] Scheduler ya estaba iniciado"
+        )
+
+        return
+
+    hilo = threading.Thread(
+        target=ejecutar_scheduler_r16,
+        name="swav-r16-auto",
+        daemon=True
+    )
+
+    hilo.start()
+
+    _scheduler_r16_iniciado = True
+
+    print(
+        "[R16 AUTO] Scheduler activado"
+    )
+
 
 print("Montando CSS...")
 print(CSS_DIR)
@@ -230,6 +303,34 @@ def dashboard():
 
         "mensaje": "dashboard.html no encontrado"
 
+    }
+
+
+@app.get("/dashboard/u8")
+def dashboard_u8():
+
+    archivo = FRONTEND_DIR / "dashboard.html"
+
+    if archivo.exists():
+
+        return FileResponse(archivo)
+
+    return {
+        "mensaje": "dashboard.html no encontrado"
+    }
+
+
+@app.get("/dashboard/u9")
+def dashboard_u9():
+
+    archivo = FRONTEND_DIR / "dashboard.html"
+
+    if archivo.exists():
+
+        return FileResponse(archivo)
+
+    return {
+        "mensaje": "dashboard.html no encontrado"
     }
 
 # ==========================================================

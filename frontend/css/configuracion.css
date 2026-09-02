@@ -638,3 +638,416 @@
     }
 
 }
+/* ==========================================================
+   SWAV - CONFIGURACION UNIFORME
+   ========================================================== */
+
+.config-section {
+    margin-bottom: 28px;
+}
+
+.config-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.config-section-subtitle {
+    margin-top: -6px;
+    margin-bottom: 16px;
+    font-size: .9rem;
+    color: #6c757d;
+}
+
+.config-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.config-card {
+    height: 100%;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .05);
+    overflow: hidden;
+}
+
+.config-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 54px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f8f9fa;
+}
+
+.config-card-header i {
+    font-size: 1.1rem;
+}
+
+.config-card-header strong {
+    font-size: .95rem;
+}
+
+.config-card-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 220px;
+    padding: 16px;
+}
+
+.config-card-description {
+    min-height: 44px;
+    margin-bottom: 14px;
+    font-size: .88rem;
+    color: #6c757d;
+}
+
+.config-card .form-control {
+    min-height: 38px;
+    font-size: .88rem;
+}
+
+.config-card-actions {
+    margin-top: auto;
+    padding-top: 14px;
+}
+
+.config-card-actions .btn {
+    width: 100%;
+    min-height: 40px;
+    font-weight: 600;
+}
+
+.config-card-status {
+    min-height: 24px;
+    margin-top: 10px;
+    font-size: .82rem;
+    font-weight: 600;
+}
+
+.config-unit-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 9px;
+    margin-left: auto;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 700;
+}
+
+.config-unit-u8 {
+    background: #e8f1ff;
+    color: #0d6efd;
+}
+
+.config-unit-u9 {
+    background: #f3e8ff;
+    color: #6f42c1;
+}
+
+.config-card-info .config-card-header {
+    border-left: 4px solid #0d6efd;
+}
+
+.config-card-anexo3 .config-card-header {
+    border-left: 4px solid #198754;
+}
+
+.config-card-anexo4 .config-card-header {
+    border-left: 4px solid #fd7e14;
+}
+
+.config-card-r16 .config-card-header {
+    border-left: 4px solid #0dcaf0;
+}
+
+.config-wide-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .05);
+    overflow: hidden;
+}
+
+.config-wide-card-header {
+    padding: 13px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f8f9fa;
+    font-weight: 700;
+}
+
+.config-wide-card-body {
+    padding: 18px;
+}
+
+@media (max-width: 1100px) {
+    .config-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .config-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================
+   SWAV - CONFIGURACION EJECUTIVA V2
+   ========================================================== */
+
+.config-section {
+    padding: 18px;
+    margin-bottom: 22px;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .05);
+}
+
+.config-section-title {
+    margin-bottom: 4px;
+    font-size: 1.08rem;
+    color: #172033;
+}
+
+.config-section-subtitle {
+    margin: 0 0 18px 0;
+    color: #7a8495;
+}
+
+.config-grid {
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    gap: 18px;
+}
+
+.config-card {
+    border-radius: 16px;
+    box-shadow: none;
+    transition:
+        transform .15s ease,
+        box-shadow .15s ease;
+}
+
+.config-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, .08);
+}
+
+.config-card-header {
+    min-height: 58px;
+    padding: 14px 16px;
+}
+
+.config-card-header strong {
+    font-size: 1rem;
+}
+
+.config-card-body {
+    min-height: 205px;
+    padding: 16px;
+}
+
+.config-card-description {
+    min-height: 42px;
+    line-height: 1.45;
+}
+
+.config-card .form-control {
+    border-radius: 9px;
+}
+
+.config-card-actions .btn {
+    border-radius: 9px;
+}
+
+.config-unit-badge {
+    min-width: 38px;
+    justify-content: center;
+}
+
+.config-card-info {
+    max-width: 420px;
+}
+
+.config-card-info .config-card-body {
+    min-height: 185px;
+}
+
+/* U8 */
+.config-section:has(.config-unit-u8) {
+    border-top: 4px solid #0d6efd;
+}
+
+/* U9 */
+.config-section:has(.config-unit-u9) {
+    border-top: 4px solid #6f42c1;
+}
+
+@media (max-width: 1200px) {
+    .config-grid {
+        grid-template-columns: repeat(2, minmax(240px, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .config-section {
+        padding: 14px;
+    }
+
+    .config-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================
+   AJUSTE ESPACIO - CATALOGO GENERAL COMPACTO
+   ========================================================== */
+
+.config-section:first-of-type {
+    padding: 14px 16px;
+}
+
+.config-section:first-of-type .config-section-subtitle {
+    margin-bottom: 10px;
+}
+
+.config-section:first-of-type .config-grid {
+    display: block;
+}
+
+.config-section:first-of-type .config-card-info {
+    max-width: none;
+    width: 100%;
+}
+
+.config-section:first-of-type .config-card {
+    display: grid;
+    grid-template-columns: 210px 1fr;
+    align-items: stretch;
+}
+
+.config-section:first-of-type .config-card-header {
+    min-height: auto;
+    border-bottom: 0;
+    border-right: 1px solid #e5e7eb;
+}
+
+.config-section:first-of-type .config-card-body {
+    min-height: auto;
+    display: grid;
+    grid-template-columns:
+        minmax(220px, 1fr)
+        minmax(280px, 1.5fr)
+        minmax(160px, .8fr)
+        minmax(120px, .6fr);
+    gap: 14px;
+    align-items: center;
+    padding: 14px 16px;
+}
+
+.config-section:first-of-type .config-card-description {
+    min-height: auto;
+    margin: 0;
+}
+
+.config-section:first-of-type .config-card-actions {
+    margin: 0;
+    padding: 0;
+}
+
+.config-section:first-of-type .config-card-status {
+    margin: 0;
+    min-height: auto;
+}
+
+@media (max-width: 900px) {
+
+    .config-section:first-of-type .config-card {
+        grid-template-columns: 1fr;
+    }
+
+    .config-section:first-of-type .config-card-header {
+        border-right: 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .config-section:first-of-type .config-card-body {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================
+   SWAV - ESTADO COMPACTO DE IMPORTACIONES
+   ========================================================== */
+
+.config-import-summary {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 10px;
+    padding: 8px 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 9px;
+    background: #f8fafc;
+    font-size: .76rem;
+    line-height: 1.2;
+}
+
+.config-import-summary > span {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.config-import-summary > span:not(:last-child)::after {
+    content: "";
+    width: 1px;
+    height: 13px;
+    margin-left: 7px;
+    background: #d1d5db;
+}
+
+.config-import-state {
+    gap: 5px;
+    font-weight: 700;
+}
+
+.config-import-state.estado-correcto {
+    color: #198754;
+}
+
+.config-import-state.estado-pendiente {
+    color: #6c757d;
+}
+
+.config-import-count {
+    color: #374151;
+    font-weight: 700;
+}
+
+.config-import-date {
+    color: #6b7280;
+    font-weight: 500;
+}
+
+@media (max-width: 700px) {
+
+    .config-import-summary {
+        align-items: flex-start;
+    }
+
+    .config-import-summary > span:not(:last-child)::after {
+        display: none;
+    }
+
+}

@@ -5,7 +5,7 @@ Dashboard API
 =========================================================
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from sqlalchemy import func, case
 from datetime import timezone
 from zoneinfo import ZoneInfo
@@ -20,7 +20,18 @@ router = APIRouter(
 
 
 @router.get("/dashboard")
-def dashboard():
+def dashboard(
+    unidad: str = Query(
+        ...,
+        pattern="^(U8|U9)$"
+    )
+):
+
+    unidad_actual = (
+        str(unidad)
+        .strip()
+        .upper()
+    )
 
     db = SessionLocal()
 
@@ -40,6 +51,10 @@ def dashboard():
                     HistoricoRegistro.fecha_operacional
                 )
             )
+            .filter(
+                HistoricoRegistro.unidad
+                == unidad_actual
+            )
             .scalar()
         )
 
@@ -50,22 +65,14 @@ def dashboard():
         ultima_importacion_registro = (
             db.query(HistorialImportacion)
             .filter(
-                HistorialImportacion.tipo_archivo == "R1.6"
+                HistorialImportacion.tipo_archivo == "R1.6",
+                HistorialImportacion.unidad == unidad_actual
             )
             .order_by(
                 HistorialImportacion.fecha.desc(),
                 HistorialImportacion.id.desc(),
             )
             .first()
-        )
-
-        unidad_actual = (
-            str(
-                ultima_importacion_registro.unidad
-                or ""
-            ).strip()
-            if ultima_importacion_registro
-            else ""
         )
 
         ultima_importacion = (

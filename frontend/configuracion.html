@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -8,7 +8,7 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>SWAV - Configuración</title>
+    <title>SWAV - Configuraci&oacute;n</title>
 
     <!-- Bootstrap -->
 
@@ -30,7 +30,7 @@
 
     <link
         rel="stylesheet"
-        href="/frontend/css/configuracion.css?v=2">
+        href="/frontend/css/configuracion.css?v=20260901_ESTADO_TARJETAS">
 
     <!-- SIDEBAR OFICIAL SWAV - MODELO REPORTES -->
     <link
@@ -69,7 +69,7 @@
         </div>
 
         <div class="sidebar-description">
-            Sistema Web de An?lisis de<br>
+            Sistema Web de An&aacute;lisis de<br>
             Velocidades
         </div>
 
@@ -121,7 +121,7 @@
             <i class="bi bi-gear-fill"></i>
 
             <span>
-                Configuraci?n
+                Configuraci&oacute;n
             </span>
         </a>
 
@@ -156,13 +156,13 @@
 
                 <h2>
 
-                    Configuración del Sistema
+                    Configuraci&oacute;n del Sistema
 
                 </h2>
 
                 <p>
 
-                    Administración de Catálogos y Archivos Base
+                    Administraci&oacute;n de Cat&aacute;logos y Archivos Base
 
                 </p>
 
@@ -174,7 +174,7 @@
 
                 <i class="bi bi-play-circle-fill"></i>
 
-                Reprocesar Información
+                Reprocesar Informaci&oacute;n
 
             </button>
 
@@ -184,54 +184,71 @@
 
         <div class="row g-4">
 
+
 <!-- ===================================================== -->
-<!-- INFO -->
+<!-- CATALOGOS GENERALES -->
 <!-- ===================================================== -->
 
-<div class="col-lg-6">
+<section class="config-section">
 
-    <div class="card shadow-sm h-100">
+    <div class="config-section-title">
+        <i class="bi bi-database"></i>
+        Catalogos Generales
+    </div>
 
-        <div class="card-header bg-primary text-white">
+    <div class="config-section-subtitle">
+        Informacion base compartida por el sistema SWAV.
+    </div>
 
-            <h5 class="mb-0">
+    <div class="config-grid">
+
+        <div class="config-card config-card-info">
+
+            <div class="config-card-header">
 
                 <i class="bi bi-file-earmark-excel-fill"></i>
 
-                Catálogo INFO
+                <strong>
+                    Catalogo INFO
+                </strong>
 
-            </h5>
+                <span class="config-unit-badge">
+                    GENERAL
+                </span>
 
-        </div>
+            </div>
 
-        <div class="card-body">
+            <div class="config-card-body">
 
-            <p class="text-muted">
+                <div class="config-card-description">
+                    Importa INFO.xlsx con unidades,
+                    servicios y terminales.
+                </div>
 
-                Importa el archivo INFO.xlsx con la definición
-                de unidades, servicios y terminales.
+                <input
+                    type="file"
+                    id="archivoInfo"
+                    class="form-control"
+                    accept=".xlsx">
 
-            </p>
+                <div class="config-card-actions">
 
-            <input
-                type="file"
-                id="archivoInfo"
-                class="form-control"
-                accept=".xlsx">
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        id="btnInfo">
 
-            <button
-                class="btn btn-primary mt-3 w-100"
-                id="btnInfo">
+                        <i class="bi bi-upload"></i>
+                        Importar INFO
 
-                <i class="bi bi-upload"></i>
+                    </button>
 
-                Importar INFO
+                </div>
 
-            </button>
-
-            <div
-                id="estadoInfo"
-                class="small mt-3 text-success">
+                <div
+                    id="estadoInfo"
+                    class="config-card-status text-success">
+                </div>
 
             </div>
 
@@ -239,196 +256,247 @@
 
     </div>
 
-</div>
+</section>
+
 
 <!-- ===================================================== -->
-<!-- ANEXO 3 -->
+<!-- U8 / ALFA -->
 <!-- ===================================================== -->
 
-<div class="col-lg-6">
+<section class="config-section">
 
-    <div class="card shadow-sm h-100">
+    <div class="config-section-title">
 
-        <div class="card-header bg-success text-white">
+        <i class="bi bi-building"></i>
 
-            <h5 class="mb-0">
+        U8 / ALFA
+
+        <span
+            class="config-unit-badge config-unit-u8">
+            U8
+        </span>
+
+    </div>
+
+    <div class="config-section-subtitle">
+        Catalogos y archivos operacionales exclusivos de ALFA.
+    </div>
+
+    <div class="config-grid">
+
+
+        <!-- ANEXO 3 U8 -->
+
+        <div class="config-card config-card-anexo3">
+
+            <div class="config-card-header">
 
                 <i class="bi bi-speedometer2"></i>
 
-                Anexo 3
+                <strong>Anexo 3</strong>
 
-            </h5>
+                <span
+                    class="config-unit-badge config-unit-u8">
+                    U8
+                </span>
 
-        </div>
+            </div>
 
-        <div class="card-body">
+            <div class="config-card-body">
 
-            <p class="text-muted">
+                <div class="config-card-description">
+                    Velocidades teoricas oficiales de U8 / ALFA.
+                </div>
 
-                Importa las velocidades teóricas oficiales.
+                <input
+                    type="file"
+                    id="archivoAnexo3U8"
+                    class="form-control"
+                    accept=".xlsx">
 
-            </p>
+                <div class="config-card-actions">
 
-            <input
-                type="file"
-                id="archivoAnexo3"
-                class="form-control"
-                accept=".xlsx">
+                    <button
+                        type="button"
+                        class="btn btn-success"
+                        id="btnAnexo3U8">
 
-            <button
-                class="btn btn-success mt-3 w-100"
-                id="btnAnexo3">
+                        <i class="bi bi-upload"></i>
+                        Importar Anexo 3 U8
 
-                <i class="bi bi-upload"></i>
+                    </button>
 
-                Importar Anexo 3
+                </div>
 
-            </button>
+                <div
+                    id="estadoAnexo3U8"
+                    class="config-card-status text-success">
+                </div>
 
-            <div
-                id="estadoAnexo3"
-                class="small mt-3 text-success">
+                <div
+                    id="estadoAnexo3U8Resumen"
+                    class="config-import-summary">
+
+                    <span class="config-import-state">
+                        <i class="bi bi-hourglass-split"></i>
+                        Pendiente
+                    </span>
+
+                    <span class="config-import-count">
+                        0 registros
+                    </span>
+
+                    <span class="config-import-date">
+                        Sin actualizaci?n
+                    </span>
+
+                </div>
 
             </div>
 
         </div>
 
-    </div>
 
-</div>
+        <!-- ANEXO 4 U8 -->
 
-<!-- ===================================================== -->
-<!-- ANEXO 4 -->
-<!-- ===================================================== -->
+        <div class="config-card config-card-anexo4">
 
-<div class="col-lg-6">
-
-    <div class="card shadow-sm h-100">
-
-        <div class="card-header bg-warning">
-
-            <h5 class="mb-0">
+            <div class="config-card-header">
 
                 <i class="bi bi-clock-history"></i>
 
-                Anexo 4
+                <strong>Anexo 4</strong>
 
-            </h5>
+                <span
+                    class="config-unit-badge config-unit-u8">
+                    U8
+                </span>
 
-        </div>
+            </div>
 
-        <div class="card-body">
+            <div class="config-card-body">
 
-            <p class="text-muted">
+                <div class="config-card-description">
+                    Tabla horaria y periodos operacionales
+                    de U8 / ALFA.
+                </div>
 
-                Importa la Tabla Horaria (Períodos Operacionales).
+                <input
+                    type="file"
+                    id="archivoAnexo4U8"
+                    class="form-control"
+                    accept=".xlsx">
 
-            </p>
+                <div class="config-card-actions">
 
-            <input
-                type="file"
-                id="archivoAnexo4"
-                class="form-control"
-                accept=".xlsx">
+                    <button
+                        type="button"
+                        class="btn btn-warning"
+                        id="btnAnexo4U8">
 
-            <button
-                class="btn btn-warning mt-3 w-100"
-                id="btnAnexo4">
+                        <i class="bi bi-upload"></i>
+                        Importar Anexo 4 U8
 
-                <i class="bi bi-upload"></i>
+                    </button>
 
-                Importar Anexo 4
+                </div>
 
-            </button>
+                <div
+                    id="estadoAnexo4U8"
+                    class="config-card-status text-success">
+                </div>
 
-            <div
-                id="estadoAnexo4"
-                class="small mt-3 text-success">
+                <div
+                    id="estadoAnexo4U8Resumen"
+                    class="config-import-summary">
+
+                    <span class="config-import-state">
+                        <i class="bi bi-hourglass-split"></i>
+                        Pendiente
+                    </span>
+
+                    <span class="config-import-count">
+                        0 registros
+                    </span>
+
+                    <span class="config-import-date">
+                        Sin actualizaci?n
+                    </span>
+
+                </div>
 
             </div>
 
         </div>
 
-    </div>
 
-</div>
+        <!-- R1.6 U8 -->
 
-<!-- ===================================================== -->
-<!-- R1.6 -->
-<!-- ===================================================== -->
+        <div class="config-card config-card-r16">
 
-<div class="col-lg-6">
-
-    <div class="card shadow-sm h-100">
-
-        <div class="card-header bg-danger text-white">
-
-            <h5 class="mb-0">
+            <div class="config-card-header">
 
                 <i class="bi bi-bus-front-fill"></i>
 
-                Archivo R1.6
+                <strong>Reporte R1.6</strong>
 
-            </h5>
-
-        </div>
-
-        <div class="card-body">
-
-            <p class="text-muted">
-
-                Importa el archivo CSV de expediciones (R1.6).
-
-            </p>
-
-            <div class="mb-3">
-
-                <label class="form-label">
-
-                    Unidad
-
-                </label>
-
-                <select
-                    id="unidadR16"
-                    class="form-select">
-
-                    <option value="U8">
-
-                        U8
-
-                    </option>
-
-                    <option value="U9">
-
-                        U9
-
-                    </option>
-
-                </select>
+                <span
+                    class="config-unit-badge config-unit-u8">
+                    U8
+                </span>
 
             </div>
 
-            <input
-                type="file"
-                id="archivoR16"
-                class="form-control"
-                accept=".csv">
+            <div class="config-card-body">
 
-            <button
-                type="button"
-                class="btn btn-danger mt-3 w-100"
-                id="btnR16">
+                <div class="config-card-description">
+                    Expediciones R1.6 correspondientes
+                    exclusivamente a U8 / ALFA.
+                </div>
 
-                <i class="bi bi-upload"></i>
+                <input
+                    type="file"
+                    id="archivoR16U8"
+                    class="form-control"
+                    accept=".csv,.xlsx">
 
-                Importar R1.6
+                <div class="config-card-actions">
 
-            </button>
+                    <button
+                        type="button"
+                        class="btn btn-info"
+                        id="btnR16U8">
 
-            <div
-                id="estadoR16"
-                class="small mt-3 text-success">
+                        <i class="bi bi-upload"></i>
+                        Importar R1.6 U8
+
+                    </button>
+
+                </div>
+
+                <div
+                    id="estadoR16U8"
+                    class="config-card-status text-success">
+                </div>
+
+                <div
+                    id="estadoR16U8Resumen"
+                    class="config-import-summary">
+
+                    <span class="config-import-state">
+                        <i class="bi bi-hourglass-split"></i>
+                        Pendiente
+                    </span>
+
+                    <span class="config-import-count">
+                        0 registros
+                    </span>
+
+                    <span class="config-import-date">
+                        Sin actualizaci?n
+                    </span>
+
+                </div>
 
             </div>
 
@@ -436,7 +504,255 @@
 
     </div>
 
-</div>
+</section>
+
+
+<!-- ===================================================== -->
+<!-- U9 / OMEGA -->
+<!-- ===================================================== -->
+
+<section class="config-section">
+
+    <div class="config-section-title">
+
+        <i class="bi bi-building"></i>
+
+        U9 / OMEGA
+
+        <span
+            class="config-unit-badge config-unit-u9">
+            U9
+        </span>
+
+    </div>
+
+    <div class="config-section-subtitle">
+        Catalogos y archivos operacionales exclusivos de OMEGA.
+    </div>
+
+    <div class="config-grid">
+
+
+        <!-- ANEXO 3 U9 -->
+
+        <div class="config-card config-card-anexo3">
+
+            <div class="config-card-header">
+
+                <i class="bi bi-speedometer2"></i>
+
+                <strong>Anexo 3</strong>
+
+                <span
+                    class="config-unit-badge config-unit-u9">
+                    U9
+                </span>
+
+            </div>
+
+            <div class="config-card-body">
+
+                <div class="config-card-description">
+                    Velocidades teoricas oficiales de U9 / OMEGA.
+                </div>
+
+                <input
+                    type="file"
+                    id="archivoAnexo3U9"
+                    class="form-control"
+                    accept=".xlsx">
+
+                <div class="config-card-actions">
+
+                    <button
+                        type="button"
+                        class="btn btn-success"
+                        id="btnAnexo3U9">
+
+                        <i class="bi bi-upload"></i>
+                        Importar Anexo 3 U9
+
+                    </button>
+
+                </div>
+
+                <div
+                    id="estadoAnexo3U9"
+                    class="config-card-status text-success">
+                </div>
+
+                <div
+                    id="estadoAnexo3U9Resumen"
+                    class="config-import-summary">
+
+                    <span class="config-import-state">
+                        <i class="bi bi-hourglass-split"></i>
+                        Pendiente
+                    </span>
+
+                    <span class="config-import-count">
+                        0 registros
+                    </span>
+
+                    <span class="config-import-date">
+                        Sin actualizaci?n
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ANEXO 4 U9 -->
+
+        <div class="config-card config-card-anexo4">
+
+            <div class="config-card-header">
+
+                <i class="bi bi-clock-history"></i>
+
+                <strong>Anexo 4</strong>
+
+                <span
+                    class="config-unit-badge config-unit-u9">
+                    U9
+                </span>
+
+            </div>
+
+            <div class="config-card-body">
+
+                <div class="config-card-description">
+                    Tabla horaria y periodos operacionales
+                    de U9 / OMEGA.
+                </div>
+
+                <input
+                    type="file"
+                    id="archivoAnexo4U9"
+                    class="form-control"
+                    accept=".xlsx">
+
+                <div class="config-card-actions">
+
+                    <button
+                        type="button"
+                        class="btn btn-warning"
+                        id="btnAnexo4U9">
+
+                        <i class="bi bi-upload"></i>
+                        Importar Anexo 4 U9
+
+                    </button>
+
+                </div>
+
+                <div
+                    id="estadoAnexo4U9"
+                    class="config-card-status text-success">
+                </div>
+
+                <div
+                    id="estadoAnexo4U9Resumen"
+                    class="config-import-summary">
+
+                    <span class="config-import-state">
+                        <i class="bi bi-hourglass-split"></i>
+                        Pendiente
+                    </span>
+
+                    <span class="config-import-count">
+                        0 registros
+                    </span>
+
+                    <span class="config-import-date">
+                        Sin actualizaci?n
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- R1.6 U9 -->
+
+        <div class="config-card config-card-r16">
+
+            <div class="config-card-header">
+
+                <i class="bi bi-bus-front-fill"></i>
+
+                <strong>Reporte R1.6</strong>
+
+                <span
+                    class="config-unit-badge config-unit-u9">
+                    U9
+                </span>
+
+            </div>
+
+            <div class="config-card-body">
+
+                <div class="config-card-description">
+                    Expediciones R1.6 correspondientes
+                    exclusivamente a U9 / OMEGA.
+                </div>
+
+                <input
+                    type="file"
+                    id="archivoR16U9"
+                    class="form-control"
+                    accept=".csv,.xlsx">
+
+                <div class="config-card-actions">
+
+                    <button
+                        type="button"
+                        class="btn btn-info"
+                        id="btnR16U9">
+
+                        <i class="bi bi-upload"></i>
+                        Importar R1.6 U9
+
+                    </button>
+
+                </div>
+
+                <div
+                    id="estadoR16U9"
+                    class="config-card-status text-success">
+                </div>
+
+                <div
+                    id="estadoR16U9Resumen"
+                    class="config-import-summary">
+
+                    <span class="config-import-state">
+                        <i class="bi bi-hourglass-split"></i>
+                        Pendiente
+                    </span>
+
+                    <span class="config-import-count">
+                        0 registros
+                    </span>
+
+                    <span class="config-import-date">
+                        Sin actualizaci?n
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
 
 
 <!-- ===================================================== -->
@@ -453,7 +769,7 @@
 
                 <i class="bi bi-shield-lock-fill"></i>
 
-                Credenciales Sin?ptico
+                Credenciales Sin&oacute;ptico
 
             </h5>
 
@@ -464,8 +780,8 @@
             <p class="text-muted">
 
                 Credenciales del supervisor autorizado para
-                descargar autom?ticamente el reporte R1.6
-                desde Sin?ptico.
+                descargar autom&aacute;ticamente el reporte R1.6
+                desde Sin&oacute;ptico.
 
             </p>
 
@@ -578,6 +894,232 @@
 
 
 <!-- ===================================================== -->
+<!-- ACTUALIZACION AUTOMATICA R1.6 -->
+<!-- ===================================================== -->
+
+<div class="col-12">
+
+    <div class="card shadow-sm">
+
+        <div class="card-header bg-info">
+
+            <h5 class="mb-0">
+
+                <i class="bi bi-arrow-repeat"></i>
+
+                Actualizaci&oacute;n Autom&aacute;tica R1.6
+
+            </h5>
+
+        </div>
+
+        <div class="card-body">
+
+            <p class="text-muted">
+
+                Permite descargar y procesar autom&aacute;ticamente
+                el reporte R1.6 para U8 y U9 seg&uacute;n el intervalo
+                configurado.
+
+            </p>
+
+
+            <div class="row g-3">
+
+                <div class="col-md-3">
+
+                    <label
+                        class="form-label"
+                        for="r16AutoActivo">
+
+                        Estado
+
+                    </label>
+
+                    <div class="form-check form-switch mt-2">
+
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            id="r16AutoActivo">
+
+                        <label
+                            class="form-check-label"
+                            for="r16AutoActivo">
+
+                            Activar actualizaci&oacute;n autom&aacute;tica
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <label
+                        for="r16AutoIntervalo"
+                        class="form-label">
+
+                        Intervalo
+
+                    </label>
+
+                    <div class="input-group">
+
+                        <input
+                            type="number"
+                            id="r16AutoIntervalo"
+                            class="form-control"
+                            min="5"
+                            max="1440"
+                            step="1"
+                            value="30">
+
+                        <span class="input-group-text">
+                            minutos
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <label class="form-label">
+                        Unidades
+                    </label>
+
+                    <div class="form-check">
+
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            id="r16AutoU8">
+
+                        <label
+                            class="form-check-label"
+                            for="r16AutoU8">
+
+                            U8 / ALFA
+
+                        </label>
+
+                    </div>
+
+                    <div class="form-check">
+
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            id="r16AutoU9">
+
+                        <label
+                            class="form-check-label"
+                            for="r16AutoU9">
+
+                            U9 / OMEGA
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <label class="form-label">
+                        Estado de ejecuci&oacute;n
+                    </label>
+
+                    <div class="small">
+
+                        <div>
+                            <strong>&Uacute;ltima:</strong>
+                            <span id="r16AutoUltima">
+                                -
+                            </span>
+                        </div>
+
+                        <div>
+                            <strong>Pr&oacute;xima:</strong>
+                            <span id="r16AutoProxima">
+                                -
+                            </span>
+                        </div>
+
+                        <div>
+                            <strong>Faltan:</strong>
+                            <span
+                                id="r16AutoContador"
+                                class="fw-bold">
+                                --:--:--
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="d-flex flex-wrap gap-3 mt-4">
+
+                <button
+                    type="button"
+                    id="btnGuardarR16Auto"
+                    class="btn btn-info">
+
+                    <i class="bi bi-floppy-fill"></i>
+
+                    Guardar configuraci&oacute;n
+
+                </button>
+
+
+                <div
+                    id="estadoR16Auto"
+                    class="d-flex align-items-center">
+
+                    <span class="badge text-bg-secondary">
+
+                        Sin cargar
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="mt-3">
+
+                <small class="text-muted">
+
+                    <strong>&Uacute;ltimo resultado:</strong>
+
+                    <span id="r16AutoResultado">
+                        -
+                    </span>
+
+                </small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ===================================================== -->
 <!-- PANEL DE ESTADO -->
 <!-- ===================================================== -->
 
@@ -609,7 +1151,7 @@
 
                         <th>Registros</th>
 
-                        <th>Última actualización</th>
+                        <th>&Uacute;ltima actualizaci&oacute;n</th>
 
                     </tr>
 
@@ -684,9 +1226,14 @@
 
 </div>
 
-<script src="/frontend/js/configuracion.js?v=2"></script>
+<script src="/frontend/js/configuracion.js?v=20260901_ESTADO_TARJETAS"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 
 </html>
+
+
+
+
+

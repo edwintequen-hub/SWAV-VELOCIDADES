@@ -29,7 +29,11 @@ class ImportadorAnexo3:
     # IMPORTAR
     # =====================================================
 
-    def importar(self, archivo):
+    def importar(
+        self,
+        archivo,
+        unidad_objetivo=None
+    ):
 
         print("=" * 80)
         print("IMPORTANDO ANEXO 3")
@@ -102,6 +106,45 @@ class ImportadorAnexo3:
                 "El Anexo 3 no contiene ninguna unidad válida."
             )
 
+        if unidad_objetivo is not None:
+
+            unidad_objetivo = (
+                str(unidad_objetivo)
+                .strip()
+                .upper()
+            )
+
+            if unidad_objetivo not in {
+                "U8",
+                "U9"
+            }:
+
+                raise Exception(
+                    "Unidad objetivo no valida para "
+                    "Anexo 3: "
+                    + unidad_objetivo
+                )
+
+            if (
+                unidad_objetivo
+                not in unidades_archivo
+            ):
+
+                raise Exception(
+                    "El archivo Anexo 3 no contiene "
+                    "la unidad "
+                    + unidad_objetivo
+                    + "."
+                )
+
+            # IMPORTANTE:
+            # Desde este punto el importador solamente
+            # puede borrar, procesar y registrar
+            # la unidad elegida por el usuario.
+            unidades_archivo = {
+                unidad_objetivo
+            }
+
         print(
             "Unidades del archivo:",
             sorted(unidades_archivo)
@@ -156,7 +199,28 @@ class ImportadorAnexo3:
 
             registros = 0
 
-            duplicados = set()
+            # =================================================
+            # CONSOLIDAR LAS DOS MH DEL MISMO PERIODO
+            #
+            # REGLA CERTIFICADA CONTRA MACRO ORIGINAL:
+            #
+            #   PERIODO = Hour(MH) + 1
+            #
+            # Para:
+            #
+            #   unidad
+            #   codigo_ts
+            #   sentido
+            #   tipo_dia
+            #   periodo
+            #
+            # se conserva la FILA con MAYOR VELOCIDAD.
+            #
+            # El indicador IP / IE / -- debe pertenecer
+            # a esa misma fila seleccionada.
+            # =================================================
+
+            seleccionados = {}
 
             # =================================================
             # RECORRER EXCEL
@@ -220,13 +284,6 @@ class ImportadorAnexo3:
                         )
                     )
 
-                    print(
-                        "MH =",
-                        fila["MH"],
-                        " -> PERIODO =",
-                        periodo
-                    )
-
                     # -----------------------------------------
                     # VELOCIDAD
                     # -----------------------------------------
@@ -240,10 +297,7 @@ class ImportadorAnexo3:
                     )
 
                     # -----------------------------------------
-                    # INDICADOR IP / IE
-                    #
-                    # Columna N del Anexo 3:
-                    # INDICADOR TIEMPO DE ESPERA
+                    # INDICADOR
                     # -----------------------------------------
 
                     indicador = (
@@ -254,12 +308,8 @@ class ImportadorAnexo3:
                         )
                     )
 
-                    indicadores[
-                        indicador
-                    ] += 1
-
                     # -----------------------------------------
-                    # CLAVE DUPLICADO
+                    # CLAVE HORARIA
                     # -----------------------------------------
 
                     clave = (
@@ -270,49 +320,148 @@ class ImportadorAnexo3:
                         periodo,
                     )
 
-                    if clave in duplicados:
+                    candidato = {
+                        "unidad": unidad,
+                        "empresa": empresa,
+                        "codigo_ts": codigo_ts,
+                        "sentido": sentido,
+                        "tipo_dia": tipo_dia,
+                        "periodo": periodo,
+                        "velocidad": velocidad,
+                        "indicador": indicador,
+                    }
+
+                    actual = seleccionados.get(
+                        clave
+                    )
+
+                    # Primera MH encontrada
+                    if actual is None:
+
+                        seleccionados[
+                            clave
+                        ] = candidato
 
                         continue
 
-                    duplicados.add(clave)
-
                     # -----------------------------------------
-                    # CREAR REGISTRO
+                    # REGLA MAX
                     # -----------------------------------------
 
-                    nuevo = Velocidad(
+                    if (
+                        velocidad
+                        >
+                        actual["velocidad"]
+                    ):
 
-                        unidad=unidad,
+                        seleccionados[
+                            clave
+                        ] = candidato
 
-                        empresa=empresa,
+                        continue
 
-                        codigo_ts=codigo_ts,
+                    # -----------------------------------------
+                    # EMPATE:
+                    # preferir indicador valido frente a --.
+                    #
+                    # No existen conflictos reales IP vs IE,
+                    # certificado previamente.
+                    # -----------------------------------------
 
-                        sentido=sentido,
+                    if (
+                        velocidad
+                        ==
+                        actual["velocidad"]
+                        and
+                        actual["indicador"]
+                        in {
+                            "--",
+                            "VACIO",
+                            "",
+                        }
+                        and
+                        indicador
+                        in {
+                            "IP",
+                            "IE",
+                        }
+                    ):
 
-                        tipo_dia=tipo_dia,
-
-                        periodo=periodo,
-
-                        velocidad=velocidad,
-
-                        indicador_tiempo_espera=indicador,
-
-                    )
-
-                    self.db.add(nuevo)
-
-                    validos_por_unidad[
-                        unidad
-                    ] += 1
-
-                    registros += 1
+                        seleccionados[
+                            clave
+                        ] = candidato
 
                 except Exception as e:
 
                     print(
                         f"Fila {indice + 8}: {e}"
                     )
+
+            # =================================================
+            # INSERTAR PERIODOS CONSOLIDADOS
+            # =================================================
+
+            for dato in seleccionados.values():
+
+                indicador = dato[
+                    "indicador"
+                ]
+
+                if indicador not in indicadores:
+
+                    indicadores[
+                        indicador
+                    ] = 0
+
+                indicadores[
+                    indicador
+                ] += 1
+
+                nuevo = Velocidad(
+
+                    unidad=dato[
+                        "unidad"
+                    ],
+
+                    empresa=dato[
+                        "empresa"
+                    ],
+
+                    codigo_ts=dato[
+                        "codigo_ts"
+                    ],
+
+                    sentido=dato[
+                        "sentido"
+                    ],
+
+                    tipo_dia=dato[
+                        "tipo_dia"
+                    ],
+
+                    periodo=dato[
+                        "periodo"
+                    ],
+
+                    velocidad=dato[
+                        "velocidad"
+                    ],
+
+                    indicador_tiempo_espera=dato[
+                        "indicador"
+                    ],
+
+                )
+
+                self.db.add(
+                    nuevo
+                )
+
+                validos_por_unidad[
+                    dato["unidad"]
+                ] += 1
+
+                registros += 1
 
             # =================================================
             # ASEGURAR INSERTS

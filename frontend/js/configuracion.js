@@ -5,34 +5,77 @@ Configuración del Sistema
 ==========================================================
 */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
 
-    document
-        .getElementById("btnInfo")
-        ?.addEventListener("click", importarInfo);
+        document
+            .getElementById("btnInfo")
+            ?.addEventListener(
+                "click",
+                importarInfo
+            );
 
-    document
-        .getElementById("btnAnexo3")
-        ?.addEventListener("click", importarAnexo3);
 
-    document
-        .getElementById("btnAnexo4")
-        ?.addEventListener("click", importarAnexo4);
+        // ==============================================
+        // ANEXO 3
+        // ==============================================
 
-    document
-        .getElementById("btnR16")
-        ?.addEventListener(
-            "click",
-            function (event) {
+        document
+            .getElementById("btnAnexo3U8")
+            ?.addEventListener(
+                "click",
+                () => importarAnexo3("U8")
+            );
 
-                event.preventDefault();
+        document
+            .getElementById("btnAnexo3U9")
+            ?.addEventListener(
+                "click",
+                () => importarAnexo3("U9")
+            );
 
-                importarR16();
 
-            }
-        );
+        // ==============================================
+        // ANEXO 4
+        // ==============================================
 
-});
+        document
+            .getElementById("btnAnexo4U8")
+            ?.addEventListener(
+                "click",
+                () => importarAnexo4("U8")
+            );
+
+        document
+            .getElementById("btnAnexo4U9")
+            ?.addEventListener(
+                "click",
+                () => importarAnexo4("U9")
+            );
+
+
+        // ==============================================
+        // R1.6
+        // ==============================================
+
+        document
+            .getElementById("btnR16U8")
+            ?.addEventListener(
+                "click",
+                () => importarR16("U8")
+            );
+
+        document
+            .getElementById("btnR16U9")
+            ?.addEventListener(
+                "click",
+                () => importarR16("U9")
+            );
+
+    }
+);
+
 
 // ==========================================================
 // FORMATEAR FECHA DE IMPORTACIÓN
@@ -85,6 +128,150 @@ function formatearFechaLocal(fecha) {
 // ==========================================================
 // CARGAR ESTADO DE IMPORTACIONES
 // ==========================================================
+
+function actualizarResumenTarjetaImportacion(
+    tipoArchivo,
+    unidad,
+    item
+) {
+
+    const tipo =
+        String(tipoArchivo || "")
+        .trim()
+        .toUpperCase();
+
+    const unidadNormalizada =
+        String(unidad || "")
+        .trim()
+        .toUpperCase();
+
+    let prefijo = null;
+
+    if (tipo === "ANEXO 3") {
+
+        prefijo =
+            unidadNormalizada === "U8"
+                ? "estadoAnexo3U8Resumen"
+                : unidadNormalizada === "U9"
+                    ? "estadoAnexo3U9Resumen"
+                    : null;
+
+    }
+    else if (tipo === "ANEXO 4") {
+
+        prefijo =
+            unidadNormalizada === "U8"
+                ? "estadoAnexo4U8Resumen"
+                : unidadNormalizada === "U9"
+                    ? "estadoAnexo4U9Resumen"
+                    : null;
+
+    }
+    else if (tipo === "R1.6") {
+
+        prefijo =
+            unidadNormalizada === "U8"
+                ? "estadoR16U8Resumen"
+                : unidadNormalizada === "U9"
+                    ? "estadoR16U9Resumen"
+                    : null;
+
+    }
+
+    if (!prefijo) {
+        return;
+    }
+
+    const resumen =
+        document.getElementById(
+            prefijo
+        );
+
+    if (!resumen) {
+        return;
+    }
+
+    const estadoElemento =
+        resumen.querySelector(
+            ".config-import-state"
+        );
+
+    const cantidadElemento =
+        resumen.querySelector(
+            ".config-import-count"
+        );
+
+    const fechaElemento =
+        resumen.querySelector(
+            ".config-import-date"
+        );
+
+    const estado =
+        String(
+            item?.estado || "Pendiente"
+        )
+        .trim();
+
+    const cantidad =
+        Number(
+            item?.registros ?? 0
+        );
+
+    const fecha =
+        item?.fecha
+            ? formatearFechaLocal(
+                item.fecha
+            )
+            : "Sin actualizaci?n";
+
+    if (estadoElemento) {
+
+        const estadoNormalizado =
+            estado
+            .toUpperCase();
+
+        const correcto =
+            estadoNormalizado === "CORRECTO"
+            ||
+            estadoNormalizado === "OK";
+
+        estadoElemento.innerHTML =
+            correcto
+                ? '<i class="bi bi-check-circle-fill"></i> Correcto'
+                : '<i class="bi bi-hourglass-split"></i> '
+                    + estado;
+
+        estadoElemento.classList.toggle(
+            "estado-correcto",
+            correcto
+        );
+
+        estadoElemento.classList.toggle(
+            "estado-pendiente",
+            !correcto
+        );
+
+    }
+
+    if (cantidadElemento) {
+
+        cantidadElemento.textContent =
+            cantidad.toLocaleString(
+                "es-CL"
+            )
+            + " registros";
+
+    }
+
+    if (fechaElemento) {
+
+        fechaElemento.textContent =
+            fecha;
+
+    }
+
+}
+
 
 async function cargarEstadoImportaciones() {
 
@@ -389,6 +576,22 @@ async function cargarEstadoImportaciones() {
         }
 
         // ======================================================
+        // RESUMENES DE TARJETAS U8 / U9
+        // ======================================================
+
+        registros.forEach(
+            item => {
+
+                actualizarResumenTarjetaImportacion(
+                    item.tipo_archivo,
+                    item.unidad,
+                    item
+                );
+
+            }
+        );
+
+        // ======================================================
         // ORDEN
         // ======================================================
 
@@ -619,18 +822,37 @@ async function importarInfo() {
 // IMPORTAR ANEXO 3
 // ==========================================================
 
-async function importarAnexo3() {
+async function importarAnexo3(unidad) {
+
+    const unidadNormalizada =
+        String(unidad || "")
+        .trim()
+        .toUpperCase();
+
+    if (
+        unidadNormalizada !== "U8"
+        &&
+        unidadNormalizada !== "U9"
+    ) {
+
+        alert(
+            "Unidad invalida para Anexo 3."
+        );
+
+        return;
+    }
 
     const archivo =
         document.getElementById(
             "archivoAnexo3"
+            + unidadNormalizada
         );
 
     const estado =
         document.getElementById(
             "estadoAnexo3"
+            + unidadNormalizada
         );
-
 
     if (
         !archivo ||
@@ -639,47 +861,47 @@ async function importarAnexo3() {
     ) {
 
         alert(
-            "Seleccione el archivo Anexo 3."
+            "Seleccione el archivo Anexo 3 "
+            + unidadNormalizada
+            + "."
         );
 
         return;
-
     }
-
 
     if (estado) {
 
         estado.innerHTML =
-            "Procesando...";
+            "Procesando Anexo 3 "
+            + unidadNormalizada
+            + "...";
 
     }
-
 
     try {
 
         const formData =
             new FormData();
 
-
         formData.append(
             "archivo",
             archivo.files[0]
         );
 
-
         const respuesta =
             await fetch(
-                "/api/configuracion/anexo3",
+                "/api/configuracion/anexo3?unidad="
+                + encodeURIComponent(
+                    unidadNormalizada
+                ),
                 {
                     method: "POST",
                     body: formData
                 }
             );
 
-
         const json =
             await respuesta.json();
-
 
         if (!respuesta.ok) {
 
@@ -690,78 +912,92 @@ async function importarAnexo3() {
 
         }
 
-
         const registros =
             json.registros ??
             json.total ??
             0;
 
-
         if (estado) {
 
             estado.innerHTML =
-                "✅ Anexo 3 procesado correctamente — " +
-                Number(registros)
-                    .toLocaleString("es-CL") +
-                " registros";
+                "? Anexo 3 "
+                + unidadNormalizada
+                + " procesado correctamente ? "
+                + Number(registros)
+                    .toLocaleString("es-CL")
+                + " registros";
 
         }
 
-
         alert(
-            "Anexo 3 procesado correctamente.\n\n" +
-            "Registros: " +
-            Number(registros)
+            "Anexo 3 "
+            + unidadNormalizada
+            + " procesado correctamente.\n\n"
+            + Number(registros)
                 .toLocaleString("es-CL")
+            + " registros."
         );
-
-
-        archivo.value = "";
-
 
         await cargarEstadoImportaciones();
 
-
     }
-
     catch (error) {
 
-        console.error(error);
-
+        console.error(
+            "Error Anexo 3:",
+            error
+        );
 
         if (estado) {
 
             estado.innerHTML =
-                "❌ Error";
+                "? "
+                + error.message;
 
         }
 
-
         alert(
-            "Error procesando Anexo 3:\n" +
-            error.message
+            "Error importando Anexo 3 "
+            + unidadNormalizada
+            + ":\n\n"
+            + error.message
         );
 
     }
 
 }
 
-// ==========================================================
-// IMPORTAR ANEXO 4
-// ==========================================================
+async function importarAnexo4(unidad) {
 
-async function importarAnexo4() {
+    const unidadNormalizada =
+        String(unidad || "")
+        .trim()
+        .toUpperCase();
+
+    if (
+        unidadNormalizada !== "U8"
+        &&
+        unidadNormalizada !== "U9"
+    ) {
+
+        alert(
+            "Unidad invalida para Anexo 4."
+        );
+
+        return;
+    }
 
     const archivo =
         document.getElementById(
             "archivoAnexo4"
+            + unidadNormalizada
         );
 
     const estado =
         document.getElementById(
             "estadoAnexo4"
+            + unidadNormalizada
         );
-
 
     if (
         !archivo ||
@@ -770,53 +1006,47 @@ async function importarAnexo4() {
     ) {
 
         alert(
-            "Seleccione el archivo Anexo 4."
+            "Seleccione el archivo Anexo 4 "
+            + unidadNormalizada
+            + "."
         );
 
         return;
-
     }
-
 
     if (estado) {
 
         estado.innerHTML =
-            "Procesando...";
+            "Procesando Anexo 4 "
+            + unidadNormalizada
+            + "...";
 
     }
-
 
     try {
 
         const formData =
             new FormData();
 
-
         formData.append(
             "archivo",
             archivo.files[0]
         );
 
-
         const respuesta =
             await fetch(
-                "/api/configuracion/anexo4",
+                "/api/configuracion/anexo4?unidad="
+                + encodeURIComponent(
+                    unidadNormalizada
+                ),
                 {
                     method: "POST",
                     body: formData
                 }
             );
 
-
         const json =
             await respuesta.json();
-
-
-        console.log(
-            "Anexo 4 respuesta:",
-            json
-        );
-
 
         if (!respuesta.ok) {
 
@@ -827,103 +1057,92 @@ async function importarAnexo4() {
 
         }
 
-
         const registros =
             json.registros ??
             json.total ??
             0;
 
-
         if (estado) {
 
             estado.innerHTML =
-
-                "✅ Anexo 4 procesado correctamente — " +
-
-                Number(
-                    registros
-                ).toLocaleString(
-                    "es-CL"
-                ) +
-
-                " registros";
+                "? Anexo 4 "
+                + unidadNormalizada
+                + " procesado correctamente ? "
+                + Number(registros)
+                    .toLocaleString("es-CL")
+                + " registros";
 
         }
 
-
         alert(
-
-            "Anexo 4 procesado correctamente.\n\n" +
-
-            "Registros: " +
-
-            Number(
-                registros
-            ).toLocaleString(
-                "es-CL"
-            )
-
+            "Anexo 4 "
+            + unidadNormalizada
+            + " procesado correctamente.\n\n"
+            + Number(registros)
+                .toLocaleString("es-CL")
+            + " registros."
         );
-
-
-        archivo.value =
-            "";
-
 
         await cargarEstadoImportaciones();
 
-
     }
-
     catch (error) {
 
         console.error(
-            "Error importando Anexo 4:",
+            "Error Anexo 4:",
             error
         );
-
 
         if (estado) {
 
             estado.innerHTML =
-                "❌ Error";
+                "? "
+                + error.message;
 
         }
 
-
         alert(
-
-            "Error procesando Anexo 4:\n" +
-            error.message
-
+            "Error importando Anexo 4 "
+            + unidadNormalizada
+            + ":\n\n"
+            + error.message
         );
 
     }
 
 }
 
+async function importarR16(unidad) {
 
-// ==========================================================
-// IMPORTAR R1.6
-// ==========================================================
+    const unidadNormalizada =
+        String(unidad || "")
+        .trim()
+        .toUpperCase();
 
-async function importarR16() {
+    if (
+        unidadNormalizada !== "U8"
+        &&
+        unidadNormalizada !== "U9"
+    ) {
+
+        alert(
+            "Unidad invalida para R1.6."
+        );
+
+        return;
+    }
 
     const archivo =
         document.getElementById(
             "archivoR16"
+            + unidadNormalizada
         );
-
-    const unidad =
-        document.getElementById(
-            "unidadR16"
-        )?.value;
 
     const estado =
         document.getElementById(
             "estadoR16"
+            + unidadNormalizada
         );
-
 
     if (
         !archivo ||
@@ -932,65 +1151,47 @@ async function importarR16() {
     ) {
 
         alert(
-            "Seleccione el archivo R1.6."
+            "Seleccione el archivo R1.6 "
+            + unidadNormalizada
+            + "."
         );
 
         return;
-
     }
-
-
-    if (!unidad) {
-
-        alert(
-            "Seleccione la unidad."
-        );
-
-        return;
-
-    }
-
 
     if (estado) {
 
         estado.innerHTML =
-            "Procesando...";
+            "Procesando R1.6 "
+            + unidadNormalizada
+            + "...";
 
     }
-
 
     try {
 
         const formData =
             new FormData();
 
-
         formData.append(
             "archivo",
             archivo.files[0]
         );
 
-
         const respuesta =
             await fetch(
-                "/api/configuracion/r16?unidad=" +
-                encodeURIComponent(unidad),
+                "/api/configuracion/r16?unidad="
+                + encodeURIComponent(
+                    unidadNormalizada
+                ),
                 {
                     method: "POST",
                     body: formData
                 }
             );
 
-
         const json =
             await respuesta.json();
-
-
-        console.log(
-            "R1.6 respuesta:",
-            json
-        );
-
 
         if (!respuesta.ok) {
 
@@ -1001,109 +1202,50 @@ async function importarR16() {
 
         }
 
-
-        const registrosImportados =
-            typeof json?.registro === "number"
-
-                ? json.registro
-
-                : (
-
-                    json?.importacion
-                        ?.registros_importados ??
-
-                    json?.registro
-                        ?.registros ??
-
-                    json?.registros_importados ??
-
-                    json?.registros ??
-
-                    0
-
-                );
-
-
-        const fueraRango =
-            json?.importacion
-                ?.registros_fuera_rango ??
-
+        const registros =
+            json.registros ??
+            json.total ??
+            json.expediciones ??
             0;
-
 
         if (estado) {
 
             estado.innerHTML =
-
-                "✅ R1.6 importado correctamente — " +
-
-                Number(
-                    registrosImportados
-                ).toLocaleString(
-                    "es-CL"
-                ) +
-
-                " registros";
+                "? R1.6 "
+                + unidadNormalizada
+                + " procesado correctamente";
 
         }
 
-
         alert(
-
-            "R1.6 procesado correctamente.\n\n" +
-
-            "Unidad: " +
-            unidad +
-
-            "\nRegistros importados: " +
-
-            Number(
-                registrosImportados
-            ).toLocaleString(
-                "es-CL"
-            ) +
-
-            "\nFuera de rango: " +
-
-            Number(
-                fueraRango
-            ).toLocaleString(
-                "es-CL"
-            )
-
+            "R1.6 "
+            + unidadNormalizada
+            + " procesado correctamente."
         );
-
-
-        archivo.value =
-            "";
-
 
         await cargarEstadoImportaciones();
 
-
     }
-
     catch (error) {
 
         console.error(
-            "Error importando R1.6:",
+            "Error R1.6:",
             error
         );
-
 
         if (estado) {
 
             estado.innerHTML =
-                "❌ Error";
+                "? "
+                + error.message;
 
         }
 
-
         alert(
-
-            "Error procesando R1.6:\n" +
-            error.message
-
+            "Error importando R1.6 "
+            + unidadNormalizada
+            + ":\n\n"
+            + error.message
         );
 
     }
@@ -1746,7 +1888,7 @@ async function cargarCredencialSinoptico() {
         estado.innerHTML =
         `
         <span class="badge text-bg-danger">
-            Error cargando configuraci�n
+            Error cargando configuración
         </span>
         `;
 
@@ -1815,7 +1957,7 @@ async function guardarCredencialSinoptico() {
         estado.innerHTML =
         `
         <span class="badge text-bg-warning">
-            Ingrese contrase�a
+            Ingrese contraseña
         </span>
         `;
 
@@ -1963,6 +2105,443 @@ function configurarPasswordSinoptico() {
 }
 
 
+
+/* ==========================================================
+   CONFIGURACION AUTOMATICA R1.6
+   ========================================================== */
+
+let intervaloContadorR16Auto = null;
+let proximaEjecucionR16Auto = null;
+
+
+function formatearFechaR16Auto(valor) {
+
+    if (!valor) {
+        return "-";
+    }
+
+    const fecha = new Date(valor);
+
+    if (Number.isNaN(fecha.getTime())) {
+        return valor;
+    }
+
+    return fecha.toLocaleString(
+        "es-CL",
+        {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+        }
+    );
+}
+
+
+
+function actualizarContadorR16Auto() {
+
+    const contador =
+        document.getElementById(
+            "r16AutoContador"
+        );
+
+    if (!contador) {
+        return;
+    }
+
+    if (!proximaEjecucionR16Auto) {
+
+        contador.textContent =
+            "--:--:--";
+
+        return;
+    }
+
+    const ahora =
+        Date.now();
+
+    const destino =
+        proximaEjecucionR16Auto.getTime();
+
+    let diferencia =
+        Math.floor(
+            (destino - ahora) / 1000
+        );
+
+    if (diferencia <= 0) {
+
+        contador.textContent =
+            "00:00:00";
+
+        return;
+    }
+
+    const horas =
+        Math.floor(
+            diferencia / 3600
+        );
+
+    diferencia %=
+        3600;
+
+    const minutos =
+        Math.floor(
+            diferencia / 60
+        );
+
+    const segundos =
+        diferencia % 60;
+
+    contador.textContent =
+        String(horas).padStart(2, "0")
+        + ":"
+        + String(minutos).padStart(2, "0")
+        + ":"
+        + String(segundos).padStart(2, "0");
+}
+
+
+function iniciarContadorR16Auto(
+    proximaEjecucion
+) {
+
+    if (intervaloContadorR16Auto) {
+
+        clearInterval(
+            intervaloContadorR16Auto
+        );
+
+        intervaloContadorR16Auto =
+            null;
+
+    }
+
+    if (!proximaEjecucion) {
+
+        proximaEjecucionR16Auto =
+            null;
+
+        actualizarContadorR16Auto();
+
+        return;
+    }
+
+    const fecha =
+        new Date(
+            proximaEjecucion
+        );
+
+    if (
+        Number.isNaN(
+            fecha.getTime()
+        )
+    ) {
+
+        proximaEjecucionR16Auto =
+            null;
+
+        actualizarContadorR16Auto();
+
+        return;
+    }
+
+    proximaEjecucionR16Auto =
+        fecha;
+
+    actualizarContadorR16Auto();
+
+    intervaloContadorR16Auto =
+        setInterval(
+            actualizarContadorR16Auto,
+            1000
+        );
+
+}
+
+
+async function cargarConfiguracionR16Auto() {
+
+    const activo =
+        document.getElementById("r16AutoActivo");
+
+    const intervalo =
+        document.getElementById("r16AutoIntervalo");
+
+    const u8 =
+        document.getElementById("r16AutoU8");
+
+    const u9 =
+        document.getElementById("r16AutoU9");
+
+    const ultima =
+        document.getElementById("r16AutoUltima");
+
+    const proxima =
+        document.getElementById("r16AutoProxima");
+
+    const resultado =
+        document.getElementById("r16AutoResultado");
+
+    const estado =
+        document.getElementById("estadoR16Auto");
+
+    if (
+        !activo ||
+        !intervalo ||
+        !u8 ||
+        !u9 ||
+        !ultima ||
+        !proxima ||
+        !resultado ||
+        !estado
+    ) {
+        return;
+    }
+
+    estado.innerHTML = `
+        <span class="badge text-bg-secondary">
+            Cargando...
+        </span>
+    `;
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/configuracion/r16-auto"
+            );
+
+        const datos =
+            await response.json();
+
+        if (!response.ok) {
+
+            throw new Error(
+                datos.detail ||
+                "Error cargando configuracion R1.6 automatica"
+            );
+
+        }
+
+        activo.checked =
+            Boolean(datos.activo);
+
+        intervalo.value =
+            datos.intervalo_minutos ?? 30;
+
+        u8.checked =
+            Boolean(datos.actualizar_u8);
+
+        u9.checked =
+            Boolean(datos.actualizar_u9);
+
+        ultima.textContent =
+            formatearFechaR16Auto(
+                datos.ultima_ejecucion
+            );
+
+        proxima.textContent =
+            formatearFechaR16Auto(
+                datos.proxima_ejecucion
+            );
+
+        iniciarContadorR16Auto(
+            datos.proxima_ejecucion
+        );
+
+        resultado.textContent =
+            datos.ultima_respuesta || "-";
+
+        estado.innerHTML = `
+            <span class="badge ${
+                datos.activo
+                    ? "text-bg-success"
+                    : "text-bg-secondary"
+            }">
+                ${
+                    datos.activo
+                        ? "Automatizacion activa"
+                        : "Automatizacion desactivada"
+                }
+            </span>
+        `;
+
+    }
+    catch (error) {
+
+        console.error(
+            "Error cargando configuracion R1.6 automatica:",
+            error
+        );
+
+        estado.innerHTML = `
+            <span class="badge text-bg-danger">
+                ${error.message}
+            </span>
+        `;
+
+    }
+
+}
+
+
+async function guardarConfiguracionR16Auto() {
+
+    const activo =
+        document.getElementById("r16AutoActivo");
+
+    const intervalo =
+        document.getElementById("r16AutoIntervalo");
+
+    const u8 =
+        document.getElementById("r16AutoU8");
+
+    const u9 =
+        document.getElementById("r16AutoU9");
+
+    const boton =
+        document.getElementById("btnGuardarR16Auto");
+
+    const estado =
+        document.getElementById("estadoR16Auto");
+
+    if (
+        !activo ||
+        !intervalo ||
+        !u8 ||
+        !u9 ||
+        !boton ||
+        !estado
+    ) {
+        return;
+    }
+
+    const minutos =
+        Number(intervalo.value);
+
+    if (
+        !Number.isInteger(minutos) ||
+        minutos < 5 ||
+        minutos > 1440
+    ) {
+
+        estado.innerHTML = `
+            <span class="badge text-bg-danger">
+                Intervalo invalido: use entre 5 y 1440 minutos
+            </span>
+        `;
+
+        return;
+    }
+
+    if (
+        !u8.checked &&
+        !u9.checked
+    ) {
+
+        estado.innerHTML = `
+            <span class="badge text-bg-danger">
+                Seleccione al menos U8 o U9
+            </span>
+        `;
+
+        return;
+    }
+
+    const textoOriginal =
+        boton.innerHTML;
+
+    boton.disabled = true;
+
+    boton.innerHTML = `
+        <span
+            class="spinner-border spinner-border-sm me-2"
+            role="status">
+        </span>
+        Guardando...
+    `;
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/configuracion/r16-auto",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify(
+                        {
+                            activo:
+                                activo.checked,
+
+                            intervalo_minutos:
+                                minutos,
+
+                            actualizar_u8:
+                                u8.checked,
+
+                            actualizar_u9:
+                                u9.checked
+                        }
+                    )
+                }
+            );
+
+        const datos =
+            await response.json();
+
+        if (!response.ok) {
+
+            throw new Error(
+                datos.detail ||
+                "Error guardando configuracion R1.6 automatica"
+            );
+
+        }
+
+        estado.innerHTML = `
+            <span class="badge text-bg-success">
+                Configuracion guardada
+            </span>
+        `;
+
+        await cargarConfiguracionR16Auto();
+
+    }
+    catch (error) {
+
+        console.error(
+            "Error guardando configuracion R1.6 automatica:",
+            error
+        );
+
+        estado.innerHTML = `
+            <span class="badge text-bg-danger">
+                ${error.message}
+            </span>
+        `;
+
+    }
+    finally {
+
+        boton.disabled = false;
+
+        boton.innerHTML =
+            textoOriginal;
+
+    }
+
+}
+
+
 /* ==========================================================
    INICIALIZACION
    ========================================================== */
@@ -1975,6 +2554,8 @@ document.addEventListener(
 
         configurarPasswordSinoptico();
 
+        cargarConfiguracionR16Auto();
+
         const botonGuardar =
             document.getElementById(
                 "btnGuardarSinoptico"
@@ -1985,6 +2566,20 @@ document.addEventListener(
             botonGuardar.addEventListener(
                 "click",
                 guardarCredencialSinoptico
+            );
+
+        }
+
+        const botonGuardarR16Auto =
+            document.getElementById(
+                "btnGuardarR16Auto"
+            );
+
+        if (botonGuardarR16Auto) {
+
+            botonGuardarR16Auto.addEventListener(
+                "click",
+                guardarConfiguracionR16Auto
             );
 
         }

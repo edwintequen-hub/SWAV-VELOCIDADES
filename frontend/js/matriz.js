@@ -236,6 +236,205 @@ function aplicarContextoDesdeDashboard() {
 }
 
 
+
+function obtenerUnidadDashboardMatriz() {
+
+    const combo =
+        document.getElementById(
+            "cmbUnidad"
+        );
+
+    if (combo && combo.options.length > 0) {
+
+        const unidadCombo =
+            String(
+                combo.value || ""
+            )
+            .trim()
+            .toUpperCase();
+
+        if (
+            unidadCombo === "U8"
+            ||
+            unidadCombo === "U9"
+        ) {
+            return unidadCombo;
+        }
+
+        // Si el usuario selecciono Todas,
+        // no debemos volver a tomar la unidad
+        // antigua desde la URL.
+        return null;
+    }
+
+    // Respaldo solamente durante carga inicial.
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
+
+    const unidadUrl =
+        String(
+            params.get("unidad") || ""
+        )
+        .trim()
+        .toUpperCase();
+
+    if (
+        unidadUrl === "U8"
+        ||
+        unidadUrl === "U9"
+    ) {
+        return unidadUrl;
+    }
+
+    return null;
+}
+
+
+// ======================================================
+// ULTIMA UNIDAD R1.6 PROCESADA
+// ======================================================
+
+function convertirFechaDashboardAValor(
+    valor
+) {
+
+    const texto =
+        String(
+            valor || ""
+        ).trim();
+
+    const match =
+        texto.match(
+            /^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})/
+        );
+
+    if (!match) {
+        return 0;
+    }
+
+    const dia =
+        Number(match[1]);
+
+    const mes =
+        Number(match[2]) - 1;
+
+    const anio =
+        Number(match[3]);
+
+    const hora =
+        Number(match[4]);
+
+    const minuto =
+        Number(match[5]);
+
+    return new Date(
+        anio,
+        mes,
+        dia,
+        hora,
+        minuto,
+        0
+    ).getTime();
+}
+
+
+async function obtenerUltimaUnidadProcesada() {
+
+    const unidades = [
+        "U8",
+        "U9"
+    ];
+
+    const resultados =
+        await Promise.all(
+            unidades.map(
+                async unidad => {
+
+                    try {
+
+                        const response =
+                            await fetch(
+                                "/api/dashboard?unidad="
+                                + encodeURIComponent(
+                                    unidad
+                                ),
+                                {
+                                    cache: "no-store"
+                                }
+                            );
+
+                        if (!response.ok) {
+
+                            return null;
+                        }
+
+                        const dashboard =
+                            await response.json();
+
+                        return {
+                            unidad:
+                                String(
+                                    dashboard.unidad
+                                    || unidad
+                                )
+                                .trim()
+                                .toUpperCase(),
+
+                            ultimaImportacion:
+                                dashboard.ultima_importacion
+                                || "",
+
+                            valorFecha:
+                                convertirFechaDashboardAValor(
+                                    dashboard.ultima_importacion
+                                )
+                        };
+
+                    }
+                    catch (error) {
+
+                        console.warn(
+                            "No fue posible consultar "
+                            + "ultima importacion "
+                            + unidad,
+                            error
+                        );
+
+                        return null;
+                    }
+                }
+            )
+        );
+
+    const validos =
+        resultados
+            .filter(Boolean)
+            .filter(
+                item =>
+                    item.unidad === "U8"
+                    ||
+                    item.unidad === "U9"
+            )
+            .sort(
+                (a, b) =>
+                    b.valorFecha
+                    -
+                    a.valorFecha
+            );
+
+    if (
+        validos.length === 0
+    ) {
+
+        return null;
+    }
+
+    return validos[0].unidad;
+}
+
+
 // ======================================================
 // CARGAR MATRIZ
 // ======================================================
@@ -244,8 +443,72 @@ async function cargarMatriz() {
 
     try {
 
+        // ==================================================
+        // CONSERVAR UNIDAD SELECCIONADA
+        // ==================================================
+
+        const unidadSeleccionadaAntes =
+            obtenerUnidadDashboardMatriz();
+
+        // ==================================================
+        // UNIDAD OBJETIVO
+        //
+        // 1. Si usuario eligio U8/U9, respetarla.
+        // 2. Si esta en Todas al iniciar, usar la ultima
+        //    unidad R1.6 realmente procesada.
+        // ==================================================
+
+        // ==================================================
+        // UNIDAD DESDE URL
+        // Permite tener U8 y U9 abiertas simultaneamente
+        // en ventanas independientes.
+        // ==================================================
+
+        const paramsUnidadInicial =
+            new URLSearchParams(
+                window.location.search
+            );
+
+        const unidadDesdeUrl =
+            String(
+                paramsUnidadInicial.get("unidad")
+                || ""
+            )
+            .trim()
+            .toUpperCase();
+
+        const unidadUrlValida =
+            (
+                unidadDesdeUrl === "U8"
+                ||
+                unidadDesdeUrl === "U9"
+            )
+                ? unidadDesdeUrl
+                : null;
+
+
+        const unidadObjetivo =
+            unidadSeleccionadaAntes
+            ||
+            unidadUrlValida
+            ||
+            await obtenerUltimaUnidadProcesada();
+
+
         const response =
-            await fetch("/api/matriz");
+            await fetch(
+                (
+                    unidadObjetivo
+                        ? "/api/matriz?unidad="
+                            + encodeURIComponent(
+                                unidadObjetivo
+                            )
+                        : "/api/matriz"
+                ),
+                {
+                    cache: "no-store"
+                }
+            );
 
         if (!response.ok) {
 
@@ -255,10 +518,69 @@ async function cargarMatriz() {
 
         }
 
-        datosOriginales =
+        const datosRecibidos =
             await response.json();
 
+        // ==================================================
+        // SEGURIDAD FINAL DE UNIDAD
+        // La matriz nunca puede mezclar U8 y U9.
+        // ==================================================
+
+        datosOriginales =
+            unidadObjetivo
+                ? datosRecibidos.filter(
+                    fila =>
+                        String(
+                            fila.unidad || ""
+                        )
+                        .trim()
+                        .toUpperCase()
+                        ===
+                        String(
+                            unidadObjetivo
+                        )
+                        .trim()
+                        .toUpperCase()
+                )
+                : datosRecibidos;
+
         cargarCombos();
+
+        // ==================================================
+        // RESTAURAR UNIDAD SELECCIONADA
+        // cargarCombos() reconstruye cmbUnidad.
+        // ==================================================
+
+        const comboUnidadRecargado =
+            document.getElementById(
+                "cmbUnidad"
+            );
+
+        if (
+            comboUnidadRecargado
+            &&
+            unidadObjetivo
+        ) {
+
+            const existeUnidadSeleccionada = [
+                ...comboUnidadRecargado.options
+            ].some(
+                opcion =>
+                    String(
+                        opcion.value || ""
+                    )
+                    .trim()
+                    .toUpperCase()
+                    === unidadObjetivo
+            );
+
+            if (existeUnidadSeleccionada) {
+
+                comboUnidadRecargado.value =
+                    unidadObjetivo;
+
+            }
+        }
 
         // ==================================================
         // UNIDAD ACTIVA = ULTIMA UNIDAD R1.6 PROCESADA
@@ -273,9 +595,24 @@ async function cargarMatriz() {
 
         try {
 
+            const unidadDashboard =
+                obtenerUnidadDashboardMatriz();
+
+            if (!unidadDashboard) {
+                throw new Error(
+                    "SIN_UNIDAD_DASHBOARD"
+                );
+            }
+
             const responseDashboard =
                 await fetch(
-                    "/api/dashboard"
+                    "/api/dashboard?unidad="
+                    + encodeURIComponent(
+                        unidadDashboard
+                    ),
+                    {
+                        cache: "no-store"
+                    }
                 );
 
             if (responseDashboard.ok) {
@@ -535,7 +872,7 @@ function periodoAHora(periodo) {
 
 
 // ======================================================
-// FORMATO RANGO DEL PERÍODO
+// FORMATO RANGO DEL PERÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂODO
 // ======================================================
 
 function periodoARango(periodo) {
@@ -569,11 +906,8 @@ function cargarCombos() {
     llenarCombo(
         "cmbUnidad",
         [
-            ...new Set(
-                datosOriginales
-                    .map(x => x.unidad)
-                    .filter(Boolean)
-            )
+            "U8",
+            "U9"
         ]
     );
 
@@ -1362,7 +1696,7 @@ function obtenerEstadosSeleccionados() {
 
 
 // ======================================================
-// TEXTO DEL BOTÃ“N ESTADO
+// TEXTO DEL BOTÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œN ESTADO
 // ======================================================
 
 function actualizarTextoEstado() {
@@ -1440,27 +1774,25 @@ function actualizarTextoEstado() {
 
 document.addEventListener(
     "change",
-    event => {
-
-        const controles = [
-
-            "cmbUnidad",
-
-            "cmbTipoDia"
-
-        ];
-
+    async event => {
 
         if (
-            controles.includes(
-                event.target.id
-            )
+            event.target.id ===
+            "cmbUnidad"
+        ) {
+
+            await cargarMatriz();
+
+            return;
+        }
+
+        if (
+            event.target.id ===
+            "cmbTipoDia"
         ) {
 
             aplicarFiltros();
-
         }
-
     }
 );
 
@@ -1678,9 +2010,28 @@ async function actualizarContadores(
 
     try {
 
+        const unidadDashboard =
+            obtenerUnidadDashboardMatriz();
+
+        if (!unidadDashboard) {
+
+            console.info(
+                "Matriz en modo Todas: "
+                + "no se consulta Dashboard por unidad."
+            );
+
+            return;
+        }
+
         const response =
             await fetch(
-                "/api/dashboard"
+                "/api/dashboard?unidad="
+                + encodeURIComponent(
+                    unidadDashboard
+                ),
+                {
+                    cache: "no-store"
+                }
             );
 
         if (!response.ok) {
@@ -1811,7 +2162,7 @@ async function actualizarContadores(
 
 
 // ======================================================
-// DETERMINAR SI UN PERÃODO TIENE ESTADO SELECCIONADO
+// DETERMINAR SI UN PERÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂODO TIENE ESTADO SELECCIONADO
 // ======================================================
 
 function periodoTieneEstado(
@@ -1849,7 +2200,7 @@ function periodoTieneEstado(
 
 
 // ======================================================
-// OBTENER PERÃODOS VISIBLES
+// OBTENER PERÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂODOS VISIBLES
 // ======================================================
 
 function obtenerPeriodosVisibles(
@@ -2159,7 +2510,7 @@ function construirTabla(
 
 
                     // ----------------------------------
-                    // SI EL ESTADO NO ESTÃ SELECCIONADO
+                    // SI EL ESTADO NO ESTÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â SELECCIONADO
                     // ----------------------------------
 
                     const estados =
@@ -2185,7 +2536,7 @@ function construirTabla(
 
 
                     // ----------------------------------
-                    // REDUCCIÃ“N
+                    // REDUCCIÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œN
                     // ----------------------------------
 
                     const reduccion =
@@ -2338,10 +2689,6 @@ function construirTabla(
                     // ----------------------------------
 
                     td.innerHTML = `
-
-                        <div class="semaforo">
-                            <span class="${claseSemaforo}"></span>
-                        </div>
 
                         <div class="indicador-matriz">
                             ${
@@ -2707,7 +3054,7 @@ function cargarRegistro(
             >
 
                 No hay PPU registradas
-                para este período.
+                para este perÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­odo.
 
             </div>
 
@@ -2743,6 +3090,14 @@ function cargarRegistro(
 
                             <th>
                                 Indicador
+                            </th>
+
+                            <th>
+                                Hora Inicio
+                            </th>
+
+                            <th>
+                                Hora Fin
                             </th>
 
                             <th>
@@ -2782,75 +3137,7 @@ function cargarRegistro(
                                             "-"
                                         }
                                     </strong>
-
-                                    ${
-                                        String(
-                                            ppu.estado ?? ""
-                                        )
-                                        .trim()
-                                        .toUpperCase() === "COMPLEJO"
-
-                                            ? `
-                                                <span
-                                                    title="Complejo"
-                                                    style="
-                                                        display:inline-block;
-                                                        width:14px;
-                                                        height:14px;
-                                                        border-radius:50%;
-                                                        background:#dc3545;
-                                                        margin-left:7px;
-                                                        vertical-align:middle;
-                                                    "
-                                                ></span>
-                                              `
-
-                                            : String(
-                                                ppu.estado ?? ""
-                                              )
-                                              .trim()
-                                              .toUpperCase() === "SIMPLE"
-
-                                            ? `
-                                                <span
-                                                    title="Simple"
-                                                    style="
-                                                        display:inline-block;
-                                                        width:14px;
-                                                        height:14px;
-                                                        border-radius:50%;
-                                                        background:#ffc107;
-                                                        margin-left:7px;
-                                                        vertical-align:middle;
-                                                    "
-                                                ></span>
-                                              `
-
-                                             : String(
-                                                 ppu.estado ?? ""
-                                               )
-                                               .trim()
-                                               .toUpperCase() === "OK"
-
-                                             ? `
-                                                 <span
-                                                     title="OK"
-                                                     style="
-                                                         display:inline-block;
-                                                         width:14px;
-                                                         height:14px;
-                                                         border-radius:50%;
-                                                         background:#198754;
-                                                         margin-left:7px;
-                                                         vertical-align:middle;
-                                                     "
-                                                 ></span>
-                                               `
-
-                                             : ""
-                                    }
-
-                                </td>
+</td>
 
 
                                 <td>
@@ -2877,74 +3164,34 @@ function cargarRegistro(
                                             .toUpperCase()
                                         }
                                     </strong>
+</td>
 
+
+                                <td class="text-center">
                                     ${
-                                        String(
-                                            ppu.estado ?? ""
-                                        )
-                                        .trim()
-                                        .toUpperCase() === "COMPLEJO"
-
-                                            ? `
-                                                <span
-                                                    title="Complejo"
-                                                    style="
-                                                        display:inline-block;
-                                                        width:14px;
-                                                        height:14px;
-                                                        border-radius:50%;
-                                                        background:#dc3545;
-                                                        margin-left:7px;
-                                                        vertical-align:middle;
-                                                    "
-                                                ></span>
-                                              `
-
-                                            : String(
-                                                ppu.estado ?? ""
+                                        ppu.inicio_servicio
+                                            ? String(
+                                                ppu.inicio_servicio
                                               )
                                               .trim()
-                                              .toUpperCase() === "SIMPLE"
-
-                                            ? `
-                                                <span
-                                                    title="Simple"
-                                                    style="
-                                                        display:inline-block;
-                                                        width:14px;
-                                                        height:14px;
-                                                        border-radius:50%;
-                                                        background:#ffc107;
-                                                        margin-left:7px;
-                                                        vertical-align:middle;
-                                                    "
-                                                ></span>
-                                              `
-
-                                             : String(
-                                                 ppu.estado ?? ""
-                                               )
-                                               .trim()
-                                               .toUpperCase() === "OK"
-
-                                             ? `
-                                                 <span
-                                                     title="OK"
-                                                     style="
-                                                         display:inline-block;
-                                                         width:14px;
-                                                         height:14px;
-                                                         border-radius:50%;
-                                                         background:#198754;
-                                                         margin-left:7px;
-                                                         vertical-align:middle;
-                                                     "
-                                                 ></span>
-                                               `
-
-                                             : ""
+                                              .split(" ")
+                                              .pop()
+                                            : "-"
                                     }
+                                </td>
 
+
+                                <td class="text-center">
+                                    ${
+                                        ppu.fin_servicio
+                                            ? String(
+                                                ppu.fin_servicio
+                                              )
+                                              .trim()
+                                              .split(" ")
+                                              .pop()
+                                            : "-"
+                                    }
                                 </td>
 
 
@@ -3170,7 +3417,7 @@ function cargarRegistro(
                     </div>
 
 
-                    <!-- VELOCIDAD TEÃ“RICA -->
+                    <!-- VELOCIDAD TEÓRICA -->
 
                     <div class="col detalle-item">
 
@@ -3207,7 +3454,7 @@ function cargarRegistro(
                     </div>
 
 
-                    <!-- REDUCCIÃ“N -->
+                    <!-- REDUCCIÓN -->
 
                     <div class="col detalle-item">
 
@@ -3253,7 +3500,7 @@ function cargarRegistro(
                 <div class="row detalle-fila detalle-fila-secundaria">
 
 
-                    <!-- PERÃODO -->
+                    <!-- PERÍODO -->
 
                     <div class="col-md-3 detalle-item">
 
@@ -3320,7 +3567,7 @@ function cargarRegistro(
                     </div>
 
 
-<!-- CLASIFICACIÃ“N -->
+<!-- CLASIFICACIÓN -->
 
                     <div class="col-md-3 detalle-item">
 
@@ -3432,4 +3679,323 @@ function cargarRegistro(
 
 
 
+
+
+
+
+// =========================================================
+// SWAV_SELECTOR_UNIDAD_MATRIZ_V1
+// SELECTOR DE UNIDAD POR URL
+// NO UTILIZA localStorage
+// =========================================================
+
+(function instalarSelectorUnidadMatriz() {
+
+    function unidadActualMatriz() {
+
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
+
+        const unidad =
+            String(
+                params.get("unidad")
+                || ""
+            )
+            .trim()
+            .toUpperCase();
+
+        if (
+            unidad === "U8"
+            ||
+            unidad === "U9"
+        ) {
+            return unidad;
+        }
+
+        const combo =
+            document.getElementById(
+                "cmbUnidad"
+            );
+
+        const unidadCombo =
+            String(
+                combo?.value
+                || ""
+            )
+            .trim()
+            .toUpperCase();
+
+        if (
+            unidadCombo === "U8"
+            ||
+            unidadCombo === "U9"
+        ) {
+            return unidadCombo;
+        }
+
+        return null;
+    }
+
+
+    function actualizarNavegacionMatriz(
+        unidad
+    ) {
+
+        if (
+            unidad !== "U8"
+            &&
+            unidad !== "U9"
+        ) {
+            return;
+        }
+
+        document
+            .querySelectorAll(
+                'a[href="/dashboard"], '
+                + 'a[href="/dashboard/u8"], '
+                + 'a[href="/dashboard/u9"]'
+            )
+            .forEach(
+                enlace => {
+
+                    enlace.href =
+                        unidad === "U9"
+                            ? "/dashboard/u9"
+                            : "/dashboard/u8";
+                }
+            );
+    }
+
+
+    function crearSelectorMatriz() {
+
+        if (
+            document.getElementById(
+                "swavSelectorUnidad"
+            )
+        ) {
+            return;
+        }
+
+        const unidad =
+            unidadActualMatriz();
+
+        if (
+            unidad !== "U8"
+            &&
+            unidad !== "U9"
+        ) {
+            return;
+        }
+
+        const contenedor =
+            document.createElement(
+                "div"
+            );
+
+        contenedor.id =
+            "swavSelectorUnidad";
+
+        contenedor.className =
+            "swav-selector-unidad";
+
+        contenedor.innerHTML = `
+            <span class="swav-selector-etiqueta">
+                Unidad:
+            </span>
+
+            <button
+                type="button"
+                class="swav-selector-boton ${
+                    unidad === "U8"
+                        ? "activo"
+                        : ""
+                }"
+                data-unidad="U8"
+            >
+                U8
+            </button>
+
+            <button
+                type="button"
+                class="swav-selector-boton ${
+                    unidad === "U9"
+                        ? "activo"
+                        : ""
+                }"
+                data-unidad="U9"
+            >
+                U9
+            </button>
+        `;
+
+        document.body.appendChild(
+            contenedor
+        );
+
+        contenedor
+            .querySelectorAll(
+                "[data-unidad]"
+            )
+            .forEach(
+                boton => {
+
+                    boton.addEventListener(
+                        "click",
+                        () => {
+
+                            const nuevaUnidad =
+                                boton.dataset.unidad;
+
+                            if (
+                                nuevaUnidad === unidad
+                            ) {
+                                return;
+                            }
+
+                            window.location.href =
+                                "/matriz?unidad="
+                                +
+                                encodeURIComponent(
+                                    nuevaUnidad
+                                );
+                        }
+                    );
+                }
+            );
+
+        actualizarNavegacionMatriz(
+            unidad
+        );
+    }
+
+
+    function instalarEstiloSelectorMatriz() {
+
+        if (
+            document.getElementById(
+                "swavSelectorUnidadEstilo"
+            )
+        ) {
+            return;
+        }
+
+        const style =
+            document.createElement(
+                "style"
+            );
+
+        style.id =
+            "swavSelectorUnidadEstilo";
+
+        style.textContent = `
+            .swav-selector-unidad {
+                position: fixed;
+                top: 14px;
+                right: 22px;
+
+                z-index: 9999;
+
+                display: flex;
+                align-items: center;
+                gap: 7px;
+
+                padding: 7px 9px;
+
+                background: rgba(255,255,255,0.97);
+
+                border: 1px solid #d8e1ec;
+                border-radius: 10px;
+
+                box-shadow:
+                    0 2px 10px
+                    rgba(20,45,80,0.10);
+
+                font-family:
+                    Arial,
+                    sans-serif;
+            }
+
+            .swav-selector-etiqueta {
+                margin-right: 3px;
+
+                font-size: 12px;
+                font-weight: 800;
+
+                color: #1f3550;
+            }
+
+            .swav-selector-boton {
+                min-width: 46px;
+
+                padding: 6px 12px;
+
+                border:
+                    1px solid
+                    #b9c9dc;
+
+                border-radius: 7px;
+
+                background: #ffffff;
+
+                color: #1c4f83;
+
+                font-size: 12px;
+                font-weight: 800;
+
+                cursor: pointer;
+
+                transition:
+                    all 0.15s ease;
+            }
+
+            .swav-selector-boton:hover {
+                background: #edf5ff;
+            }
+
+            .swav-selector-boton.activo {
+                background: #1769d2;
+                border-color: #1769d2;
+
+                color: #ffffff;
+
+                box-shadow:
+                    0 1px 4px
+                    rgba(23,105,210,0.30);
+            }
+        `;
+
+        document.head.appendChild(
+            style
+        );
+    }
+
+
+    function iniciarSelectorMatriz() {
+
+        instalarEstiloSelectorMatriz();
+
+        crearSelectorMatriz();
+    }
+
+
+    if (
+        document.readyState ===
+        "loading"
+    ) {
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            iniciarSelectorMatriz
+        );
+
+    }
+    else {
+
+        iniciarSelectorMatriz();
+    }
+
+})();
 

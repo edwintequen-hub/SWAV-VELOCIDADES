@@ -29,7 +29,11 @@ class ImportadorAnexo4:
     # IMPORTAR
     # =====================================================
 
-    def importar(self, archivo):
+    def importar(
+        self,
+        archivo,
+        unidad_objetivo=None
+    ):
 
         print("=" * 80)
         print("IMPORTANDO ANEXO 4")
@@ -118,6 +122,45 @@ class ImportadorAnexo4:
                 "El Anexo 4 no contiene ninguna unidad válida."
             )
 
+        if unidad_objetivo is not None:
+
+            unidad_objetivo = (
+                str(unidad_objetivo)
+                .strip()
+                .upper()
+            )
+
+            if unidad_objetivo not in {
+                "U8",
+                "U9"
+            }:
+
+                raise Exception(
+                    "Unidad objetivo no valida para "
+                    "Anexo 4: "
+                    + unidad_objetivo
+                )
+
+            if (
+                unidad_objetivo
+                not in unidades_archivo
+            ):
+
+                raise Exception(
+                    "El archivo Anexo 4 no contiene "
+                    "la unidad "
+                    + unidad_objetivo
+                    + "."
+                )
+
+            # IMPORTANTE:
+            # Desde este punto el importador solamente
+            # puede borrar, procesar y registrar
+            # la unidad elegida por el usuario.
+            unidades_archivo = {
+                unidad_objetivo
+            }
+
         print(
             "Unidades del archivo:",
             sorted(unidades_archivo)
@@ -173,6 +216,13 @@ class ImportadorAnexo4:
             registros = 0
 
             duplicados = set()
+
+            # =================================================
+            # CONSOLIDACION ANEXO 4
+            # Una fila por clave, conservando MAYOR DURACION
+            # =================================================
+
+            seleccionados = {}
 
             # =================================================
             # RECORRER EXCEL
@@ -312,61 +362,107 @@ class ImportadorAnexo4:
 
                     )
 
-                    if clave in duplicados:
+                    # -----------------------------------------
+                    # CONSOLIDAR DUPLICADOS
+                    # REGLA OFICIAL:
+                    # conservar MAYOR DURACION por clave
+                    # -----------------------------------------
 
-                        continue
-
-                    duplicados.add(
+                    actual = seleccionados.get(
                         clave
                     )
 
-                    # -----------------------------------------
-                    # CREAR REGISTRO
-                    # -----------------------------------------
+                    if (
+                        actual is None
+                        or
+                        duracion > actual["duracion"]
+                    ):
 
-                    nuevo = Periodo(
+                        seleccionados[
+                            clave
+                        ] = {
 
-                        unidad=unidad,
+                            "unidad": unidad,
 
-                        empresa=empresa,
+                            "empresa": empresa,
 
-                        escenario=escenario,
+                            "escenario": escenario,
 
-                        codigo_ts=codigo_ts,
+                            "codigo_ts": codigo_ts,
 
-                        sentido=sentido,
+                            "sentido": sentido,
 
-                        tipo_dia=tipo_dia,
+                            "tipo_dia": tipo_dia,
 
-                        tipo_evento=tipo_evento,
+                            "tipo_evento": tipo_evento,
 
-                        hora_inicio=hora_inicio,
+                            "hora_inicio": hora_inicio,
 
-                        periodo_inicio=periodo_inicio,
+                            "periodo_inicio": periodo_inicio,
 
-                        hora_fin=hora_fin,
+                            "hora_fin": hora_fin,
 
-                        periodo_fin=periodo_fin,
+                            "periodo_fin": periodo_fin,
 
-                        duracion=duracion,
+                            "duracion": duracion,
 
-                    )
+                        }
 
-                    self.db.add(
-                        nuevo
-                    )
-
-                    validos_por_unidad[
-                        unidad
-                    ] += 1
-
-                    registros += 1
+                    continue
 
                 except Exception as e:
 
                     print(
                         f"Fila {indice + 8}: {e}"
                     )
+
+            # =================================================
+            # INSERTAR PERIODOS CONSOLIDADOS
+            # =================================================
+
+            for dato in seleccionados.values():
+
+                nuevo = Periodo(
+
+                    unidad=dato["unidad"],
+
+                    empresa=dato["empresa"],
+
+                    escenario=dato["escenario"],
+
+                    codigo_ts=dato["codigo_ts"],
+
+                    sentido=dato["sentido"],
+
+                    tipo_dia=dato["tipo_dia"],
+
+                    tipo_evento=dato["tipo_evento"],
+
+                    hora_inicio=dato["hora_inicio"],
+
+                    periodo_inicio=dato[
+                        "periodo_inicio"
+                    ],
+
+                    hora_fin=dato["hora_fin"],
+
+                    periodo_fin=dato[
+                        "periodo_fin"
+                    ],
+
+                    duracion=dato["duracion"],
+
+                )
+
+                self.db.add(
+                    nuevo
+                )
+
+                validos_por_unidad[
+                    dato["unidad"]
+                ] += 1
+
+                registros += 1
 
             # =================================================
             # ASEGURAR INSERTS

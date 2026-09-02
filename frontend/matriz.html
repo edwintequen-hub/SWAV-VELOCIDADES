@@ -268,6 +268,10 @@
         vertical-align: middle;
     }
 
+    .mini-semaforo-normal {
+        background: #198754;
+    }
+
     .mini-semaforo-simple {
         background: #f4b400;
     }
@@ -572,7 +576,7 @@
             class="estado-resumen normal-resumen"
         >
 
-            &#x1F7E2;
+            
             <b>Normal:</b>
 
             <strong id="contadorNormal">
@@ -586,7 +590,7 @@
             class="estado-resumen simple-resumen"
         >
 
-            &#x1F7E1;
+            
             <b>Simple:</b>
 
             <strong id="contadorSimple">
@@ -600,7 +604,7 @@
             class="estado-resumen complejo-resumen"
         >
 
-            &#x1F534;
+            
             <b>Complejo:</b>
 
             <strong id="contadorComplejo">
@@ -629,14 +633,14 @@
             </strong>
 
             <span class="indicador-simple">
-                <span class="mini-semaforo mini-semaforo-simple"></span> Simple:
+                 Simple:
                 <strong id="contadorIpSimple">
                     0
                 </strong>
             </span>
 
             <span class="indicador-complejo">
-                <span class="mini-semaforo mini-semaforo-complejo"></span> Complejo:
+                 Complejo:
                 <strong id="contadorIpComplejo">
                     0
                 </strong>
@@ -662,14 +666,14 @@
             </strong>
 
             <span class="indicador-simple">
-                <span class="mini-semaforo mini-semaforo-simple"></span> Simple:
+                 Simple:
                 <strong id="contadorIeSimple">
                     0
                 </strong>
             </span>
 
             <span class="indicador-complejo">
-                <span class="mini-semaforo mini-semaforo-complejo"></span> Complejo:
+                 Complejo:
                 <strong id="contadorIeComplejo">
                     0
                 </strong>
@@ -706,13 +710,28 @@
                      para conservar la logica interna de matriz.js
                      ================================================= -->
 
-                <div style="display:none;">
+                
+                <div class="col-md-2">
 
-                    <select id="cmbUnidad">
+                    <label
+                        for="cmbUnidad"
+                        class="form-label"
+                    >
+                        Unidad
+                    </label>
+
+                    <select
+                        id="cmbUnidad"
+                        class="form-select"
+                    >
                         <option value="">
                             Todas
                         </option>
                     </select>
+
+                </div>
+
+                <div style="display:none;">
 
                     <select id="cmbTipoDia">
                         <option value="">
@@ -721,6 +740,7 @@
                     </select>
 
                 </div>
+
 
 
                 <!-- =================================================
@@ -785,7 +805,7 @@
                                 >
 
                                 <span>
-                                    &#x1F7E2; Normal
+                                    Normal
                                 </span>
 
                             </label>
@@ -803,7 +823,7 @@
                                 >
 
                                 <span>
-                                    &#x1F7E1; Simple
+                                    Simple
                                 </span>
 
                             </label>
@@ -821,7 +841,7 @@
                                 >
 
                                 <span>
-                                    &#x1F534; Complejo
+                                    Complejo
                                 </span>
 
                             </label>

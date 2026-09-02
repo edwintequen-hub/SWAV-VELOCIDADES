@@ -1,13 +1,38 @@
-﻿// ==========================================================
+// ==========================================================
 // SISTEMA WEB ANÁLISIS DE VELOCIDADES
 // Dashboard v3
 // ==========================================================
 
 let dashboard = null;
 
+const UNIDAD_DASHBOARD = (() => {
+
+    const ruta =
+        window.location.pathname
+        .toLowerCase();
+
+    if (
+        ruta === "/dashboard/u9"
+        ||
+        ruta.endsWith("/dashboard/u9")
+    ) {
+        return "U9";
+    }
+
+    return "U8";
+
+})();
+
 let graficoComparacion = null;
 let graficoPeriodos = null;
 let graficoTop = null;
+
+let intervaloDashboardAutomatico = null;
+let dashboardActualizando = false;
+
+let proximaActualizacionR16 = null;
+let intervaloContadorDashboardR16 = null;
+let intervaloEstadoDashboardR16 = null;
 
 
 // ==========================================================
@@ -16,8 +41,264 @@ let graficoTop = null;
 
 document.addEventListener(
     "DOMContentLoaded",
-    iniciarDashboard
+    () => {
+
+        iniciarDashboard();
+
+        iniciarEstadoAutomaticoR16Dashboard();
+
+        if (!intervaloDashboardAutomatico) {
+
+            intervaloDashboardAutomatico =
+                setInterval(
+                    iniciarDashboard,
+                    30000
+                );
+
+        }
+
+    }
 );
+
+
+
+// ==========================================================
+// ESTADO AUTOMATICO R1.6 - DASHBOARD
+// ==========================================================
+
+function formatearFechaHoraR16Dashboard(valor) {
+
+    if (!valor) {
+        return "--";
+    }
+
+    const fecha = new Date(valor);
+
+    if (Number.isNaN(fecha.getTime())) {
+        return valor;
+    }
+
+    return fecha.toLocaleString(
+        "es-CL",
+        {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false
+        }
+    );
+}
+
+
+function actualizarContadorDashboardR16() {
+
+    const elemento =
+        document.getElementById(
+            "contadorActualizacionR16"
+        );
+
+    const etiqueta =
+        document.getElementById(
+            "etiquetaContadorActualizacionR16"
+        );
+
+    if (!elemento) {
+        return;
+    }
+
+    if (!proximaActualizacionR16) {
+
+        if (etiqueta) {
+            etiqueta.textContent =
+                "Faltan";
+        }
+
+        elemento.textContent =
+            "--:--:--";
+
+        return;
+    }
+
+    const ahora =
+        Date.now();
+
+    const objetivo =
+        proximaActualizacionR16.getTime();
+
+    let diferencia =
+        Math.floor(
+            (objetivo - ahora) / 1000
+        );
+
+    // ==================================================
+    // TODAVIA FALTA PARA LA EJECUCION
+    // ==================================================
+
+    if (diferencia > 0) {
+
+        if (etiqueta) {
+            etiqueta.textContent =
+                "Faltan";
+        }
+
+        const horas =
+            Math.floor(
+                diferencia / 3600
+            );
+
+        diferencia %= 3600;
+
+        const minutos =
+            Math.floor(
+                diferencia / 60
+            );
+
+        const segundos =
+            diferencia % 60;
+
+        elemento.textContent =
+            String(horas).padStart(2, "0")
+            + ":"
+            + String(minutos).padStart(2, "0")
+            + ":"
+            + String(segundos).padStart(2, "0");
+
+        return;
+    }
+
+    // ==================================================
+    // LLEGO LA HORA
+    // EL BACKEND ESTA DESCARGANDO / PROCESANDO
+    // ==================================================
+
+    if (etiqueta) {
+        etiqueta.textContent =
+            "Actualizando";
+    }
+
+    elemento.textContent =
+        "ACTUALIZANDO";
+
+}
+
+
+async function cargarEstadoAutomaticoR16Dashboard() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/configuracion/r16-auto",
+                {
+                    cache: "no-store"
+                }
+            );
+
+        if (!response.ok) {
+            throw new Error(
+                "HTTP " + response.status
+            );
+        }
+
+        const datos =
+            await response.json();
+
+        const ultima =
+            document.getElementById(
+                "ultimaImportacion"
+            );
+
+        const proxima =
+            document.getElementById(
+                "proximaActualizacionR16"
+            );
+
+        if (
+            ultima &&
+            datos.ultima_ejecucion
+        ) {
+
+            ultima.textContent =
+                formatearFechaHoraR16Dashboard(
+                    datos.ultima_ejecucion
+                );
+
+        }
+
+        if (proxima) {
+
+            proxima.textContent =
+                formatearFechaHoraR16Dashboard(
+                    datos.proxima_ejecucion
+                );
+
+        }
+
+        if (datos.proxima_ejecucion) {
+
+            const fecha =
+                new Date(
+                    datos.proxima_ejecucion
+                );
+
+            proximaActualizacionR16 =
+                Number.isNaN(
+                    fecha.getTime()
+                )
+                    ? null
+                    : fecha;
+
+        }
+        else {
+
+            proximaActualizacionR16 =
+                null;
+
+        }
+
+        actualizarContadorDashboardR16();
+
+    }
+    catch (error) {
+
+        console.error(
+            "Error cargando estado automatico R1.6:",
+            error
+        );
+
+    }
+
+}
+
+
+function iniciarEstadoAutomaticoR16Dashboard() {
+
+    cargarEstadoAutomaticoR16Dashboard();
+
+    if (!intervaloContadorDashboardR16) {
+
+        intervaloContadorDashboardR16 =
+            setInterval(
+                actualizarContadorDashboardR16,
+                1000
+            );
+
+    }
+
+    if (!intervaloEstadoDashboardR16) {
+
+        intervaloEstadoDashboardR16 =
+            setInterval(
+                cargarEstadoAutomaticoR16Dashboard,
+                15000
+            );
+
+    }
+
+}
 
 
 // ==========================================================
@@ -26,12 +307,24 @@ document.addEventListener(
 
 async function iniciarDashboard() {
 
+    if (dashboardActualizando) {
+        return;
+    }
+
+    dashboardActualizando = true;
+
     mostrarLoading(true);
 
     try {
 
         const response = await fetch(
-            "/api/dashboard"
+            "/api/dashboard?unidad="
+            + encodeURIComponent(
+                UNIDAD_DASHBOARD
+            ),
+            {
+                cache: "no-store"
+            }
         );
 
         if (!response.ok) {
@@ -43,6 +336,27 @@ async function iniciarDashboard() {
         }
 
         dashboard = await response.json();
+
+        if (
+            String(
+                dashboard?.unidad || ""
+            )
+            .trim()
+            .toUpperCase()
+            !== UNIDAD_DASHBOARD
+        ) {
+
+            throw new Error(
+                "Unidad incorrecta recibida. "
+                + "Esperada: "
+                + UNIDAD_DASHBOARD
+                + " / Recibida: "
+                + String(
+                    dashboard?.unidad || "--"
+                )
+            );
+
+        }
 
         console.log(
             "Dashboard cargado",
@@ -129,6 +443,8 @@ async function iniciarDashboard() {
     finally {
 
         mostrarLoading(false);
+
+        dashboardActualizando = false;
 
     }
 
@@ -1202,6 +1518,8 @@ function cargarInformacionSistema() {
 
     }
 
+    aplicarBotonR16PorUnidad();
+
 }
 
 
@@ -1244,6 +1562,46 @@ function formatearFecha(
 // DESCARGA AUTOMATICA R1.6
 // CONTROL VISUAL SIN ROMPER DISEÑO
 // ==========================================================
+
+function aplicarBotonR16PorUnidad() {
+
+    const unidad =
+        String(
+            dashboard?.unidad || ""
+        )
+        .trim()
+        .toUpperCase();
+
+    const btnU8 =
+        document.getElementById(
+            "btn-r16-U8"
+        );
+
+    const btnU9 =
+        document.getElementById(
+            "btn-r16-U9"
+        );
+
+    if (btnU8) {
+
+        btnU8.style.display =
+            unidad === "U8"
+                ? ""
+                : "none";
+
+    }
+
+    if (btnU9) {
+
+        btnU9.style.display =
+            unidad === "U9"
+                ? ""
+                : "none";
+
+    }
+
+}
+
 
 async function descargarR16(unidad)
 {
@@ -1376,7 +1734,12 @@ async function descargarR16(unidad)
             datos
         );
 
-        await iniciarDashboard();
+        try {
+            await iniciarDashboard();
+        } catch(errorDashboard) {
+            console.error("R1.6 OK - Error solo al refrescar Dashboard:", errorDashboard);
+        }
+
 
         estado.innerHTML =
         `
@@ -1683,3 +2046,326 @@ document.addEventListener(
         }
     }
 );
+
+
+/* =========================================================
+   SWAV - NAVEGACION MATRIZ SEGUN UNIDAD DEL DASHBOARD
+   ========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        const enlaceMatriz =
+            document.querySelector(
+                'a.sidebar-item[href="/matriz"]'
+            );
+
+        if (!enlaceMatriz) {
+            return;
+        }
+
+        const unidad =
+            String(
+                typeof UNIDAD_DASHBOARD !== "undefined"
+                    ? UNIDAD_DASHBOARD
+                    : ""
+            )
+            .trim()
+            .toUpperCase();
+
+        if (
+            unidad !== "U8"
+            &&
+            unidad !== "U9"
+        ) {
+            return;
+        }
+
+        enlaceMatriz.href =
+            "/matriz?unidad="
+            +
+            encodeURIComponent(unidad);
+
+        console.info(
+            "SWAV Matriz:",
+            enlaceMatriz.href
+        );
+    }
+);
+
+
+
+// =========================================================
+// SWAV_SELECTOR_UNIDAD_DASHBOARD_V1
+// SELECTOR DE UNIDAD POR URL
+// NO UTILIZA localStorage
+// =========================================================
+
+(function instalarSelectorUnidadDashboard() {
+
+    function unidadActualDashboard() {
+
+        const ruta =
+            String(
+                window.location.pathname || ""
+            )
+            .trim()
+            .toLowerCase();
+
+        if (
+            ruta === "/dashboard/u9"
+            ||
+            ruta.endsWith("/dashboard/u9")
+        ) {
+            return "U9";
+        }
+
+        return "U8";
+    }
+
+
+    function actualizarNavegacionDashboard(
+        unidad
+    ) {
+
+        const enlaces =
+            document.querySelectorAll(
+                'a[href="/matriz"], '
+                + 'a[href^="/matriz?"]'
+            );
+
+        enlaces.forEach(
+            enlace => {
+
+                enlace.href =
+                    "/matriz?unidad="
+                    +
+                    encodeURIComponent(
+                        unidad
+                    );
+            }
+        );
+    }
+
+
+    function crearSelectorDashboard() {
+
+        if (
+            document.getElementById(
+                "swavSelectorUnidad"
+            )
+        ) {
+            return;
+        }
+
+        const unidad =
+            unidadActualDashboard();
+
+        const contenedor =
+            document.createElement(
+                "div"
+            );
+
+        contenedor.id =
+            "swavSelectorUnidad";
+
+        contenedor.className =
+            "swav-selector-unidad";
+
+        contenedor.innerHTML = `
+            <span class="swav-selector-etiqueta">
+                Unidad:
+            </span>
+
+            <button
+                type="button"
+                class="swav-selector-boton ${
+                    unidad === "U8"
+                        ? "activo"
+                        : ""
+                }"
+                data-unidad="U8"
+            >
+                U8
+            </button>
+
+            <button
+                type="button"
+                class="swav-selector-boton ${
+                    unidad === "U9"
+                        ? "activo"
+                        : ""
+                }"
+                data-unidad="U9"
+            >
+                U9
+            </button>
+        `;
+
+        document.body.appendChild(
+            contenedor
+        );
+
+        contenedor
+            .querySelectorAll(
+                "[data-unidad]"
+            )
+            .forEach(
+                boton => {
+
+                    boton.addEventListener(
+                        "click",
+                        () => {
+
+                            const nuevaUnidad =
+                                boton.dataset.unidad;
+
+                            if (
+                                nuevaUnidad === unidad
+                            ) {
+                                return;
+                            }
+
+                            window.location.href =
+                                nuevaUnidad === "U9"
+                                    ? "/dashboard/u9"
+                                    : "/dashboard/u8";
+                        }
+                    );
+                }
+            );
+
+        actualizarNavegacionDashboard(
+            unidad
+        );
+    }
+
+
+    function instalarEstiloSelectorDashboard() {
+
+        if (
+            document.getElementById(
+                "swavSelectorUnidadEstilo"
+            )
+        ) {
+            return;
+        }
+
+        const style =
+            document.createElement(
+                "style"
+            );
+
+        style.id =
+            "swavSelectorUnidadEstilo";
+
+        style.textContent = `
+            .swav-selector-unidad {
+                position: fixed;
+                top: 14px;
+                right: 22px;
+
+                z-index: 9999;
+
+                display: flex;
+                align-items: center;
+                gap: 7px;
+
+                padding: 7px 9px;
+
+                background: rgba(255,255,255,0.97);
+
+                border: 1px solid #d8e1ec;
+                border-radius: 10px;
+
+                box-shadow:
+                    0 2px 10px
+                    rgba(20, 45, 80, 0.10);
+
+                font-family:
+                    Arial,
+                    sans-serif;
+            }
+
+            .swav-selector-etiqueta {
+                margin-right: 3px;
+
+                font-size: 12px;
+                font-weight: 800;
+
+                color: #1f3550;
+            }
+
+            .swav-selector-boton {
+                min-width: 46px;
+
+                padding: 6px 12px;
+
+                border:
+                    1px solid
+                    #b9c9dc;
+
+                border-radius: 7px;
+
+                background: #ffffff;
+
+                color: #1c4f83;
+
+                font-size: 12px;
+                font-weight: 800;
+
+                cursor: pointer;
+
+                transition:
+                    all 0.15s ease;
+            }
+
+            .swav-selector-boton:hover {
+                background: #edf5ff;
+            }
+
+            .swav-selector-boton.activo {
+                background: #1769d2;
+                border-color: #1769d2;
+
+                color: #ffffff;
+
+                box-shadow:
+                    0 1px 4px
+                    rgba(23,105,210,0.30);
+            }
+        `;
+
+        document.head.appendChild(
+            style
+        );
+    }
+
+
+    function iniciarSelectorDashboard() {
+
+        instalarEstiloSelectorDashboard();
+
+        crearSelectorDashboard();
+    }
+
+
+    if (
+        document.readyState ===
+        "loading"
+    ) {
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            iniciarSelectorDashboard
+        );
+
+    }
+    else {
+
+        iniciarSelectorDashboard();
+    }
+
+})();
+
