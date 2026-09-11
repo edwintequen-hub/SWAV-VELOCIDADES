@@ -3624,3 +3624,735 @@ button.prestamo-chip {
         !important;
 }
 
+
+/* =====================================================================
+   R12F-A - FLOTA OPERATIVA / ALTO RELIEVE
+   Extiende el estilo aprobado de Terminales que requieren apoyo.
+   SOLO PRESENTACION.
+   NO altera datos, formulas, R1.6, prestamos ni JavaScript.
+   ===================================================================== */
+
+
+/* =========================================================
+   PANELES PRINCIPALES
+   ========================================================= */
+
+.flota-page .panel,
+.flota-operativa-page .panel,
+main.main-content .panel {
+
+    border:
+        1px solid rgba(145, 169, 194, .30)
+        !important;
+
+    border-radius:
+        15px
+        !important;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #fbfdff 55%,
+            #f1f6fa 100%
+        )
+        !important;
+
+    box-shadow:
+        0 8px 18px rgba(20, 48, 78, .13),
+        0 2px 5px rgba(20, 48, 78, .07),
+        inset 0 2px 1px rgba(255,255,255,.98),
+        inset 0 -2px 3px rgba(40,72,103,.05)
+        !important;
+}
+
+
+/* No modificar el diseño especial ya aprobado de apoyo */
+
+.support-panel {
+
+    box-shadow:
+        0 8px 18px rgba(20,48,78,.13),
+        0 2px 5px rgba(20,48,78,.07),
+        inset 0 2px 1px rgba(255,255,255,.98)
+        !important;
+}
+
+
+/* =========================================================
+   BLOQUES U8 / U9
+   ========================================================= */
+
+.unidad-card,
+.flota-unidad-card,
+.unit-card {
+
+    border:
+        1px solid rgba(137, 163, 190, .34)
+        !important;
+
+    border-radius:
+        16px
+        !important;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #f8fbfe 60%,
+            #edf3f8 100%
+        )
+        !important;
+
+    box-shadow:
+        0 9px 20px rgba(17,45,76,.15),
+        0 2px 5px rgba(17,45,76,.08),
+        inset 0 2px 1px rgba(255,255,255,.98),
+        inset 0 -2px 4px rgba(32,66,99,.06)
+        !important;
+}
+
+
+/* =========================================================
+   TARJETAS / METRICAS
+   ========================================================= */
+
+.flota-card,
+.metric-card,
+.kpi-card,
+.resumen-card,
+.terminal-card {
+
+    border:
+        1px solid rgba(145,168,192,.30)
+        !important;
+
+    border-radius:
+        13px
+        !important;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff,
+            #f2f6fa
+        )
+        !important;
+
+    box-shadow:
+        0 6px 13px rgba(19,47,77,.13),
+        0 2px 4px rgba(19,47,77,.06),
+        inset 0 2px 1px rgba(255,255,255,.96),
+        inset 0 -2px 3px rgba(34,68,100,.05)
+        !important;
+
+    transition:
+        transform .15s ease,
+        box-shadow .15s ease
+        !important;
+}
+
+
+.flota-card:hover,
+.metric-card:hover,
+.kpi-card:hover,
+.resumen-card:hover,
+.terminal-card:hover {
+
+    transform:
+        translateY(-2px)
+        !important;
+
+    box-shadow:
+        0 9px 18px rgba(19,47,77,.17),
+        0 3px 6px rgba(19,47,77,.08),
+        inset 0 2px 1px rgba(255,255,255,1)
+        !important;
+}
+
+
+/* =========================================================
+   ESTADO POR TERMINAL
+   ========================================================= */
+
+.terminal-row,
+.estado-terminal-row,
+.terminal-item {
+
+    border-radius:
+        10px
+        !important;
+
+    border:
+        1px solid rgba(150,171,193,.22)
+        !important;
+
+    box-shadow:
+        0 3px 7px rgba(19,47,77,.09),
+        inset 0 1px 0 rgba(255,255,255,.96)
+        !important;
+}
+
+
+/* =========================================================
+   CHIPS PRESTADOS / RECIBIDOS / AJUSTADA
+   ========================================================= */
+
+.prestamo-chip,
+.prestamos-chip,
+.recibidos-chip,
+.ajustada-chip,
+[class*="prestado"],
+[class*="recibido"] {
+
+    box-shadow:
+        0 3px 7px rgba(19,47,77,.13),
+        inset 0 1px 1px rgba(255,255,255,.55),
+        inset 0 -1px 2px rgba(25,52,80,.07)
+        !important;
+}
+
+
+/* =========================================================
+   TABLAS
+   ========================================================= */
+
+.flota-page table,
+.flota-operativa-page table,
+main.main-content table {
+
+    border-collapse:
+        separate
+        !important;
+
+    border-spacing:
+        0
+        !important;
+
+    border:
+        1px solid rgba(145,168,192,.25)
+        !important;
+
+    border-radius:
+        11px
+        !important;
+
+    box-shadow:
+        0 5px 12px rgba(19,47,77,.09),
+        inset 0 1px 0 rgba(255,255,255,.95)
+        !important;
+}
+
+
+.flota-page thead th,
+.flota-operativa-page thead th,
+main.main-content thead th {
+
+    box-shadow:
+        inset 0 -1px 0 rgba(105,133,161,.18),
+        0 2px 4px rgba(19,47,77,.06)
+        !important;
+}
+
+
+/* =========================================================
+   BOTONES GENERALES
+   ========================================================= */
+
+.flota-page button,
+.flota-operativa-page button,
+main.main-content button {
+
+    box-shadow:
+        0 4px 8px rgba(19,47,77,.14),
+        inset 0 1px 1px rgba(255,255,255,.38),
+        inset 0 -2px 3px rgba(15,40,68,.06)
+        !important;
+
+    transition:
+        transform .14s ease,
+        box-shadow .14s ease
+        !important;
+}
+
+
+.flota-page button:hover,
+.flota-operativa-page button:hover,
+main.main-content button:hover {
+
+    transform:
+        translateY(-1px)
+        !important;
+
+    box-shadow:
+        0 6px 11px rgba(19,47,77,.18),
+        inset 0 1px 1px rgba(255,255,255,.42)
+        !important;
+}
+
+
+.flota-page button:active,
+.flota-operativa-page button:active,
+main.main-content button:active {
+
+    transform:
+        translateY(1px)
+        !important;
+
+    box-shadow:
+        inset 0 2px 5px rgba(15,40,68,.15),
+        0 1px 2px rgba(19,47,77,.08)
+        !important;
+}
+
+
+/* =========================================================
+   INPUTS / SELECTORES
+   ========================================================= */
+
+.flota-page input,
+.flota-page select,
+.flota-operativa-page input,
+.flota-operativa-page select,
+main.main-content input,
+main.main-content select {
+
+    border:
+        1px solid rgba(137,162,188,.38)
+        !important;
+
+    border-radius:
+        9px
+        !important;
+
+    box-shadow:
+        inset 0 2px 4px rgba(20,48,78,.06),
+        0 1px 2px rgba(255,255,255,.90)
+        !important;
+}
+
+
+/* =========================================================
+   BARRAS
+   Conservamos R11D3 y solo reforzamos profundidad.
+   ========================================================= */
+
+.apoyo-terminal-titulo::after {
+
+    box-shadow:
+        inset 0 3px 4px rgba(255,255,255,.55),
+        inset 0 -3px 4px rgba(12,39,66,.16),
+        0 3px 6px rgba(16,44,73,.20)
+        !important;
+}
+
+
+/* =========================================================
+   MODALES
+   ========================================================= */
+
+.modal-content {
+
+    border:
+        1px solid rgba(142,165,188,.34)
+        !important;
+
+    border-radius:
+        15px
+        !important;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #fbfdff 65%,
+            #f1f5f9 100%
+        )
+        !important;
+
+    box-shadow:
+        0 18px 45px rgba(9,31,55,.28),
+        0 5px 14px rgba(9,31,55,.14),
+        inset 0 2px 1px rgba(255,255,255,.98)
+        !important;
+}
+
+
+.modal-header {
+
+    box-shadow:
+        inset 0 -1px 0 rgba(118,143,168,.16),
+        0 3px 7px rgba(20,48,78,.06)
+        !important;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .flota-page .panel,
+    .flota-operativa-page .panel,
+    main.main-content .panel,
+    .unidad-card,
+    .flota-unidad-card,
+    .unit-card {
+
+        box-shadow:
+            0 5px 12px rgba(20,48,78,.12),
+            inset 0 1px 0 rgba(255,255,255,.96)
+            !important;
+    }
+}
+
+
+/* ================================================================
+   R12F-B - ALTO RELIEVE EXACTO FLOTA OPERATIVA
+   Clases reales certificadas por diagnostico.
+   ================================================================ */
+
+
+/* ------------------------------------------------
+   KPI U8 / U9
+   ------------------------------------------------ */
+
+.unidad-kpis {
+    gap: 14px !important;
+}
+
+.unidad-kpi {
+    position: relative !important;
+    overflow: hidden !important;
+
+    border: 1px solid rgba(154, 177, 200, .42) !important;
+    border-radius: 14px !important;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #fbfdff 48%,
+            #eef4f9 100%
+        ) !important;
+
+    box-shadow:
+        0 7px 15px rgba(20, 48, 78, .15),
+        0 2px 4px rgba(20, 48, 78, .08),
+        inset 0 2px 1px rgba(255,255,255,.98),
+        inset 0 -2px 4px rgba(37,69,101,.07)
+        !important;
+
+    transition:
+        transform .15s ease,
+        box-shadow .15s ease
+        !important;
+}
+
+.unidad-kpi::before {
+    content: "" !important;
+
+    position: absolute !important;
+    top: 0 !important;
+    left: 10px !important;
+    right: 10px !important;
+
+    height: 2px !important;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255,255,255,1),
+            transparent
+        ) !important;
+
+    pointer-events: none !important;
+}
+
+.unidad-kpi:hover {
+    transform: translateY(-2px) !important;
+
+    box-shadow:
+        0 10px 20px rgba(20,48,78,.19),
+        0 3px 6px rgba(20,48,78,.09),
+        inset 0 2px 1px rgba(255,255,255,1)
+        !important;
+}
+
+.unidad-kpi strong {
+    text-shadow:
+        0 1px 0 rgba(255,255,255,.95)
+        !important;
+}
+
+
+/* ------------------------------------------------
+   TITULOS INTERNOS
+   ------------------------------------------------ */
+
+.unidad-subtitulo {
+    position: relative !important;
+
+    background:
+        linear-gradient(
+            180deg,
+            #f9fbfd 0%,
+            #f1f5f9 100%
+        ) !important;
+
+    border-top:
+        1px solid rgba(151,174,197,.20)
+        !important;
+
+    border-bottom:
+        1px solid rgba(151,174,197,.20)
+        !important;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.98),
+        0 2px 5px rgba(20,48,78,.06)
+        !important;
+}
+
+
+/* ------------------------------------------------
+   ESTADO POR TERMINAL
+   ------------------------------------------------ */
+
+.unidad-terminales {
+    padding: 8px 12px 11px 12px !important;
+
+    background:
+        linear-gradient(
+            180deg,
+            #fbfdff,
+            #f6f9fc
+        ) !important;
+}
+
+
+/* ------------------------------------------------
+   BARRA - CANAL EN BAJO RELIEVE
+   ------------------------------------------------ */
+
+.unidad-terminal-barra {
+    position: relative !important;
+    overflow: hidden !important;
+
+    height: 10px !important;
+
+    border:
+        1px solid rgba(137,160,184,.32)
+        !important;
+
+    border-radius:
+        999px
+        !important;
+
+    background:
+        linear-gradient(
+            180deg,
+            #dbe5ed 0%,
+            #eef3f7 48%,
+            #d6e1e9 100%
+        ) !important;
+
+    box-shadow:
+        inset 0 2px 4px rgba(27,54,82,.20),
+        inset 0 -1px 1px rgba(255,255,255,.90),
+        0 1px 2px rgba(255,255,255,.90)
+        !important;
+}
+
+
+/* ------------------------------------------------
+   BARRA - PARTE ACTIVA EN ALTO RELIEVE
+   ------------------------------------------------ */
+
+.unidad-terminal-barra-activa {
+    position: relative !important;
+
+    height: 100% !important;
+
+    border-radius:
+        999px
+        !important;
+
+    background:
+        linear-gradient(
+            180deg,
+            #44b76e 0%,
+            #229552 52%,
+            #178346 100%
+        ) !important;
+
+    box-shadow:
+        inset 0 2px 2px rgba(255,255,255,.42),
+        inset 0 -2px 3px rgba(0,65,31,.20),
+        0 2px 5px rgba(20,100,55,.28)
+        !important;
+
+    transition:
+        width .35s ease
+        !important;
+}
+
+
+/* ROJO < 50 */
+
+.unidad-terminal-barra-activa.barra-critico {
+    background:
+        linear-gradient(
+            180deg,
+            #ff6672 0%,
+            #ff3447 50%,
+            #df172b 100%
+        ) !important;
+
+    box-shadow:
+        inset 0 2px 2px rgba(255,255,255,.45),
+        inset 0 -2px 3px rgba(120,0,12,.20),
+        0 2px 6px rgba(210,20,40,.28)
+        !important;
+}
+
+
+/* AMARILLO 50 - 80 */
+
+.unidad-terminal-barra-activa.barra-atencion {
+    background:
+        linear-gradient(
+            180deg,
+            #ffd95b 0%,
+            #ffbb16 52%,
+            #df9400 100%
+        ) !important;
+
+    box-shadow:
+        inset 0 2px 2px rgba(255,255,255,.52),
+        inset 0 -2px 3px rgba(123,78,0,.18),
+        0 2px 6px rgba(207,144,0,.27)
+        !important;
+}
+
+
+/* VERDE > 80 */
+
+.unidad-terminal-barra-activa.barra-normal {
+    background:
+        linear-gradient(
+            180deg,
+            #46c27a 0%,
+            #20a15a 52%,
+            #128244 100%
+        ) !important;
+
+    box-shadow:
+        inset 0 2px 2px rgba(255,255,255,.45),
+        inset 0 -2px 3px rgba(0,75,35,.20),
+        0 2px 6px rgba(18,132,70,.27)
+        !important;
+}
+
+
+/* ------------------------------------------------
+   MATRIZ COMPORTAMIENTO POR PERIODO
+   ------------------------------------------------ */
+
+.unidad-matriz-scroll {
+    margin: 8px 10px 12px 10px !important;
+
+    border:
+        1px solid rgba(139,164,189,.32)
+        !important;
+
+    border-radius:
+        12px
+        !important;
+
+    background:
+        #ffffff
+        !important;
+
+    box-shadow:
+        0 7px 15px rgba(20,48,78,.12),
+        inset 0 2px 3px rgba(22,49,77,.04),
+        inset 0 1px 0 rgba(255,255,255,.98)
+        !important;
+}
+
+
+.matriz-unidad-table {
+    border:
+        0
+        !important;
+
+    box-shadow:
+        none
+        !important;
+}
+
+
+.matriz-unidad-table thead th {
+    background:
+        linear-gradient(
+            180deg,
+            #edf5ff 0%,
+            #e2edf9 100%
+        ) !important;
+
+    box-shadow:
+        inset 0 -1px 0 rgba(87,120,153,.18),
+        inset 0 1px 0 rgba(255,255,255,.95)
+        !important;
+}
+
+
+.matriz-unidad-table tbody tr {
+    transition:
+        background .12s ease,
+        box-shadow .12s ease
+        !important;
+}
+
+
+.matriz-unidad-table tbody tr:hover {
+    background:
+        #f7fbff
+        !important;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.95),
+        inset 0 -1px 0 rgba(144,168,191,.18)
+        !important;
+}
+
+
+/* ------------------------------------------------
+   CHIPS PRESTAMOS / RECIBIDOS / AJUSTADA
+   ------------------------------------------------ */
+
+.prestamos-terminal-resumen button,
+.prestamos-terminal-resumen span {
+    box-shadow:
+        0 3px 6px rgba(20,48,78,.13),
+        inset 0 1px 1px rgba(255,255,255,.70),
+        inset 0 -1px 2px rgba(20,48,78,.07)
+        !important;
+}
+
+
+/* ------------------------------------------------
+   BOTON VER PPU
+   ------------------------------------------------ */
+
+.matriz-unidad-table button {
+    box-shadow:
+        0 3px 7px rgba(116,23,31,.16),
+        inset 0 1px 1px rgba(255,255,255,.55),
+        inset 0 -2px 2px rgba(110,15,25,.08)
+        !important;
+}
+

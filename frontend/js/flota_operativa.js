@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
 
     "use strict";
 
@@ -47,7 +47,7 @@
             valor === null ||
             valor === undefined
         ) {
-            return "—";
+            return "â€”";
         }
 
         return (
@@ -135,7 +135,7 @@
             return "Revisar";
         }
 
-        return "Mejor condición";
+        return "Mejor condiciÃ³n";
     }
 
 
@@ -226,12 +226,12 @@
 
         $("catalogoVersion").textContent =
             (
-                "Catálogo "
+                "CatÃ¡logo "
                 +
                 (
                     datos.catalogo_version
                     ||
-                    "sin versión"
+                    "sin versiÃ³n"
                 )
             );
 
@@ -329,7 +329,7 @@
 
             const etiqueta =
                 (
-                    `${p} · ${inicio}-${fin}`
+                    `${p} Â· ${inicio}-${fin}`
                 );
 
 
@@ -409,7 +409,7 @@
         ) {
 
             alert(
-                "El período inicial no puede ser mayor que el período final."
+                "El perÃ­odo inicial no puede ser mayor que el perÃ­odo final."
             );
 
             return;
@@ -621,7 +621,7 @@
         ) {
 
             titulo +=
-                " — "
+                " â€” "
                 +
                 fechaCL(
                     desde
@@ -633,7 +633,7 @@
         ) {
 
             titulo +=
-                " — "
+                " â€” "
                 +
                 fechaCL(
                     desde
@@ -665,7 +665,7 @@
 
         $("subtituloConsulta").textContent =
             (
-                "Períodos seleccionados: "
+                "PerÃ­odos seleccionados: "
                 +
                 pi
                 +
@@ -748,7 +748,7 @@
                 `
                 <tr>
                     <td colspan="5" class="empty-cell">
-                        Sin información por unidad.
+                        Sin informaciÃ³n por unidad.
                     </td>
                 </tr>
                 `;
@@ -889,7 +889,7 @@
 
                         ${
                             completa
-                            ? "? día completo"
+                            ? "? dÃ­a completo"
                             : "? cobertura parcial"
                         }
 
@@ -1162,7 +1162,7 @@
             contenedor.innerHTML =
                 `
                 <div class="empty-support">
-                    Sin información.
+                    Sin informaciÃ³n.
                 </div>
                 `;
 
@@ -1846,7 +1846,7 @@
 
                 terminalesElemento.innerHTML = `
                     <div class="empty-support">
-                        Sin información para ${unidad}.
+                        Sin informaciÃ³n para ${unidad}.
                     </div>
                 `;
 
@@ -2018,7 +2018,7 @@
                                     <div class="unidad-terminal-barra">
 
                                         <div
-                                            class="unidad-terminal-barra-activa"
+                                            class="unidad-terminal-barra-activa ${porcentaje < 50 ? "barra-critico" : (porcentaje <= 80 ? "barra-atencion" : "barra-normal")}"
                                             style="
                                                 width:
                                                 ${
@@ -3298,7 +3298,7 @@
 
         cabecera += `
             <th class="num matriz-sin-tx">
-                Sin transmisión
+                Sin transmisiÃ³n
             </th>
 
             <th class="num">
@@ -3306,7 +3306,7 @@
             </th>
 
             <th>
-                Acción
+                AcciÃ³n
             </th>
         `;
 
@@ -4186,7 +4186,7 @@
                 aviso.innerHTML =
                     `
                     <strong>
-                        Días sin información:
+                        DÃ­as sin informaciÃ³n:
                     </strong>
 
                     ${fechasSinDatos
@@ -4194,7 +4194,7 @@
                         .join(", ")}.
 
                     No se consideran como
-                    días sin transmisión.
+                    dÃ­as sin transmisiÃ³n.
                     `;
 
             } else {
@@ -4217,7 +4217,7 @@
                         colspan="6"
                         class="empty-cell">
 
-                        Sin información para
+                        Sin informaciÃ³n para
                         la consulta seleccionada.
 
                     </td>
@@ -4307,7 +4307,7 @@
                             <td>
 
                                 <div class="tipo-bus-list">
-                                    ${tipos || "—"}
+                                    ${tipos || "â€”"}
                                 </div>
 
                             </td>
@@ -4424,7 +4424,7 @@
                     </strong>
                 </td>
 
-                <td>—</td>
+                <td>â€”</td>
 
                 <td class="num">
                     <strong>
@@ -4992,11 +4992,11 @@
         $("modalTitulo").textContent =
             terminalNombre
             ? (
-                "PPU sin transmisión — "
+                "PPU sin transmisiÃ³n â€” "
                 +
                 terminalNombre
             )
-            : "PPU sin transmisión — Todas las terminales";
+            : "PPU sin transmisiÃ³n â€” Todas las terminales";
 
 
         const pi =
@@ -5031,7 +5031,7 @@
                     : ""
                 )
                 +
-                " · "
+                " Â· "
                 +
                 pi
                 +
@@ -5051,7 +5051,7 @@
                 `
                 <tr>
                     <td colspan="6" class="empty-cell">
-                        No existen PPU sin transmisión para esta consulta.
+                        No existen PPU sin transmisiÃ³n para esta consulta.
                     </td>
                 </tr>
                 `;
@@ -5071,23 +5071,23 @@
                         </td>
 
                         <td>
-                            ${escapeHtml(fila.interno || "—")}
+                            ${escapeHtml(fila.interno || "â€”")}
                         </td>
 
                         <td>
-                            ${escapeHtml(fila.unidad || "—")}
+                            ${escapeHtml(fila.unidad || "â€”")}
                         </td>
 
                         <td>
-                            ${escapeHtml(fila.terminal_nombre || fila.terminal || "—")}
+                            ${escapeHtml(fila.terminal_nombre || fila.terminal || "â€”")}
                         </td>
 
                         <td>
-                            ${escapeHtml(fila.tipo_bus || "—")}
+                            ${escapeHtml(fila.tipo_bus || "â€”")}
                         </td>
 
                         <td>
-                            ${escapeHtml(fila.tipo_flota || "—")}
+                            ${escapeHtml(fila.tipo_flota || "â€”")}
                         </td>
 
                     </tr>
@@ -5696,7 +5696,7 @@
             catch (error) {
 
                 console.warn(
-                    "Actualización automática Flota Operativa:",
+                    "ActualizaciÃ³n automÃ¡tica Flota Operativa:",
                     error
                 );
             }
@@ -6260,3 +6260,4 @@
     );
 
 })();
+
