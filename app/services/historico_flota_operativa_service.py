@@ -673,13 +673,14 @@ def procesar_fecha(
 
             # Hace que SQLite espere hasta 60 segundos
             # antes de declarar que la base sigue bloqueada.
-            db.execute(
-                __import__(
-                    "sqlalchemy"
-                ).text(
-                    "PRAGMA busy_timeout = 60000"
+            if db.get_bind().dialect.name == "sqlite":
+                db.execute(
+                    __import__(
+                        "sqlalchemy"
+                    ).text(
+                        "PRAGMA busy_timeout = 60000"
+                    )
                 )
-            )
 
             resultado = _procesar_fecha_una_vez(
                 db,

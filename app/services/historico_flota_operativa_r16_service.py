@@ -663,11 +663,12 @@ def procesar_archivo_r16(
 
         try:
 
-            db.execute(
-                text(
-                    "PRAGMA busy_timeout = 60000"
+            if db.get_bind().dialect.name == "sqlite":
+                db.execute(
+                    text(
+                        "PRAGMA busy_timeout = 60000"
+                    )
                 )
-            )
 
             resultado = (
                 _procesar_archivo_una_vez(
