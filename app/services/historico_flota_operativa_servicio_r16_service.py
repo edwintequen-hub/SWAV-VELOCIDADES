@@ -335,27 +335,11 @@ def procesar_r16_servicios(
             )
 
 
-            archivos_previos = {
-                parte.strip()
-
-                for parte in str(
-                    existente.archivo_origen
-                    or ""
-                ).split("|")
-
-                if parte.strip()
-            }
-
-            archivos_previos.add(
-                archivo_origen
-            )
-
+            # El R1.6 automatico genera un archivo nuevo en cada ciclo.
+            # Conservamos solamente el archivo mas reciente que actualizo
+            # este registro para evitar crecimiento indefinido.
             existente.archivo_origen = (
-                " | ".join(
-                    sorted(
-                        archivos_previos
-                    )
-                )
+                archivo_origen
             )
 
             actualizados += 1
