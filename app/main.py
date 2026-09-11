@@ -48,6 +48,7 @@ from app.api.matriz import router as matriz_router
 from app.api.dashboard import router as dashboard_router
 from app.api.configuracion import router as configuracion_router
 from app.api.sinoptico import router as sinoptico_router
+from app.api.flota_operativa import router as flota_operativa_router
 from app.api.matriz import router as matriz_router
 
 
@@ -254,6 +255,8 @@ app.include_router(configuracion_router)
 
 app.include_router(sinoptico_router)
 
+app.include_router(flota_operativa_router)
+
 app.include_router(matriz_router)
 
 # Si ya existe el router dashboard
@@ -388,6 +391,23 @@ def reportes():
 
         "mensaje": "reportes.html no encontrado"
 
+    }
+
+
+# ==========================================================
+# FLOTA OPERATIVA
+# ==========================================================
+
+@app.get("/flota-operativa")
+def flota_operativa():
+
+    archivo = FRONTEND_DIR / "flota_operativa.html"
+
+    if archivo.exists():
+        return FileResponse(archivo)
+
+    return {
+        "mensaje": "flota_operativa.html no encontrado"
     }
 
 # ==========================================================

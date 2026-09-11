@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SWAV - Flota Operativa</title>
+
+    <link rel="stylesheet"
+          href="/css/flota_operativa.css?v=20260911_r8f2">
+</head>
+
+<body>
+
+<div class="app-shell">
+
+    <!-- ============================================================= -->
+    <!-- SIDEBAR                                                       -->
+    <!-- ============================================================= -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-mark">S</div>
+
+            <div>
+                <div class="brand-title">SWAV</div>
+                <div class="brand-subtitle">Control Operacional</div>
+            </div>
+        </div>
+
+        <nav class="menu">
+
+            <a href="/dashboard" class="menu-item">
+                <span>Dashboard</span>
+            </a>
+
+            <a href="/matriz" class="menu-item">
+                <span>Matriz</span>
+            </a>
+
+            <a href="/reportes" class="menu-item">
+                <span>Reportes</span>
+            </a>
+
+            <a href="/flota-operativa" class="menu-item active">
+                <span>Flota Operativa</span>
+            </a>
+
+            <a href="/configuracion" class="menu-item">
+                <span>Configuración</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+            <span>METROPOL</span>
+            <small>Centro de Control Operacional</small>
+        </div>
+
+    </aside>
+
+
+    <!-- ============================================================= -->
+    <!-- CONTENIDO                                                      -->
+    <!-- ============================================================= -->
+
+    <main class="main-content">
+
+        <!-- ========================================================= -->
+        <!-- CABECERA                                                  -->
+        <!-- ========================================================= -->
+
+        <header class="top-header">
+
+            <div>
+
+                <div class="eyebrow">
+                    CENTRO DE CONTROL OPERACIONAL
+                </div>
+
+                <h1>Flota Operativa</h1>
+
+                <p>
+                    Estado global de la flota con transmisión real,
+                    por terminal y período seleccionado.
+                </p>
+
+            </div>
+
+            <div class="catalog-badge">
+
+                <span class="catalog-status"></span>
+
+                <div>
+                    <strong>Histórico BD</strong>
+                    <small id="catalogoVersion">
+                        Catálogo terminales
+                    </small>
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- ========================================================= -->
+        <!-- FILTROS                                                   -->
+        <!-- ========================================================= -->
+
+        <section class="panel filter-panel">
+
+            <div class="panel-header">
+
+                <div>
+                    <h2>Consulta histórica</h2>
+                    <p>
+                        Selecciona fecha, unidad, terminal, servicio
+                        y períodos.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="filters-grid">
+
+                <div class="field">
+                    <label for="fechaDesde">Fecha desde</label>
+                    <input id="fechaDesde" type="date">
+                </div>
+
+                <div class="field">
+                    <label for="fechaHasta">Fecha hasta</label>
+                    <input id="fechaHasta" type="date">
+                </div>
+
+                <div class="field">
+                    <label for="unidad">Unidad</label>
+
+                    <select id="unidad">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="terminal">Terminal</label>
+
+                    <select id="terminal">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="servicio">Servicio</label>
+
+                    <select id="servicio">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="periodoInicial">Período inicial</label>
+                    <select id="periodoInicial"></select>
+                </div>
+
+                <div class="field">
+                    <label for="periodoFinal">Período final</label>
+                    <select id="periodoFinal"></select>
+                </div>
+
+
+                <div class="filter-actions">
+
+                    <button
+                        type="button"
+                        id="btnConsultar"
+                        class="btn btn-primary">
+
+                        Consultar
+
+                    </button>
+
+                    <button
+                        type="button"
+                        id="btnExportar"
+                        class="btn btn-excel">
+
+                        Exportar Excel
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ========================================================= -->
+        <!-- TITULO CONSULTA                                           -->
+        <!-- ========================================================= -->
+
+        
+
+
+
+<section class="query-banner">
+
+            <div>
+
+                <span class="query-label">
+                    RESULTADO OPERACIONAL
+                </span>
+
+                <h2 id="tituloConsulta">
+                    Flota Operativa
+                </h2>
+
+                <p id="subtituloConsulta">
+                    Períodos seleccionados: P01 a P24
+                </p>
+
+            </div>
+
+            <div class="query-update">
+                <span>Consulta:</span>
+                <strong id="horaConsulta">--:--:--</strong>
+            </div>
+
+        </section>
+
+
+        <!-- ========================================================= -->
+        <!-- KPI GLOBALES                                              -->
+        <!-- ========================================================= -->
+
+        
+
+
+
+<section class="kpi-grid">
+
+            <article class="kpi-card">
+
+                <span class="kpi-title">
+                    FLOTA ASIGNADA
+                </span>
+
+                <strong id="kpiAsignada">
+                    0
+                </strong>
+
+                <small>
+                    Catálogo actualizado
+                </small>
+
+            </article>
+
+
+            <article class="kpi-card kpi-operativa">
+
+                <span class="kpi-title">
+                    FLOTA OPERATIVA
+                </span>
+
+                <strong id="kpiOperativa">
+                    0
+                </strong>
+
+                <small>
+                    PPU con transmisión
+                </small>
+
+            </article>
+
+
+            <article class="kpi-card kpi-sin-tx">
+
+                <span class="kpi-title">
+                    SIN TRANSMISIÓN
+                </span>
+
+                <strong id="kpiSinTx">
+                    0
+                </strong>
+
+                <small>
+                    PPU sin transmisión en el rango
+                </small>
+
+            </article>
+
+
+            <article class="kpi-card kpi-porcentaje">
+
+                <span class="kpi-title">
+                    % OPERATIVA
+                </span>
+
+                <strong id="kpiPorcentaje">
+                    0,00 %
+                </strong>
+
+                <small>
+                    Operativa / Asignada
+                </small>
+
+            </article>
+
+        </section>
+
+
+        <!-- ========================================================= -->
+        <!-- RESUMEN EJECUTIVO U8 / U9 / TOTAL                         -->
+        <!-- ========================================================= -->
+
+        <section class="panel decision-panel">
+
+            <div class="panel-header panel-header-inline">
+
+                <div>
+                    <h2>
+                        Resumen operativo por unidad
+                    </h2>
+
+                    <p>
+                        Buses con transmisión real según R1.6 completo.
+                        La misma PPU cuenta una sola vez en el rango consultado.
+                    </p>
+                </div>
+
+                <div
+                    id="coberturaR16"
+                    class="r16-coverage">
+                </div>
+
+            </div>
+
+
+            <div class="decision-layout">
+
+                <div class="decision-table-wrap">
+
+                    <table
+                        class="data-table unit-summary-table"
+                        id="tablaResumenUnidades">
+
+                        <thead>
+                            <tr>
+                                <th>Unidad</th>
+                                <th class="num">Flota asignada</th>
+                                <th class="num">Trabajando</th>
+                                <th class="num">No trabajando</th>
+                                <th class="num">% Operativa</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tbodyResumenUnidades">
+
+                            <tr>
+                                <td
+                                    colspan="5"
+                                    class="empty-cell">
+
+                                    Consultando unidades...
+
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                    <div class="decision-note">
+                        “No trabajando” indica que la PPU no registra
+                        transmisión en el rango consultado. No significa
+                        automáticamente que el bus está en taller.
+                    </div>
+
+                </div>
+
+
+                <div class="decision-global">
+
+                    <div class="decision-chart-title">
+                        Estado general de flota
+                    </div>
+
+                    <div class="donut-wrap">
+
+                        <div
+                            id="donutFlota"
+                            class="flota-donut">
+
+                            <div class="flota-donut-center">
+
+                                <strong id="donutPorcentaje">
+                                    0,00 %
+                                </strong>
+
+                                <span>
+                                    operativa
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="donut-legend">
+
+                        <span>
+                            <i class="legend-dot working"></i>
+                            Trabajando:
+                            <strong id="donutTrabajando">0</strong>
+                        </span>
+
+                        <span>
+                            <i class="legend-dot not-working"></i>
+                            No trabajando:
+                            <strong id="donutNoTrabajando">0</strong>
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            </div>
+
+        </section>
+
+<section
+            class="panel unidades-operacion-panel"
+            id="vistaOperacionPorUnidad">
+
+            <div class="panel-header panel-header-inline">
+
+                <div>
+
+                    <h2>
+                        Operación separada por unidad
+                    </h2>
+
+                    <p>
+                        Cada unidad se analiza por separado:
+                        flota, terminales y per?odos.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="unidades-operacion-grid">
+
+
+                <!-- ================================================= -->
+                <!-- U8 / ALFA                                        -->
+                <!-- ================================================= -->
+
+                <article
+                    class="unidad-operacion-card unidad-u8">
+
+                    <div class="unidad-operacion-header">
+
+                        <div>
+
+                            <span class="unidad-badge">
+                                U8
+                            </span>
+
+                            <div>
+
+                                <h3>
+                                    U8 · ALFA
+                                </h3>
+
+                                <small>
+                                    Condell · El Retiro ·
+                                    Santa Margarita · Santa Marta
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div
+                            id="coberturaUnidadU8"
+                            class="unidad-cobertura">
+                            Sin cobertura R1.6
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="kpisUnidadU8"
+                        class="unidad-kpis">
+                    </div>
+
+
+                    <div class="unidad-subtitulo">
+                        Estado por terminal
+                    </div>
+
+                    <div
+                        id="terminalesUnidadU8"
+                        class="unidad-terminales">
+                    </div>
+
+
+                    <div class="unidad-subtitulo">
+                        Comportamiento por período
+                    </div>
+
+                    <div
+                        id="matrizUnidadU8"
+                        class="unidad-matriz-scroll">
+                    </div>
+
+                </article>
+
+
+                <!-- ================================================= -->
+                <!-- U9 / OMEGA                                       -->
+                <!-- ================================================= -->
+
+                <article
+                    class="unidad-operacion-card unidad-u9">
+
+                    <div class="unidad-operacion-header">
+
+                        <div>
+
+                            <span class="unidad-badge">
+                                U9
+                            </span>
+
+                            <div>
+
+                                <h3>
+                                    U9 · OMEGA
+                                </h3>
+
+                                <small>
+                                    Aguirre Luco · Juanita · Pie Andino
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div
+                            id="coberturaUnidadU9"
+                            class="unidad-cobertura">
+                            Sin cobertura R1.6
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="kpisUnidadU9"
+                        class="unidad-kpis">
+                    </div>
+
+
+                    <div class="unidad-subtitulo">
+                        Estado por terminal
+                    </div>
+
+                    <div
+                        id="terminalesUnidadU9"
+                        class="unidad-terminales">
+                    </div>
+
+
+                    <div class="unidad-subtitulo">
+                        Comportamiento por período
+                    </div>
+
+                    <div
+                        id="matrizUnidadU9"
+                        class="unidad-matriz-scroll">
+                    </div>
+
+                </article>
+
+
+            </div>
+
+        </section>
+
+
+
+
+
+        
+
+<!-- ========================================================= -->
+        <!-- VISTA OPERACIONAL POR UNIDAD                              -->
+        <!-- ========================================================= -->
+
+        
+
+        
+
+<!-- ========================================================= -->
+        <!-- APOYO OPERACIONAL                                         -->
+        <!-- ========================================================= -->
+
+        <section class="panel support-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Terminales que requieren apoyo
+                    </h2>
+
+                    <p>
+                        Priorización visual desde el menor
+                        porcentaje de flota operativa.
+                    </p>
+
+                </div>
+
+                <span class="advisory-label">
+                    APOYO OPERACIONAL
+                </span>
+
+            </div>
+
+
+            <div
+                id="rankingApoyo"
+                class="support-grid">
+
+                <div class="empty-support">
+                    Sin información.
+                </div>
+
+            </div>
+
+            <div class="support-note">
+                El orden es una ayuda visual para la toma de decisiones;
+                no corresponde a una clasificación oficial DTPM.
+            </div>
+
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PPU SIN TRANSMISION POR DIA Y TERMINAL                    -->
+        <!-- ========================================================= -->
+
+        <section class="panel sin-tx-dia-panel">
+
+            <div class="panel-header panel-header-inline">
+
+                <div>
+                    <h2>
+                        PPU sin transmisión por día y terminal
+                    </h2>
+
+                    <p>
+                        Cantidad de PPU asignadas que no registraron
+                        ninguna transmisión en las fechas evaluables.
+                    </p>
+                </div>
+
+                <div class="sin-tx-cobertura">
+
+                    <span>
+                        Días rango:
+                        <strong id="sinTxDiasRango">0</strong>
+                    </span>
+
+                    <span class="cobertura-ok">
+                        Evaluables:
+                        <strong id="sinTxDiasEvaluables">0</strong>
+                    </span>
+
+                    <span class="cobertura-warning">
+                        Sin datos:
+                        <strong id="sinTxDiasSinDatos">0</strong>
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="sinTxAvisoCobertura"
+                class="sin-tx-aviso hidden">
+            </div>
+
+
+            <div class="table-wrap">
+
+                <table class="data-table sin-tx-resumen-table">
+
+                    <thead>
+                        <tr>
+                            <th>Terminal</th>
+                            <th class="num">Total PPU</th>
+                            <th>Tipos de bus</th>
+                            <th class="num">
+                                Total sin transmisión
+                            </th>
+                            <th class="num">
+                                % Sin transmisión
+                            </th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tbodySinTxDias"></tbody>
+
+                    <tfoot id="tfootSinTxDias"></tfoot>
+
+                </table>
+
+            </div>
+
+            <div class="sin-tx-nota">
+                <strong>Importante:</strong>
+                PPU sin transmisión no significa bus en taller.
+                Esta vista indica únicamente ausencia de transmisión
+                en los días con información disponible.
+            </div>
+
+        </section>
+
+
+
+    </main>
+
+</div>
+
+
+<!-- ================================================================= -->
+<!-- MODAL PPU SIN TRANSMISION                                         -->
+<!-- ================================================================= -->
+
+<div
+    id="modalSinTx"
+    class="modal-overlay hidden"
+    aria-hidden="true">
+
+    <div class="modal-card">
+
+        <div class="modal-header">
+
+            <div>
+
+                <span class="modal-kicker">
+                    FLOTA ACTUALIZADA
+                </span>
+
+                <h3 id="modalTitulo">
+                    PPU sin transmisión
+                </h3>
+
+                <p id="modalSubtitulo">
+                    Terminal
+                </p>
+
+            </div>
+
+            <button
+                id="btnCerrarModal"
+                class="modal-close"
+                type="button"
+                aria-label="Cerrar">
+
+                ×
+
+            </button>
+
+        </div>
+
+
+        <div class="modal-summary">
+
+            <div>
+                <span>Total PPU</span>
+                <strong id="modalTotal">0</strong>
+            </div>
+
+            <div class="modal-warning">
+                Sin transmisión no significa automáticamente
+                que el bus esté en taller.
+            </div>
+
+        </div>
+
+
+        <div class="modal-table-wrap">
+
+            <table class="data-table modal-table">
+
+                <thead>
+
+                <tr>
+                    <th>PPU</th>
+                    <th>Interno</th>
+                    <th>Unidad</th>
+                    <th>Terminal</th>
+                    <th>Tipo Bus</th>
+                    <th>Tipo Flota</th>
+                </tr>
+
+                </thead>
+
+                <tbody id="tbodySinTx"></tbody>
+
+            </table>
+
+        </div>
+
+
+        <div class="modal-footer">
+
+            <button
+                id="btnCerrarModalFooter"
+                type="button"
+                class="btn btn-secondary">
+
+                Cerrar
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+<!-- ================================================================= -->
+<!-- DETALLE PPU SIN TRANSMISION POR DIAS                              -->
+<!-- ================================================================= -->
+
+<div
+    id="modalSinTxDias"
+    class="modal-overlay hidden"
+    aria-hidden="true">
+
+    <div class="modal-card modal-sin-tx-dias-card">
+
+        <div class="modal-header">
+
+            <div>
+
+                <span class="modal-kicker">
+                    FLOTA OPERATIVA
+                </span>
+
+                <h3>
+                    Detalles PPU sin transmisión
+                </h3>
+
+                <p id="modalSinTxDiasSubtitulo"></p>
+
+            </div>
+
+
+            <button
+                id="btnCerrarSinTxDias"
+                type="button"
+                class="modal-close"
+                aria-label="Cerrar"
+                onclick="
+                    const m = document.getElementById('modalSinTxDias');
+                    if (m) {
+                        m.classList.add('hidden');
+                        m.setAttribute('aria-hidden', 'true');
+                    }
+                ">
+                &times;
+            </button>
+
+        </div>
+
+
+        <div class="sin-tx-modal-total">
+
+            Total PPU sin transmisión:
+
+            <strong id="totalModalSinTxDias">
+                0
+            </strong>
+
+        </div>
+
+
+        <div class="sin-tx-modal-toolbar">
+
+            <input
+                id="buscarSinTxDias"
+                class="sin-tx-search"
+                type="search"
+                placeholder="Buscar por PPU...">
+
+
+            <select
+                id="filtroTipoBusSinTxDias"
+                class="sin-tx-select">
+
+                <option value="">
+                    Todos los tipos de bus
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="table-wrap sin-tx-modal-table-wrap">
+
+            <table class="data-table">
+
+                <thead>
+
+                    <tr>
+                        <th>Terminal</th>
+                        <th>PPU</th>
+                        <th>Tipo bus</th>
+                        <th class="num">Plazas</th>
+                        <th class="num">
+                            Días sin transmisión
+                        </th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="tbodyModalSinTxDias"></tbody>
+
+            </table>
+
+        </div>
+
+
+        <div class="sin-tx-modal-footer">
+
+            PPU sin transmisión no significa bus en taller.
+            Corresponde únicamente a ausencia de transmisión
+            durante los días evaluables.
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="/js/flota_operativa.js?v=20260911_r8f2"></script>
+
+</body>
+</html>
+

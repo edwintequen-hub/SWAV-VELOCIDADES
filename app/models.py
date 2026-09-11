@@ -1,3 +1,4 @@
+from datetime import datetime
 """
 =========================================================
 SWAV - Sistema Web de AnÃ¡lisis de Velocidades
@@ -1266,6 +1267,258 @@ class HistorialImportacion(Base):
 
     carga_hash = Column(
         String(64)
+    )
+
+
+
+# =========================================================
+# FLOTA OPERATIVA - ASIGNACION TERMINAL
+# Catalogo historico de PPU por terminal.
+# No reemplaza versiones anteriores.
+# =========================================================
+
+class FlotaAsignacionTerminal(Base):
+
+    __tablename__ = "flota_asignacion_terminal"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    version = Column(String(20), nullable=False, index=True)
+    ppu = Column(String(20), nullable=False, index=True)
+    terminal = Column(String(60), nullable=False, index=True)
+    unidad = Column(String(10), nullable=True, index=True)
+    empresa = Column(String(20), nullable=True)
+    interno = Column(String(30), nullable=True)
+    tipo_bus = Column(String(30), nullable=True)
+    tipo_flota = Column(String(30), nullable=True)
+    es_soporte = Column(Boolean, default=False, nullable=False)
+    es_auxiliar = Column(Boolean, default=False, nullable=False)
+    archivo_origen = Column(String(250), nullable=True)
+    activo = Column(Boolean, default=True, nullable=False)
+    fecha_importacion = Column(DateTime, server_default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint(
+            "version",
+            "ppu",
+            name="uq_flota_asignacion_version_ppu",
+        ),
+    )
+
+
+# =============================================================================
+# FLOTA OPERATIVA - HISTORICO INDEPENDIENTE
+# =============================================================================
+# Este modelo NO pertenece al motor de velocidades.
+#
+# Regla de presencia operacional:
+#     FECHA + PERIODO + PPU = 1 BUS OPERATIVO
+#
+# Las expediciones R1.6 originales NO se eliminan.
+# Esta tabla conserva una presencia consolidada para consulta historica.
+# =============================================================================
+
+from datetime import datetime as _FODatetime
+
+from sqlalchemy import (
+    Column as _FOColumn,
+    Integer as _FOInteger,
+    String as _FOString,
+    Date as _FODate,
+    DateTime as _FODateTime,
+    UniqueConstraint as _FOUniqueConstraint,
+)
+
+
+class HistoricoFlotaOperativa(Base):
+
+    __tablename__ = "historico_flota_operativa"
+
+    id = _FOColumn(
+        _FOInteger,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    fecha = _FOColumn(
+        _FODate,
+        nullable=False,
+        index=True
+    )
+
+    periodo = _FOColumn(
+        _FOInteger,
+        nullable=False,
+        index=True
+    )
+
+    ppu = _FOColumn(
+        _FOString(20),
+        nullable=False,
+        index=True
+    )
+
+    unidad = _FOColumn(
+        _FOString(20),
+        nullable=True,
+        index=True
+    )
+
+    terminal = _FOColumn(
+        _FOString(120),
+        nullable=True,
+        index=True
+    )
+
+    interno = _FOColumn(
+        _FOString(50),
+        nullable=True
+    )
+
+    tipo_bus = _FOColumn(
+        _FOString(50),
+        nullable=True
+    )
+
+    tipo_flota = _FOColumn(
+        _FOString(50),
+        nullable=True
+    )
+
+    plazas = _FOColumn(
+        _FOInteger,
+        nullable=True
+    )
+
+    primera_transmision = _FOColumn(
+        _FODateTime,
+        nullable=True
+    )
+
+    ultima_transmision = _FOColumn(
+        _FODateTime,
+        nullable=True
+    )
+
+    cantidad_registros_fuente = _FOColumn(
+        _FOInteger,
+        nullable=False,
+        default=1
+    )
+
+    archivo_origen = _FOColumn(
+        _FOString(500),
+        nullable=True
+    )
+
+    fecha_creacion = _FOColumn(
+        _FODateTime,
+        nullable=False,
+        default=_FODatetime.now
+    )
+
+    __table_args__ = (
+
+        _FOUniqueConstraint(
+            "fecha",
+            "periodo",
+            "ppu",
+            name="uq_historico_flota_operativa_fecha_periodo_ppu"
+        ),
+
+    )
+
+
+# =============================================================================
+# HISTORICO FLOTA OPERATIVA POR SERVICIO
+# =============================================================================
+
+class HistoricoFlotaOperativaServicio(Base):
+
+    __tablename__ = "historico_flota_operativa_servicio"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+    fecha = Column(
+        Date,
+        nullable=False,
+        index=True,
+    )
+
+    periodo = Column(
+        Integer,
+        nullable=False,
+        index=True,
+    )
+
+    ppu = Column(
+        String(20),
+        nullable=False,
+        index=True,
+    )
+
+    servicio = Column(
+        String(100),
+        nullable=False,
+        index=True,
+    )
+
+    unidad = Column(
+        String(20),
+        nullable=True,
+        index=True,
+    )
+
+    terminal = Column(
+        String(120),
+        nullable=True,
+        index=True,
+    )
+
+    primera_transmision = Column(
+        DateTime,
+        nullable=True,
+    )
+
+    ultima_transmision = Column(
+        DateTime,
+        nullable=True,
+    )
+
+    cantidad_registros_fuente = Column(
+        Integer,
+        nullable=False,
+        default=1,
+    )
+
+    archivo_origen = Column(
+        String(500),
+        nullable=True,
+    )
+
+    fecha_creacion = Column(
+        DateTime,
+        nullable=False,
+        default=datetime.now,
+    )
+
+    __table_args__ = (
+
+        UniqueConstraint(
+            "fecha",
+            "periodo",
+            "ppu",
+            "servicio",
+            name=(
+                "uq_historico_flota_operativa_servicio_"
+                "fecha_periodo_ppu_servicio"
+            ),
+        ),
+
     )
 
 

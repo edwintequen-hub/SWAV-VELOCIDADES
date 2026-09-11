@@ -2587,3 +2587,329 @@ document.addEventListener(
     }
 );
 
+
+/* ==========================================================
+   CATALOGO FLOTA OPERATIVA
+   PREVISUALIZACION
+   ========================================================== */
+
+function valorFlota(id, valor) {
+
+    const elemento =
+        document.getElementById(id);
+
+    if (elemento) {
+        elemento.textContent =
+            valor ?? "-";
+    }
+}
+
+
+async function previsualizarFlotaOperativa() {
+
+    const archivo =
+        document.getElementById(
+            "archivoFlotaOperativa"
+        );
+
+    const boton =
+        document.getElementById(
+            "btnPrevisualizarFlota"
+        );
+
+    const confirmar =
+        document.getElementById(
+            "btnConfirmarFlota"
+        );
+
+    const estado =
+        document.getElementById(
+            "estadoFlotaOperativa"
+        );
+
+    const resumen =
+        document.getElementById(
+            "resumenFlotaOperativa"
+        );
+
+    const resultado =
+        document.getElementById(
+            "flotaResultadoPreview"
+        );
+
+
+    if (
+        !archivo ||
+        !archivo.files ||
+        archivo.files.length === 0
+    ) {
+
+        alert(
+            "Seleccione el Excel de "
+            + "Distribucion por Terminales."
+        );
+
+        return;
+    }
+
+
+    if (confirmar) {
+        confirmar.disabled = true;
+    }
+
+    if (boton) {
+        boton.disabled = true;
+        boton.innerHTML =
+            '<span class="spinner-border '
+            + 'spinner-border-sm me-1"></span>'
+            + 'Analizando...';
+    }
+
+    if (estado) {
+        estado.className =
+            "config-card-status text-primary";
+
+        estado.textContent =
+            "Analizando catalogo de flota...";
+    }
+
+    if (resumen) {
+        resumen.hidden = true;
+    }
+
+
+    try {
+
+        const formData =
+            new FormData();
+
+        formData.append(
+            "archivo",
+            archivo.files[0]
+        );
+
+        const respuesta =
+            await fetch(
+                "/api/configuracion/flota/previsualizar",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+        const json =
+            await respuesta.json();
+
+
+        if (!respuesta.ok) {
+
+            throw new Error(
+                json.detail
+                || "No fue posible analizar el catalogo."
+            );
+        }
+
+
+        valorFlota(
+            "flotaVersionActual",
+            json.version_actual
+        );
+
+        valorFlota(
+            "flotaArchivo",
+            json.archivo
+        );
+
+        valorFlota(
+            "flotaTotalActual",
+            json.total_actual
+        );
+
+        valorFlota(
+            "flotaTotalNuevo",
+            json.total_nuevo
+        );
+
+        valorFlota(
+            "flotaU8",
+            json.por_unidad?.U8 ?? 0
+        );
+
+        valorFlota(
+            "flotaU9",
+            json.por_unidad?.U9 ?? 0
+        );
+
+        valorFlota(
+            "flotaSoporte",
+            json.total_soporte
+        );
+
+        valorFlota(
+            "flotaAuxiliar",
+            json.total_auxiliares_fuera_universo
+        );
+
+        valorFlota(
+            "flotaAltas",
+            json.altas
+        );
+
+        valorFlota(
+            "flotaBajas",
+            json.bajas
+        );
+
+        valorFlota(
+            "flotaModificados",
+            json.modificados
+        );
+
+        valorFlota(
+            "flotaSinCambio",
+            json.sin_cambio
+        );
+
+
+        if (resumen) {
+            resumen.hidden = false;
+        }
+
+
+        if (json.total_cambios === 0) {
+
+            if (estado) {
+                estado.className =
+                    "config-card-status text-success";
+
+                estado.textContent =
+                    "Catalogo validado correctamente.";
+            }
+
+            if (resultado) {
+                resultado.className =
+                    "config-flota-resultado "
+                    + "config-flota-sin-cambios";
+
+                resultado.innerHTML =
+                    '<i class="bi bi-check-circle-fill"></i>'
+                    + '<span>'
+                    + 'El archivo coincide con la version vigente. '
+                    + 'No es necesario actualizar.'
+                    + '</span>';
+            }
+
+        }
+        else {
+
+            if (estado) {
+                estado.className =
+                    "config-card-status text-warning";
+
+                estado.textContent =
+                    "Se detectaron cambios en el catalogo.";
+            }
+
+            if (resultado) {
+                resultado.className =
+                    "config-flota-resultado "
+                    + "config-flota-con-cambios";
+
+                resultado.innerHTML =
+                    '<i class="bi bi-exclamation-triangle-fill"></i>'
+                    + '<span>'
+                    + 'Se detectaron '
+                    + json.total_cambios
+                    + ' cambios. '
+                    + 'La confirmacion permanecera bloqueada '
+                    + 'hasta certificar el guardado historico.'
+                    + '</span>';
+            }
+        }
+
+
+        /*
+         * IMPORTANTE:
+         * En PASO 7R la confirmacion permanece
+         * siempre bloqueada.
+         *
+         * El endpoint de commit todavia no existe.
+         */
+
+        if (confirmar) {
+            confirmar.disabled = true;
+        }
+
+    }
+    catch (error) {
+
+        console.error(
+            "Error previsualizando flota:",
+            error
+        );
+
+        if (estado) {
+            estado.className =
+                "config-card-status text-danger";
+
+            estado.textContent =
+                error.message;
+        }
+
+        if (resultado) {
+            resultado.innerHTML = "";
+        }
+
+        if (resumen) {
+            resumen.hidden = true;
+        }
+
+        if (confirmar) {
+            confirmar.disabled = true;
+        }
+
+    }
+    finally {
+
+        if (boton) {
+
+            boton.disabled = false;
+
+            boton.innerHTML =
+                '<i class="bi bi-search"></i> '
+                + 'Previsualizar cambios';
+        }
+    }
+}
+
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        const boton =
+            document.getElementById(
+                "btnPrevisualizarFlota"
+            );
+
+        const confirmar =
+            document.getElementById(
+                "btnConfirmarFlota"
+            );
+
+        if (boton) {
+
+            boton.addEventListener(
+                "click",
+                previsualizarFlotaOperativa
+            );
+        }
+
+        if (confirmar) {
+
+            confirmar.disabled = true;
+        }
+    }
+);
+
+

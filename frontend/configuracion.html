@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -113,6 +113,19 @@
             </span>
         </a>
 
+
+
+
+        <a
+            href="/flota-operativa"
+            class="sidebar-item"
+        >
+            <i class="bi bi-bus-front-fill"></i>
+
+            <span>
+                Flota Operativa
+            </span>
+        </a>
 
         <a
             href="/configuracion"
@@ -254,7 +267,160 @@
 
         </div>
 
-    </div>
+    
+
+        <!-- CATALOGO FLOTA OPERATIVA -->
+
+        <div class="config-card config-card-flota">
+
+            <div class="config-card-header">
+
+                <i class="bi bi-bus-front-fill"></i>
+
+                <strong>
+                    Cat&aacute;logo Flota Operativa
+                </strong>
+
+                <span class="config-unit-badge">
+                    GENERAL
+                </span>
+
+            </div>
+
+            <div class="config-card-body">
+
+                <div class="config-card-description">
+                    Distribuci&oacute;n vigente de buses por terminal.
+                    Permite revisar un nuevo Excel antes de actualizar
+                    el cat&aacute;logo operacional.
+                </div>
+
+                <input
+                    type="file"
+                    id="archivoFlotaOperativa"
+                    class="form-control"
+                    accept=".xlsx">
+
+                <div class="config-card-actions config-flota-actions">
+
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        id="btnPrevisualizarFlota">
+
+                        <i class="bi bi-search"></i>
+                        Previsualizar cambios
+
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-success"
+                        id="btnConfirmarFlota"
+                        disabled>
+
+                        <i class="bi bi-check-circle-fill"></i>
+                        Confirmar actualizaci&oacute;n
+
+                    </button>
+
+                </div>
+
+                <div
+                    id="estadoFlotaOperativa"
+                    class="config-card-status">
+                    Seleccione el Excel de Distribuci&oacute;n por Terminales.
+                </div>
+
+                <div
+                    id="resumenFlotaOperativa"
+                    class="config-flota-preview"
+                    hidden>
+
+                    <div class="config-flota-version">
+
+                        <span>
+                            Versi&oacute;n vigente
+                            <strong id="flotaVersionActual">-</strong>
+                        </span>
+
+                        <span>
+                            Archivo
+                            <strong id="flotaArchivo">-</strong>
+                        </span>
+
+                    </div>
+
+                    <div class="config-flota-kpis">
+
+                        <div>
+                            <span>PPU actuales</span>
+                            <strong id="flotaTotalActual">0</strong>
+                        </div>
+
+                        <div>
+                            <span>PPU nuevo archivo</span>
+                            <strong id="flotaTotalNuevo">0</strong>
+                        </div>
+
+                        <div>
+                            <span>U8 / ALFA</span>
+                            <strong id="flotaU8">0</strong>
+                        </div>
+
+                        <div>
+                            <span>U9 / OMEGA</span>
+                            <strong id="flotaU9">0</strong>
+                        </div>
+
+                        <div>
+                            <span>Flota Soporte</span>
+                            <strong id="flotaSoporte">0</strong>
+                        </div>
+
+                        <div>
+                            <span>Auxiliar fuera universo</span>
+                            <strong id="flotaAuxiliar">0</strong>
+                        </div>
+
+                    </div>
+
+                    <div class="config-flota-cambios">
+
+                        <span>
+                            Altas
+                            <strong id="flotaAltas">0</strong>
+                        </span>
+
+                        <span>
+                            Bajas
+                            <strong id="flotaBajas">0</strong>
+                        </span>
+
+                        <span>
+                            Modificados
+                            <strong id="flotaModificados">0</strong>
+                        </span>
+
+                        <span>
+                            Sin cambios
+                            <strong id="flotaSinCambio">0</strong>
+                        </span>
+
+                    </div>
+
+                    <div
+                        id="flotaResultadoPreview"
+                        class="config-flota-resultado">
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+</div>
 
 </section>
 
@@ -1226,7 +1392,7 @@
 
 </div>
 
-<script src="/frontend/js/configuracion.js?v=20260901_ESTADO_TARJETAS"></script>
+<script src="/frontend/js/configuracion.js?v=FLOTA_20260911_062330"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>

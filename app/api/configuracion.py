@@ -40,6 +40,11 @@ from app.importadores.importar_anexo4 import (
 
 from app.services.procesador import ProcesadorSWAV
 
+from app.services.importador_flota_terminales import (
+    leer_excel_distribucion,
+    comparar_con_catalogo,
+)
+
 from app.services.coordinador_operaciones import (
     coordinador_swav,
     OperacionSWAVEnCurso
@@ -967,4 +972,224 @@ async def importar_r16(
     finally:
 
         db.close()
+
+
+#=========================================================
+# CATALOGO FLOTA OPERATIVA
+# PREVISUALIZACION
+#=========================================================
+
+@router.post("/flota/previsualizar")
+async def previsualizar_catalogo_flota(
+    archivo: UploadFile = File(...)
+):
+
+    """
+    Analiza un Excel de Distribucion por Terminales.
+
+    IMPORTANTE:
+    - No crea una nueva version.
+    - No modifica flota_asignacion_terminal.
+    - No modifica historicos.
+    - Flota Auxiliar queda informada fuera del universo.
+    """
+
+    nombre_original = (
+        Path(
+            archivo.filename or ""
+        )
+        .name
+    )
+
+    if not nombre_original:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Archivo sin nombre."
+        )
+
+    extension = (
+        Path(nombre_original)
+        .suffix
+        .lower()
+    )
+
+    if extension != ".xlsx":
+
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "El catalogo de flota debe ser "
+                "un archivo Excel .xlsx."
+            )
+        )
+
+    marca = datetime.now().strftime(
+        "%Y%m%d_%H%M%S_%f"
+    )
+
+    ruta_temporal = (
+        UPLOAD_DIR
+        / (
+            "PREVIEW_FLOTA_"
+            + marca
+            + "_"
+            + nombre_original
+        )
+    )
+
+    db = SessionLocal()
+
+    try:
+
+        with open(
+            ruta_temporal,
+            "wb"
+        ) as buffer:
+
+            shutil.copyfileobj(
+                archivo.file,
+                buffer
+            )
+
+        datos_excel = (
+            leer_excel_distribucion(
+                ruta_temporal
+            )
+        )
+
+        comparacion = (
+            comparar_con_catalogo(
+                db,
+                datos_excel
+            )
+        )
+
+        auxiliares = (
+            datos_excel.get(
+                "auxiliares_fuera_universo",
+                []
+            )
+        )
+
+        registros = (
+            datos_excel.get(
+                "registros",
+                {}
+            )
+        )
+
+        total_soporte = sum(
+            1
+            for item in registros.values()
+            if bool(
+                item.get(
+                    "es_soporte"
+                )
+            )
+        )
+
+        total_cambios = (
+            int(
+                comparacion.get(
+                    "altas",
+                    0
+                )
+            )
+            +
+            int(
+                comparacion.get(
+                    "bajas",
+                    0
+                )
+            )
+            +
+            int(
+                comparacion.get(
+                    "modificados",
+                    0
+                )
+            )
+        )
+
+        return {
+
+            "estado":
+                "PREVISUALIZACION",
+
+            "fecha_revision":
+                datetime.now().isoformat(
+                    timespec="seconds"
+                ),
+
+            "archivo":
+                nombre_original,
+
+            **comparacion,
+
+            "total_soporte":
+                total_soporte,
+
+            "total_auxiliares_fuera_universo":
+                len(auxiliares),
+
+            "auxiliares_fuera_universo":
+                auxiliares,
+
+            "total_cambios":
+                total_cambios,
+
+            "requiere_actualizacion":
+                total_cambios > 0,
+
+            "puede_confirmar":
+                (
+                    total_cambios > 0
+                    and comparacion.get(
+                        "duplicados_archivo",
+                        0
+                    ) == 0
+                    and comparacion.get(
+                        "filas_invalidas",
+                        0
+                    ) == 0
+                ),
+        }
+
+    except HTTPException:
+
+        raise
+
+    except Exception as exc:
+
+        import traceback
+        traceback.print_exc()
+
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "No fue posible previsualizar "
+                "el catalogo de flota: "
+                + str(exc)
+            )
+        )
+
+    finally:
+
+        db.close()
+
+        try:
+
+            archivo.file.close()
+
+        except Exception:
+            pass
+
+        try:
+
+            if ruta_temporal.exists():
+                ruta_temporal.unlink()
+
+        except Exception:
+            pass
 

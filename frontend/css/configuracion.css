@@ -1051,3 +1051,137 @@
     }
 
 }
+
+
+/* =========================================================
+   CATALOGO FLOTA OPERATIVA
+   ========================================================= */
+
+.config-card-flota {
+    grid-column: 1 / -1;
+    max-width: none !important;
+}
+
+.config-card-flota .config-card-header {
+    border-left: 4px solid #198754;
+}
+
+.config-flota-actions {
+    display: grid;
+    grid-template-columns:
+        repeat(2, minmax(180px, 1fr));
+    gap: 10px;
+}
+
+.config-flota-preview {
+    margin-top: 14px;
+    padding: 14px;
+    border: 1px solid #dfe4ea;
+    border-radius: 10px;
+    background: #f8f9fa;
+}
+
+.config-flota-version {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 24px;
+    margin-bottom: 12px;
+    font-size: .84rem;
+}
+
+.config-flota-version span {
+    display: flex;
+    gap: 6px;
+}
+
+.config-flota-kpis {
+    display: grid;
+    grid-template-columns:
+        repeat(6, minmax(105px, 1fr));
+    gap: 8px;
+}
+
+.config-flota-kpis > div {
+    padding: 9px 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.config-flota-kpis span {
+    display: block;
+    min-height: 34px;
+    color: #6c757d;
+    font-size: .72rem;
+    line-height: 1.25;
+}
+
+.config-flota-kpis strong {
+    display: block;
+    margin-top: 3px;
+    font-size: 1.15rem;
+}
+
+.config-flota-cambios {
+    display: grid;
+    grid-template-columns:
+        repeat(4, minmax(110px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.config-flota-cambios span {
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: #e9ecef;
+    font-size: .78rem;
+}
+
+.config-flota-cambios strong {
+    float: right;
+}
+
+.config-flota-resultado {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: .84rem;
+    font-weight: 600;
+}
+
+.config-flota-sin-cambios {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.config-flota-con-cambios {
+    background: #fff3cd;
+    color: #664d03;
+}
+
+#btnConfirmarFlota:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+@media (max-width: 1100px) {
+
+    .config-flota-kpis {
+        grid-template-columns:
+            repeat(3, minmax(110px, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+
+    .config-flota-actions,
+    .config-flota-kpis,
+    .config-flota-cambios {
+        grid-template-columns: 1fr;
+    }
+}
+
+
