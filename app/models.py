@@ -1514,8 +1514,7 @@ class HistoricoFlotaOperativaServicio(Base):
             "ppu",
             "servicio",
             name=(
-                "uq_historico_flota_operativa_servicio_"
-                "fecha_periodo_ppu_servicio"
+                "uq_hist_flota_serv_fecha_per_ppu_serv"
             ),
         ),
 
