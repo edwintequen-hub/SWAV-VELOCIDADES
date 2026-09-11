@@ -1,4 +1,4 @@
-﻿"""
+"""
 =========================================================
 SWAV - SINOPTICO
 API de integracion con Sinoptico
@@ -19,8 +19,14 @@ from fastapi import HTTPException
 
 from sqlalchemy.orm import Session
 
-from app.database import get_db
+from app.database import get_db, SessionLocal
 from app.services.procesador import ProcesadorSWAV
+from app.services.historico_flota_operativa_r16_service import (
+    procesar_archivo_r16,
+)
+from app.services.historico_flota_operativa_servicio_r16_service import (
+    procesar_r16_servicios,
+)
 from app.services.sinoptico_r16_service import SinopticoR16Service
 from app.models import CredencialSinoptico
 
@@ -377,7 +383,76 @@ def descargar_r16(
 
 
     # =====================================================
-    # 3. PROCESAMIENTO COMPLETO SWAV
+    # 3. FLOTA OPERATIVA - R1.6 ORIGINAL COMPLETO
+    # =====================================================
+    #
+    # REGLA:
+    # - usa directamente el R1.6 descargado;
+    # - NO depende de Expedicion;
+    # - NO depende de MotorComparacion;
+    # - NO aplica filtros de Velocidades;
+    # - conserva filas con velocidad 0;
+    # - conserva FIN SERVICIO 1900;
+    # - PPU repetida mismo periodo se consolida;
+    # - historial principal:
+    #       fecha + periodo + PPU
+    # - historial servicio:
+    #       fecha + periodo + PPU + servicio
+    #
+    # Se utiliza una sesion independiente para que
+    # Flota Operativa no comparta transaccion con
+    # el procesamiento de Velocidades.
+    # =====================================================
+
+    flota_db = SessionLocal()
+
+    try:
+
+        resultado_flota_operativa = (
+            procesar_archivo_r16(
+                db=flota_db,
+                archivo=str(archivo),
+                unidad=unidad,
+            )
+        )
+
+        resultado_flota_servicios = (
+            procesar_r16_servicios(
+                db=flota_db,
+                archivo=str(archivo),
+                unidad=unidad,
+            )
+        )
+
+        flota_db.commit()
+
+    except Exception as exc:
+
+        flota_db.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "mensaje":
+                    "R1.6 descargado, pero fallo "
+                    "la persistencia independiente "
+                    "de Flota Operativa",
+                "error":
+                    str(exc),
+                "unidad":
+                    unidad,
+                "archivo":
+                    str(archivo),
+            }
+        )
+
+    finally:
+
+        flota_db.close()
+
+
+    # =====================================================
+    # 4. PROCESAMIENTO COMPLETO SWAV / VELOCIDADES
     # =====================================================
 
     try:
@@ -416,7 +491,7 @@ def descargar_r16(
     )
 
     # =====================================================
-    # 4. MISMO ARCHIVO YA PROCESADO
+    # 5. MISMO ARCHIVO YA PROCESADO
     # =====================================================
 
     if estado_proceso == "DUPLICADO":
@@ -477,8 +552,9 @@ def descargar_r16(
             }
         )
 
+
     # =====================================================
-    # 5. RESPUESTA FINAL
+    # 6. RESPUESTA FINAL
     # =====================================================
 
     return {
@@ -514,6 +590,11 @@ def descargar_r16(
 
         "resultado":
             resultado,
+        "flota_operativa":
+            resultado_flota_operativa,
+
+        "flota_operativa_servicios":
+            resultado_flota_servicios,
 
         "mensaje":
             (
