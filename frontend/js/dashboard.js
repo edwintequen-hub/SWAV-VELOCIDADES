@@ -206,6 +206,130 @@ async function cargarEstadoAutomaticoR16Dashboard() {
         const datos =
             await response.json();
 
+
+        // ==========================================================
+        // R11B - ESTADO VISUAL R1.6 DASHBOARD
+        // ==========================================================
+
+        const estadoAutomatico =
+            document.getElementById(
+                "estado-r16"
+            );
+
+        const ultimaRespuesta =
+            String(
+                datos.ultima_respuesta
+                ??
+                ""
+            );
+
+        const u8Ok =
+            /'U8'\s*:\s*\{[^}]*'ok'\s*:\s*True/i
+            .test(
+                ultimaRespuesta
+            );
+
+        const u9Ok =
+            /'U9'\s*:\s*\{[^}]*'ok'\s*:\s*True/i
+            .test(
+                ultimaRespuesta
+            );
+
+        const u8Error =
+            /'U8'\s*:\s*\{[^}]*'ok'\s*:\s*False/i
+            .test(
+                ultimaRespuesta
+            );
+
+        const u9Error =
+            /'U9'\s*:\s*\{[^}]*'ok'\s*:\s*False/i
+            .test(
+                ultimaRespuesta
+            );
+
+        if (estadoAutomatico) {
+
+            if (!datos.activo) {
+
+                estadoAutomatico.innerHTML =
+                    "<span>\u25cf</span> AUTOMATICO DESACTIVADO";
+
+                estadoAutomatico.style.background =
+                    "#fff4d6";
+
+                estadoAutomatico.style.color =
+                    "#8a6200";
+
+            }
+            else if (
+                u8Ok
+                &&
+                u9Ok
+            ) {
+
+                estadoAutomatico.innerHTML =
+                    "<span>\u25cf</span> R1.6 ACTUALIZADO \u00b7 U8 \u2713 \u00b7 U9 \u2713";
+
+                estadoAutomatico.style.background =
+                    "#eaf8ef";
+
+                estadoAutomatico.style.color =
+                    "#176c40";
+
+            }
+            else if (
+                u8Error
+                ||
+                u9Error
+            ) {
+
+                estadoAutomatico.innerHTML =
+                    "<span>\u25cf</span> ERROR R1.6"
+                    +
+                    " \u00b7 U8 "
+                    +
+                    (
+                        u8Error
+                            ? "\u2715"
+                            : (
+                                u8Ok
+                                    ? "\u2713"
+                                    : "--"
+                            )
+                    )
+                    +
+                    " \u00b7 U9 "
+                    +
+                    (
+                        u9Error
+                            ? "\u2715"
+                            : (
+                                u9Ok
+                                    ? "\u2713"
+                                    : "--"
+                            )
+                    );
+
+                estadoAutomatico.style.background =
+                    "#fff0f0";
+
+                estadoAutomatico.style.color =
+                    "#a12e2e";
+
+            }
+            else {
+
+                estadoAutomatico.innerHTML =
+                    "<span>\u25cf</span> R1.6 VERIFICANDO";
+
+                estadoAutomatico.style.background =
+                    "#fff8e8";
+
+                estadoAutomatico.style.color =
+                    "#805f14";
+            }
+        }
+
         const ultima =
             document.getElementById(
                 "ultimaImportacion"

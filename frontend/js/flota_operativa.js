@@ -1809,6 +1809,18 @@
         // TERMINALES GLOBAL
         // ------------------------------------------------------------
 
+        const prestamosResumen = (
+            datos.prestamos_resumen
+            ||
+            []
+        );
+
+        window.__swavPrestamosDetalle = (
+            datos.prestamos_detalle
+            ||
+            []
+        );
+
         const terminales = (
             datos.resumen_terminal_global
             ||
@@ -1852,6 +1864,47 @@
                                     0
                                 );
 
+                            const movimiento =
+                                prestamosResumen.find(
+                                    item =>
+                                        String(
+                                            item.terminal
+                                            ||
+                                            ""
+                                        ).toUpperCase()
+                                        ===
+                                        String(
+                                            fila.terminal
+                                            ||
+                                            ""
+                                        ).toUpperCase()
+                                )
+                                ||
+                                {};
+
+                            const prestados =
+                                Number(
+                                    movimiento.prestados
+                                    ||
+                                    0
+                                );
+
+                            const recibidos =
+                                Number(
+                                    movimiento.recibidos
+                                    ||
+                                    0
+                                );
+
+                            const operativaAjustada =
+                                Number(
+                                    movimiento.operativa_ajustada
+                                    ??
+                                    fila.operativa
+                                    ??
+                                    0
+                                );
+
                             return `
 
                                 <div class="unidad-terminal-fila">
@@ -1879,6 +1932,85 @@
                                                 )
                                             }
                                         </span>
+
+                                        <div class="prestamos-terminal-resumen">
+
+                                            ${
+                                                prestados > 0
+                                                ? `
+                                                <button
+                                                    type="button"
+                                                    class="
+                                                        prestamo-chip
+                                                        prestamo-chip-sale
+                                                    "
+                                                    data-prestamo-tipo="prestados"
+                                                    data-prestamo-terminal="${escapeHtml(
+                                                        fila.terminal
+                                                    )}"
+                                                    data-prestamo-unidad="${escapeHtml(
+                                                        unidad
+                                                    )}">
+                                                    &#8593;
+                                                    ${numero(prestados)}
+                                                    Prestados
+                                                </button>
+                                                `
+                                                : `
+                                                <span
+                                                    class="
+                                                        prestamo-chip
+                                                        prestamo-chip-neutro
+                                                    ">
+                                                    &#8593; 0 Prestados
+                                                </span>
+                                                `
+                                            }
+
+                                            ${
+                                                recibidos > 0
+                                                ? `
+                                                <button
+                                                    type="button"
+                                                    class="
+                                                        prestamo-chip
+                                                        prestamo-chip-recibe
+                                                    "
+                                                    data-prestamo-tipo="recibidos"
+                                                    data-prestamo-terminal="${escapeHtml(
+                                                        fila.terminal
+                                                    )}"
+                                                    data-prestamo-unidad="${escapeHtml(
+                                                        unidad
+                                                    )}">
+                                                    &#8595;
+                                                    ${numero(recibidos)}
+                                                    Recibidos
+                                                </button>
+                                                `
+                                                : `
+                                                <span
+                                                    class="
+                                                        prestamo-chip
+                                                        prestamo-chip-neutro
+                                                    ">
+                                                    &#8595; 0 Recibidos
+                                                </span>
+                                                `
+                                            }
+
+                                            <span
+                                                class="
+                                                    prestamo-chip
+                                                    prestamo-chip-ajustada
+                                                ">
+                                                Ajustada:
+                                                ${numero(
+                                                    operativaAjustada
+                                                )}
+                                            </span>
+
+                                        </div>
 
                                     </div>
 
@@ -3665,7 +3797,7 @@
                     0
                 );
 
-            if (valor < 5) {
+            if (valor < 50) {
 
                 return {
                     clase: "apoyo-critico",
@@ -3673,7 +3805,7 @@
                 };
             }
 
-            if (valor < 12) {
+            if (valor <= 80) {
 
                 return {
                     clase: "apoyo-atencion",
@@ -3939,19 +4071,19 @@
                 <span class="leyenda-critico">
                     <i></i>
                     <strong>Cr\u00edtico</strong>
-                    &lt; 5 %
+                    &lt; 50 % de la flota del terminal
                 </span>
 
                 <span class="leyenda-atencion">
                     <i></i>
                     <strong>Atenci\u00f3n</strong>
-                    5 % a &lt; 12 %
+                    50 % a 80 % de la flota del terminal
                 </span>
 
                 <span class="leyenda-normal">
                     <i></i>
                     <strong>Normal</strong>
-                    \u2265 12 %
+                    &gt; 80 % de la flota del terminal
                 </span>
 
             </div>
@@ -5214,6 +5346,295 @@
 
 
     // ================================================================
+    // R11B - MONITOR ESTADO AUTOMATICO R1.6
+    // ================================================================
+
+    function formatearHoraMonitorR16(valor) {
+
+        if (!valor) {
+            return "--";
+        }
+
+        const fecha =
+            new Date(valor);
+
+        if (Number.isNaN(fecha.getTime())) {
+            return "--";
+        }
+
+        return fecha.toLocaleTimeString(
+            "es-CL",
+            {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: false
+            }
+        );
+    }
+
+
+    function estadoUnidadMonitorR16(
+        respuesta,
+        unidad
+    ) {
+
+        const texto =
+            String(
+                respuesta
+                ??
+                ""
+            );
+
+        const patronOk =
+            new RegExp(
+                "'" + unidad
+                + "'\\s*:\\s*\\{[^}]*'ok'\\s*:\\s*True",
+                "i"
+            );
+
+        const patronError =
+            new RegExp(
+                "'" + unidad
+                + "'\\s*:\\s*\\{[^}]*'ok'\\s*:\\s*False",
+                "i"
+            );
+
+        if (patronOk.test(texto)) {
+            return "ok";
+        }
+
+        if (patronError.test(texto)) {
+            return "error";
+        }
+
+        return "pendiente";
+    }
+
+
+    async function cargarMonitorR16Flota() {
+
+        const monitor =
+            document.getElementById(
+                "r16MonitorFlota"
+            );
+
+        if (!monitor) {
+            return;
+        }
+
+        const estado =
+            document.getElementById(
+                "r16MonitorEstado"
+            );
+
+        const unidades =
+            document.getElementById(
+                "r16MonitorUnidades"
+            );
+
+        const ultima =
+            document.getElementById(
+                "r16MonitorUltima"
+            );
+
+        const proxima =
+            document.getElementById(
+                "r16MonitorProxima"
+            );
+
+        const frecuencia =
+            document.getElementById(
+                "r16MonitorFrecuencia"
+            );
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/configuracion/r16-auto",
+                    {
+                        cache: "no-store"
+                    }
+                );
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "HTTP "
+                    +
+                    response.status
+                );
+            }
+
+            const datos =
+                await response.json();
+
+            const u8 =
+                estadoUnidadMonitorR16(
+                    datos.ultima_respuesta,
+                    "U8"
+                );
+
+            const u9 =
+                estadoUnidadMonitorR16(
+                    datos.ultima_respuesta,
+                    "U9"
+                );
+
+            monitor.classList.remove(
+                "r16-live-ok",
+                "r16-live-error",
+                "r16-live-pending"
+            );
+
+            if (!datos.activo) {
+
+                monitor.classList.add(
+                    "r16-live-pending"
+                );
+
+                if (estado) {
+                    estado.textContent =
+                        "R1.6 AUTOMATICO DESACTIVADO";
+                }
+
+            }
+            else if (
+                u8 === "ok"
+                &&
+                u9 === "ok"
+            ) {
+
+                monitor.classList.add(
+                    "r16-live-ok"
+                );
+
+                if (estado) {
+                    estado.textContent =
+                        "R1.6 ACTUALIZADO";
+                }
+
+            }
+            else if (
+                u8 === "error"
+                ||
+                u9 === "error"
+            ) {
+
+                monitor.classList.add(
+                    "r16-live-error"
+                );
+
+                if (estado) {
+                    estado.textContent =
+                        "ERROR ACTUALIZACION R1.6";
+                }
+
+            }
+            else {
+
+                monitor.classList.add(
+                    "r16-live-pending"
+                );
+
+                if (estado) {
+                    estado.textContent =
+                        "R1.6 VERIFICANDO";
+                }
+            }
+
+            if (unidades) {
+
+                unidades.textContent =
+                    "U8 "
+                    +
+                    (
+                        u8 === "ok"
+                            ? "\u2713 OK"
+                            : (
+                                u8 === "error"
+                                    ? "\u2715 ERROR"
+                                    : "--"
+                            )
+                    )
+                    +
+                    " | U9 "
+                    +
+                    (
+                        u9 === "ok"
+                            ? "\u2713 OK"
+                            : (
+                                u9 === "error"
+                                    ? "\u2715 ERROR"
+                                    : "--"
+                            )
+                    );
+            }
+
+            if (ultima) {
+
+                ultima.textContent =
+                    formatearHoraMonitorR16(
+                        datos.ultima_ejecucion
+                    );
+            }
+
+            if (proxima) {
+
+                proxima.textContent =
+                    formatearHoraMonitorR16(
+                        datos.proxima_ejecucion
+                    );
+            }
+
+            if (frecuencia) {
+
+                frecuencia.textContent =
+                    (
+                        datos.intervalo_minutos
+                        ??
+                        "--"
+                    )
+                    +
+                    " min";
+            }
+
+        }
+        catch (error) {
+
+            console.error(
+                "Monitor R1.6 Flota Operativa:",
+                error
+            );
+
+            monitor.classList.remove(
+                "r16-live-ok",
+                "r16-live-pending"
+            );
+
+            monitor.classList.add(
+                "r16-live-error"
+            );
+
+            if (estado) {
+                estado.textContent =
+                    "SIN CONEXION ESTADO R1.6";
+            }
+        }
+    }
+
+
+    cargarMonitorR16Flota();
+
+    setInterval(
+        cargarMonitorR16Flota,
+        60 * 1000
+    );
+
+
+
+    // ================================================================
     // ACTUALIZACION AUTOMATICA
     // ================================================================
 
@@ -5285,5 +5706,557 @@
     );
 
 
+
+
+
+    // ================================================================
+    // R11C4 - MODAL PRESTADOS / RECIBIDOS
+    // Independiente del modal certificado Ver PPU.
+    // ================================================================
+
+    function abrirModalPrestamos(
+        tipo,
+        terminal,
+        unidad
+    ) {
+
+        const detalle = (
+            window.__swavPrestamosDetalle
+            ||
+            []
+        );
+
+
+        const filas = detalle
+            .filter(
+                item => {
+
+                    const unidadOk =
+                        !unidad
+                        ||
+                        String(
+                            item.unidad
+                            ||
+                            ""
+                        ).toUpperCase()
+                        ===
+                        String(
+                            unidad
+                        ).toUpperCase();
+
+
+                    let terminalOk = false;
+
+                    if (
+                        tipo
+                        ===
+                        "prestados"
+                    ) {
+
+                        terminalOk =
+                            String(
+                                item.terminal_base
+                                ||
+                                ""
+                            ).toUpperCase()
+                            ===
+                            String(
+                                terminal
+                            ).toUpperCase();
+
+                    } else {
+
+                        terminalOk =
+                            String(
+                                item.terminal_operativo
+                                ||
+                                ""
+                            ).toUpperCase()
+                            ===
+                            String(
+                                terminal
+                            ).toUpperCase();
+                    }
+
+
+                    return (
+                        unidadOk
+                        &&
+                        terminalOk
+                    );
+                }
+            )
+            .sort(
+                (a, b) => {
+
+                    const fechaA =
+                        String(
+                            a.fecha
+                            ||
+                            ""
+                        );
+
+                    const fechaB =
+                        String(
+                            b.fecha
+                            ||
+                            ""
+                        );
+
+                    if (
+                        fechaA
+                        !==
+                        fechaB
+                    ) {
+
+                        return fechaA.localeCompare(
+                            fechaB
+                        );
+                    }
+
+
+                    const periodoA =
+                        Number(
+                            a.periodo
+                            ||
+                            0
+                        );
+
+                    const periodoB =
+                        Number(
+                            b.periodo
+                            ||
+                            0
+                        );
+
+                    if (
+                        periodoA
+                        !==
+                        periodoB
+                    ) {
+
+                        return (
+                            periodoA
+                            -
+                            periodoB
+                        );
+                    }
+
+
+                    return String(
+                        a.ppu
+                        ||
+                        ""
+                    ).localeCompare(
+                        String(
+                            b.ppu
+                            ||
+                            ""
+                        )
+                    );
+                }
+            );
+
+
+        let modal =
+            document.getElementById(
+                "modalPrestamosPatio"
+            );
+
+
+        if (!modal) {
+
+            modal =
+                document.createElement(
+                    "div"
+                );
+
+            modal.id =
+                "modalPrestamosPatio";
+
+            modal.className =
+                "prestamos-modal-overlay hidden";
+
+            modal.innerHTML = `
+                <div class="prestamos-modal">
+
+                    <div class="prestamos-modal-header">
+
+                        <div>
+                            <span class="modal-kicker">
+                                APOYO ENTRE PATIOS
+                            </span>
+
+                            <h3 id="prestamosModalTitulo">
+                                Buses en pr?stamo
+                            </h3>
+
+                            <p id="prestamosModalSubtitulo">
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            id="cerrarPrestamosModal"
+                            class="prestamos-modal-cerrar"
+                            aria-label="Cerrar">
+                            &times;
+                        </button>
+
+                    </div>
+
+                    <div class="prestamos-modal-body">
+
+                        <div class="prestamos-modal-resumen">
+                            <strong id="prestamosModalTotal">
+                                0
+                            </strong>
+                            <span>
+                                movimientos
+                            </span>
+                        </div>
+
+                        <div class="prestamos-tabla-wrap">
+
+                            <table class="data-table prestamos-tabla">
+
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Per?odo</th>
+                                        <th>PPU</th>
+                                        <th>Servicio</th>
+                                        <th>Patio base</th>
+                                        <th>Patio operativo</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="prestamosModalBody">
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            `;
+
+
+            document.body.appendChild(
+                modal
+            );
+
+
+            document
+                .getElementById(
+                    "cerrarPrestamosModal"
+                )
+                .addEventListener(
+                    "click",
+                    () => {
+                        modal.classList.add(
+                            "hidden"
+                        );
+
+                        document.body.classList.remove(
+                            "modal-open"
+                        );
+                    }
+                );
+
+
+            modal.addEventListener(
+                "click",
+                evento => {
+
+                    if (
+                        evento.target
+                        ===
+                        modal
+                    ) {
+
+                        modal.classList.add(
+                            "hidden"
+                        );
+
+                        document.body.classList.remove(
+                            "modal-open"
+                        );
+                    }
+                }
+            );
+        }
+
+
+        const titulo =
+            document.getElementById(
+                "prestamosModalTitulo"
+            );
+
+        const subtitulo =
+            document.getElementById(
+                "prestamosModalSubtitulo"
+            );
+
+        const total =
+            document.getElementById(
+                "prestamosModalTotal"
+            );
+
+        const tbody =
+            document.getElementById(
+                "prestamosModalBody"
+            );
+
+
+        titulo.textContent =
+            tipo === "prestados"
+                ? "Buses prestados"
+                : "Buses recibidos";
+
+
+        subtitulo.textContent =
+            (
+                terminal
+                +
+                " ? "
+                +
+                unidad
+            );
+
+
+        total.textContent =
+            String(
+                filas.length
+            );
+
+
+        if (!filas.length) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td
+                        colspan="6"
+                        class="empty-cell">
+                        Sin movimientos para el rango seleccionado.
+                    </td>
+                </tr>
+            `;
+
+        } else {
+
+            tbody.innerHTML =
+                filas
+                .map(
+                    item => `
+                        <tr>
+
+                            <td>
+                                ${escapeHtml(
+                                    item.fecha
+                                    ||
+                                    ""
+                                )}
+                            </td>
+
+                            <td class="num">
+                                P${String(
+                                    Number(
+                                        item.periodo
+                                        ||
+                                        0
+                                    )
+                                ).padStart(
+                                    2,
+                                    "0"
+                                )}
+                            </td>
+
+                            <td>
+                                <strong class="ppu-value">
+                                    ${escapeHtml(
+                                        item.ppu
+                                        ||
+                                        ""
+                                    )}
+                                </strong>
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                                    item.servicio_r16
+                                    ||
+                                    ""
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                                    item.terminal_base_nombre
+                                    ||
+                                    item.terminal_base
+                                    ||
+                                    ""
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                                    item.terminal_operativo_nombre
+                                    ||
+                                    item.terminal_operativo
+                                    ||
+                                    ""
+                                )}
+                            </td>
+
+                        </tr>
+                    `
+                )
+                .join("");
+        }
+
+
+        modal.classList.remove(
+            "hidden"
+        );
+
+        document.body.classList.add(
+            "modal-open"
+        );
+    }
+
+
+    document.addEventListener(
+        "click",
+        evento => {
+
+            const boton =
+                evento.target.closest(
+                    ".prestamo-chip[data-prestamo-tipo]"
+                );
+
+            if (!boton) {
+                return;
+            }
+
+
+            evento.preventDefault();
+
+
+            abrirModalPrestamos(
+                boton.dataset.prestamoTipo
+                ||
+                "",
+                boton.dataset.prestamoTerminal
+                ||
+                "",
+                boton.dataset.prestamoUnidad
+                ||
+                ""
+            );
+        }
+    );
+
+
+
+
+    // ================================================================
+    // R11D3 - PINTAR BARRAS APOYO
+    // Solo presentaci?n.
+    // Lee el porcentaje ya calculado y mostrado por SWAV.
+    // ================================================================
+
+    function pintarBarrasApoyo() {
+
+        const tarjetas =
+            document.querySelectorAll(
+                ".apoyo-terminal-card"
+            );
+
+        tarjetas.forEach(
+            tarjeta => {
+
+                const porcentajeElemento =
+                    tarjeta.querySelector(
+                        ".apoyo-metricas > div:last-child strong"
+                    );
+
+                if (!porcentajeElemento) {
+                    return;
+                }
+
+                const texto =
+                    String(
+                        porcentajeElemento.textContent
+                        ||
+                        ""
+                    )
+                    .replace("%", "")
+                    .replace(",", ".")
+                    .trim();
+
+                let valor =
+                    Number.parseFloat(
+                        texto
+                    );
+
+                if (
+                    !Number.isFinite(valor)
+                ) {
+                    valor = 0;
+                }
+
+                valor =
+                    Math.max(
+                        0,
+                        Math.min(
+                            100,
+                            valor
+                        )
+                    );
+
+                tarjeta.style.setProperty(
+                    "--apoyo-pct",
+                    valor + "%"
+                );
+            }
+        );
+    }
+
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        () => {
+
+            pintarBarrasApoyo();
+
+            const ranking =
+                document.getElementById(
+                    "rankingApoyo"
+                );
+
+            if (!ranking) {
+                return;
+            }
+
+            const observer =
+                new MutationObserver(
+                    () => {
+                        pintarBarrasApoyo();
+                    }
+                );
+
+            observer.observe(
+                ranking,
+                {
+                    childList: true,
+                    subtree: true
+                }
+            );
+        }
+    );
 
 })();

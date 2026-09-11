@@ -2512,3 +2512,1115 @@ td.matriz-total-calle strong {
 .btn-view-missing {
     white-space: nowrap;
 }
+
+
+/* ==================================================================
+   R11B - MONITOR R1.6
+   ================================================================== */
+
+.r16-live-monitor {
+    min-width: 310px;
+    padding: 10px 14px;
+    border: 1px solid #d9e2ec;
+    border-radius: 12px;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-sizing: border-box;
+}
+
+.r16-live-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.r16-live-main > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.r16-live-main strong {
+    font-size: 12px;
+    letter-spacing: .25px;
+}
+
+.r16-live-main small {
+    font-size: 10px;
+    color: #64748b;
+}
+
+.r16-live-dot {
+    width: 10px;
+    height: 10px;
+    min-width: 10px;
+    border-radius: 50%;
+    background: #d39c21;
+    box-shadow: 0 0 0 4px rgba(211,156,33,.14);
+}
+
+.r16-live-times {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    font-size: 9px;
+    color: #64748b;
+}
+
+.r16-live-times span {
+    display: flex;
+    flex-direction: column;
+}
+
+.r16-live-times strong {
+    margin-top: 1px;
+    color: #263547;
+    font-size: 10px;
+}
+
+.r16-live-ok {
+    border-color: #b9dfc8;
+    background: #f1fbf5;
+}
+
+.r16-live-ok .r16-live-dot {
+    background: #178647;
+    box-shadow: 0 0 0 4px rgba(23,134,71,.13);
+}
+
+.r16-live-error {
+    border-color: #efc0c0;
+    background: #fff5f5;
+}
+
+.r16-live-error .r16-live-dot {
+    background: #c93d3d;
+    box-shadow: 0 0 0 4px rgba(201,61,61,.12);
+}
+
+.r16-live-pending {
+    border-color: #ecd49d;
+    background: #fffaf0;
+}
+
+@media (max-width: 900px) {
+
+    .r16-live-monitor {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .r16-live-times {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+
+/* ==================================================================
+   R11C4 - PRESTADOS / RECIBIDOS ENTRE PATIOS
+   ================================================================== */
+
+.prestamos-terminal-resumen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 5px;
+}
+
+.prestamo-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 22px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+button.prestamo-chip {
+    cursor: pointer;
+}
+
+.prestamo-chip-sale {
+    border: 1px solid #e7b2b2;
+    background: #fff4f4;
+    color: #a92323;
+}
+
+.prestamo-chip-sale:hover {
+    background: #fde7e7;
+}
+
+.prestamo-chip-recibe {
+    border: 1px solid #abd8bd;
+    background: #effaf3;
+    color: #176b3c;
+}
+
+.prestamo-chip-recibe:hover {
+    background: #e0f4e8;
+}
+
+.prestamo-chip-neutro {
+    border: 1px solid #e1e6ec;
+    background: #f7f9fb;
+    color: #7b8795;
+}
+
+.prestamo-chip-ajustada {
+    border: 1px solid #b9cbe4;
+    background: #f1f6fc;
+    color: #274e7d;
+}
+
+
+/* Modal independiente */
+
+.prestamos-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 12050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(13, 26, 45, .58);
+}
+
+.prestamos-modal-overlay.hidden {
+    display: none !important;
+}
+
+.prestamos-modal {
+    width: min(1100px, 96vw);
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 22px 60px rgba(0, 0, 0, .24);
+}
+
+.prestamos-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px 22px;
+    border-bottom: 1px solid #e4e9ef;
+}
+
+.prestamos-modal-header h3 {
+    margin: 3px 0 2px;
+    color: #172945;
+}
+
+.prestamos-modal-header p {
+    margin: 0;
+    color: #6b7788;
+    font-size: 11px;
+}
+
+.prestamos-modal-cerrar {
+    border: 0;
+    background: transparent;
+    color: #657184;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.prestamos-modal-body {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 22px 22px;
+}
+
+.prestamos-modal-resumen {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    margin-bottom: 12px;
+}
+
+.prestamos-modal-resumen strong {
+    color: #172945;
+    font-size: 22px;
+}
+
+.prestamos-modal-resumen span {
+    color: #6f7b8b;
+    font-size: 11px;
+}
+
+.prestamos-tabla-wrap {
+    overflow: auto;
+    border: 1px solid #e2e7ed;
+    border-radius: 8px;
+}
+
+.prestamos-tabla {
+    min-width: 850px;
+}
+
+.prestamos-tabla th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+@media (max-width: 900px) {
+
+    .prestamos-terminal-resumen {
+        gap: 3px;
+    }
+
+    .prestamo-chip {
+        font-size: 8px;
+        padding: 3px 5px;
+    }
+
+    .prestamos-modal-overlay {
+        padding: 10px;
+    }
+}
+
+
+/* ==================================================================
+   R11D2 - TERMINALES QUE REQUIEREN APOYO
+   DISEÑO GERENCIAL AMPLIO
+   Solo presentación. No altera cálculos.
+   ================================================================== */
+
+
+/* PANEL GENERAL */
+
+.support-panel {
+    overflow: hidden !important;
+    border-radius: 12px !important;
+}
+
+
+/* ================================================================
+   CABECERA AZUL
+   ================================================================ */
+
+.support-panel > .panel-header {
+    position: relative !important;
+
+    min-height: 118px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+
+    padding:
+        18px 32px
+        18px 108px
+        !important;
+
+    border: 0 !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            #123f76 0%,
+            #1765a1 55%,
+            #174b82 100%
+        )
+        !important;
+
+    color: #ffffff !important;
+}
+
+
+/* ICONO BUS */
+
+.support-panel > .panel-header::before {
+    content: "▣";
+
+    position: absolute !important;
+    left: 28px !important;
+    top: 22px !important;
+
+    width: 58px !important;
+    height: 58px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    border:
+        2px solid
+        rgba(94, 194, 255, .70)
+        !important;
+
+    border-radius: 12px !important;
+
+    background:
+        rgba(27, 127, 199, .34)
+        !important;
+
+    color: #a8ddff !important;
+
+    font-size: 30px !important;
+    font-weight: 900 !important;
+}
+
+
+/* TITULO */
+
+.support-panel > .panel-header h2 {
+    margin: 0 0 5px 0 !important;
+
+    color: #ffffff !important;
+
+    font-size: 27px !important;
+    line-height: 1.1 !important;
+
+    font-weight: 900 !important;
+}
+
+
+/* SUBTITULO */
+
+.support-panel > .panel-header p {
+    margin: 0 !important;
+
+    color:
+        rgba(255, 255, 255, .80)
+        !important;
+
+    font-size: 15px !important;
+}
+
+
+/* ETIQUETA APOYO OPERACIONAL */
+
+.support-panel .advisory-label {
+    position: absolute !important;
+
+    left: 108px !important;
+    bottom: 13px !important;
+
+    padding:
+        5px 13px
+        !important;
+
+    border-radius: 999px !important;
+
+    background: #ccecff !important;
+
+    color: #0869bd !important;
+
+    font-size: 10px !important;
+    font-weight: 900 !important;
+}
+
+
+/* ================================================================
+   CUADRO EXPLICATIVO DERECHO
+   ================================================================ */
+
+.support-panel > .panel-header::after {
+    content:
+        "ℹ   % Operativa (por terminal)\A"
+        "Porcentaje calculado en base a la flota asignada al terminal.\A"
+        "% Operativa = (Flota operativa del terminal / Flota total del terminal) × 100";
+
+    white-space: pre !important;
+
+    width: 500px !important;
+
+    padding:
+        12px 18px
+        !important;
+
+    border:
+        1px solid
+        rgba(93, 192, 255, .75)
+        !important;
+
+    border-radius: 9px !important;
+
+    background:
+        rgba(10, 55, 104, .30)
+        !important;
+
+    color: #ffffff !important;
+
+    font-size: 12px !important;
+    line-height: 1.55 !important;
+
+    font-weight: 500 !important;
+}
+
+
+/* ================================================================
+   CONTENEDOR U8 / U9
+   ================================================================ */
+
+#rankingApoyo.support-grid {
+    padding:
+        14px
+        !important;
+
+    background: #ffffff !important;
+}
+
+
+.apoyo-unidades-grid {
+    display: grid !important;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        )
+        !important;
+
+    gap: 12px !important;
+
+    align-items: start !important;
+}
+
+
+/* ================================================================
+   TARJETA DE UNIDAD
+   ================================================================ */
+
+.apoyo-unidad {
+    border:
+        1px solid #cfe0f0
+        !important;
+
+    border-radius: 10px !important;
+
+    background: #ffffff !important;
+
+    overflow: hidden !important;
+}
+
+
+/* CABECERA U8 / U9 */
+
+.apoyo-unidad-header {
+    min-height: 68px !important;
+
+    padding:
+        10px 14px
+        !important;
+
+    gap: 14px !important;
+
+    background:
+        linear-gradient(
+            90deg,
+            #f8fbff,
+            #ffffff
+        )
+        !important;
+}
+
+
+/* CUADRADO U8/U9 */
+
+.apoyo-unidad-header .unidad-badge,
+.apoyo-unidad-header > span:first-child {
+    min-width: 60px !important;
+    width: 60px !important;
+    height: 54px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    border-radius: 9px !important;
+
+    background:
+        linear-gradient(
+            145deg,
+            #17375f,
+            #071d3b
+        )
+        !important;
+
+    color: #ffffff !important;
+
+    font-size: 22px !important;
+    font-weight: 900 !important;
+}
+
+
+/* NOMBRE ALFA / OMEGA */
+
+.apoyo-unidad-header > div > strong {
+    font-size: 19px !important;
+    font-weight: 900 !important;
+
+    color: #102b4f !important;
+}
+
+
+.apoyo-unidad-header > div > small {
+    margin-top: 5px !important;
+
+    font-size: 11px !important;
+
+    color: #405d7e !important;
+}
+
+
+/* ================================================================
+   LISTADO TERMINALES
+   ================================================================ */
+
+.apoyo-terminal-lista {
+    gap: 6px !important;
+
+    padding:
+        7px
+        !important;
+}
+
+
+/* TARJETA TERMINAL */
+
+.apoyo-terminal-card {
+    grid-template-columns:
+        64px
+        minmax(0, 1fr)
+        !important;
+
+    min-height: 98px !important;
+
+    border-radius: 9px !important;
+
+    border-left-width: 5px !important;
+}
+
+
+/* POSICION */
+
+.apoyo-posicion {
+    font-size: 27px !important;
+
+    font-weight: 900 !important;
+}
+
+
+/* CONTENIDO */
+
+.apoyo-terminal-contenido {
+    display: grid !important;
+
+    grid-template-columns:
+        minmax(230px, 1.45fr)
+        minmax(0, 2.8fr)
+        !important;
+
+    align-items: center !important;
+
+    gap: 18px !important;
+
+    padding:
+        10px 16px
+        !important;
+}
+
+
+/* TITULO TERMINAL */
+
+.apoyo-terminal-titulo {
+    margin: 0 !important;
+}
+
+
+.apoyo-terminal-titulo strong {
+    font-size: 15px !important;
+
+    font-weight: 900 !important;
+
+    color: #10233f !important;
+}
+
+
+.apoyo-terminal-titulo span {
+    margin-top: 3px !important;
+
+    font-size: 10px !important;
+}
+
+
+/* ================================================================
+   BARRA VISUAL DE FLOTA
+   ================================================================ */
+
+.apoyo-terminal-titulo::after {
+    content: "";
+
+    display: block !important;
+
+    width: 100% !important;
+    height: 13px !important;
+
+    margin-top: 10px !important;
+
+    border:
+        1px solid #c7d8e8
+        !important;
+
+    border-radius: 999px !important;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255,255,255,.65),
+            rgba(221,232,242,.85)
+        )
+        !important;
+
+    box-shadow:
+        inset 0 1px 2px
+        rgba(0,0,0,.06)
+        !important;
+}
+
+
+/* ================================================================
+   METRICAS
+   ================================================================ */
+
+.apoyo-metricas {
+    grid-template-columns:
+        1fr
+        1fr
+        1.25fr
+        !important;
+
+    gap: 10px !important;
+}
+
+
+.apoyo-metricas > div {
+    min-height: 58px !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+
+    padding:
+        8px 14px
+        !important;
+
+    border:
+        1px solid
+        rgba(25, 61, 98, .08)
+        !important;
+
+    border-radius: 8px !important;
+
+    background:
+        rgba(255,255,255,.67)
+        !important;
+}
+
+
+.apoyo-metricas small {
+    margin-bottom: 4px !important;
+
+    font-size: 9px !important;
+
+    text-transform: uppercase !important;
+}
+
+
+.apoyo-metricas strong {
+    font-size: 18px !important;
+
+    font-weight: 900 !important;
+}
+
+
+/* PORCENTAJE DESTACADO */
+
+.apoyo-metricas > div:last-child {
+    padding-left: 16px !important;
+}
+
+
+.apoyo-metricas > div:last-child strong {
+    font-size: 23px !important;
+}
+
+
+/* ================================================================
+   SEMAFORO 50 / 80
+   ================================================================ */
+
+/* CRITICO */
+
+.apoyo-terminal-card.apoyo-critico {
+    border-left-color: #ff2533 !important;
+
+    background:
+        linear-gradient(
+            90deg,
+            #fff2f3,
+            #ffffff
+        )
+        !important;
+}
+
+
+.apoyo-terminal-card.apoyo-critico
+.apoyo-posicion {
+    color: #e21c2a !important;
+}
+
+
+.apoyo-terminal-card.apoyo-critico
+.apoyo-metricas > div:last-child {
+    background: #fff0f1 !important;
+}
+
+
+/* ATENCION */
+
+.apoyo-terminal-card.apoyo-atencion {
+    border-left-color: #ffb900 !important;
+
+    background:
+        linear-gradient(
+            90deg,
+            #fff9e8,
+            #ffffff
+        )
+        !important;
+}
+
+
+.apoyo-terminal-card.apoyo-atencion
+.apoyo-posicion {
+    color: #b77b00 !important;
+}
+
+
+.apoyo-terminal-card.apoyo-atencion
+.apoyo-metricas > div:last-child {
+    background: #fff8e2 !important;
+}
+
+
+/* NORMAL */
+
+.apoyo-terminal-card.apoyo-normal {
+    border-left-color: #12aa63 !important;
+
+    background:
+        linear-gradient(
+            90deg,
+            #effbf5,
+            #ffffff
+        )
+        !important;
+}
+
+
+.apoyo-terminal-card.apoyo-normal
+.apoyo-posicion {
+    color: #087b48 !important;
+}
+
+
+.apoyo-terminal-card.apoyo-normal
+.apoyo-metricas > div:last-child {
+    background: #eefaf4 !important;
+}
+
+
+/* ================================================================
+   LEYENDA
+   ================================================================ */
+
+.apoyo-semaforo-leyenda {
+    margin:
+        0 14px 12px
+        !important;
+
+    padding:
+        10px 14px
+        !important;
+
+    gap: 26px !important;
+
+    border:
+        1px solid #d4e3ef
+        !important;
+
+    border-radius: 8px !important;
+
+    background: #f8fbfe !important;
+}
+
+
+.apoyo-semaforo-leyenda span {
+    font-size: 11px !important;
+}
+
+
+/* ================================================================
+   OCULTAR NOTA ANTIGUA INFERIOR
+   La explicación ya está en cabecera.
+   ================================================================ */
+
+.support-panel > .support-note {
+    display: none !important;
+}
+
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+@media (max-width: 1250px) {
+
+    .support-panel > .panel-header::after {
+        width: 410px !important;
+
+        font-size: 10px !important;
+    }
+
+    .apoyo-terminal-contenido {
+        grid-template-columns:
+            minmax(180px, 1fr)
+            minmax(0, 2fr)
+            !important;
+    }
+}
+
+
+@media (max-width: 1000px) {
+
+    .support-panel > .panel-header {
+        padding:
+            18px 20px
+            18px 90px
+            !important;
+    }
+
+    .support-panel > .panel-header::before {
+        left: 18px !important;
+    }
+
+    .support-panel > .panel-header::after {
+        display: none !important;
+    }
+
+    .support-panel .advisory-label {
+        left: 90px !important;
+    }
+
+    .apoyo-unidades-grid {
+        grid-template-columns:
+            1fr
+            !important;
+    }
+}
+
+
+@media (max-width: 700px) {
+
+    .support-panel > .panel-header h2 {
+        font-size: 21px !important;
+    }
+
+    .apoyo-terminal-contenido {
+        grid-template-columns:
+            1fr
+            !important;
+    }
+
+    .apoyo-metricas {
+        grid-template-columns:
+            repeat(
+                3,
+                minmax(0,1fr)
+            )
+            !important;
+    }
+}
+
+
+
+/* ==================================================================
+   R11D3 - BARRAS ALTO RELIEVE
+   ================================================================== */
+
+
+/* COLOR BASE SEGUN SEMAFORO */
+
+.apoyo-terminal-card.apoyo-critico {
+    --apoyo-color-1: #ff1828;
+    --apoyo-color-2: #ff6670;
+}
+
+.apoyo-terminal-card.apoyo-atencion {
+    --apoyo-color-1: #f3ad00;
+    --apoyo-color-2: #ffd34d;
+}
+
+.apoyo-terminal-card.apoyo-normal {
+    --apoyo-color-1: #009b55;
+    --apoyo-color-2: #22c779;
+}
+
+
+/* BARRA BASE */
+
+.apoyo-terminal-titulo::after {
+    content: "" !important;
+
+    display: block !important;
+
+    width: 100% !important;
+    height: 15px !important;
+
+    margin-top: 9px !important;
+
+    border: 1px solid #bdccda !important;
+
+    border-radius: 999px !important;
+
+    background:
+        linear-gradient(
+            90deg,
+
+            var(--apoyo-color-1)
+                0%,
+
+            var(--apoyo-color-2)
+                var(--apoyo-pct, 0%),
+
+            #e7eef4
+                var(--apoyo-pct, 0%),
+
+            #dfe8f0
+                100%
+        )
+        !important;
+
+    box-shadow:
+        inset 0 2px 3px
+            rgba(255,255,255,.65),
+
+        inset 0 -2px 3px
+            rgba(0,0,0,.12),
+
+        0 2px 4px
+            rgba(14,43,73,.18)
+        !important;
+}
+
+
+/* BRILLO SUPERIOR DE LA BARRA */
+
+.apoyo-terminal-card
+.apoyo-terminal-titulo {
+    position: relative !important;
+}
+
+
+/* TARJETAS EN ALTO RELIEVE */
+
+.apoyo-terminal-card {
+    box-shadow:
+        0 4px 9px
+            rgba(20,50,82,.13),
+
+        inset 0 1px 0
+            rgba(255,255,255,.90)
+        !important;
+
+    transition:
+        transform .15s ease,
+        box-shadow .15s ease
+        !important;
+}
+
+
+.apoyo-terminal-card:hover {
+    transform:
+        translateY(-1px)
+        !important;
+
+    box-shadow:
+        0 7px 15px
+            rgba(20,50,82,.18),
+
+        inset 0 1px 0
+            rgba(255,255,255,.95)
+        !important;
+}
+
+
+/* METRICAS EN RELIEVE */
+
+.apoyo-metricas > div {
+    border:
+        1px solid
+        rgba(132,155,180,.25)
+        !important;
+
+    box-shadow:
+        0 3px 7px
+            rgba(15,43,73,.10),
+
+        inset 0 1px 0
+            rgba(255,255,255,.90)
+        !important;
+}
+
+
+/* PORCENTAJE MAS DESTACADO */
+
+.apoyo-metricas > div:last-child {
+    box-shadow:
+        0 4px 10px
+            rgba(15,43,73,.12),
+
+        inset 0 1px 0
+            rgba(255,255,255,.92)
+        !important;
+}
+
+
+/* CABECERA U8 / U9 EN RELIEVE */
+
+.apoyo-unidad {
+    box-shadow:
+        0 5px 13px
+            rgba(12,43,77,.11)
+        !important;
+}
+
+
+.apoyo-unidad-header .unidad-badge,
+.apoyo-unidad-header > span:first-child {
+    box-shadow:
+        0 5px 10px
+            rgba(7,29,59,.25),
+
+        inset 0 1px 1px
+            rgba(255,255,255,.18)
+        !important;
+}
+

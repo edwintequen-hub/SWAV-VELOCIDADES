@@ -30,6 +30,7 @@ from app.models import (
     FlotaAsignacionTerminal,
     HistoricoFlotaOperativa,
     HistoricoFlotaOperativaServicio,
+    Servicio,
 )
 
 
@@ -76,6 +77,373 @@ def _normalizar_ppu(valor) -> str:
         "",
         texto,
     )
+
+
+
+# =====================================================================
+# R11C - PRESTAMOS ENTRE PATIOS
+# =====================================================================
+#
+# REGLA:
+#   - terminal_base: catalogo vigente de PPU
+#   - terminal_operativo: servicio real R1.6 -> tabla Servicio / INFO.xlsx
+#
+# IMPORTANTE:
+#   Este bloque NO modifica HistoricoFlotaOperativaServicio.
+#   Solo resuelve informacion operacional durante la consulta.
+# =====================================================================
+
+
+def _normalizar_ts(valor) -> str:
+
+    return re.sub(
+        r"[^A-Z0-9]",
+        "",
+        _norm(valor),
+    )
+
+
+def _construir_mapa_patios_operativos(
+    db: Session,
+) -> dict:
+
+    filas = (
+        db.query(
+            Servicio
+        )
+        .all()
+    )
+
+    por_unidad = defaultdict(list)
+
+    for fila in filas:
+
+        unidad = _norm(
+            fila.unidad
+        )
+
+        terminal = _norm(
+            fila.terminal
+        )
+
+        codigo_ts = _normalizar_ts(
+            fila.codigo_ts
+        )
+
+        if (
+            not unidad
+            or
+            not terminal
+            or
+            not codigo_ts
+        ):
+            continue
+
+        clave_ts = (
+            "T"
+            +
+            codigo_ts
+        )
+
+        por_unidad[
+            unidad
+        ].append({
+            "servicio_cliente":
+                _texto(
+                    fila.servicio
+                ),
+            "codigo_ts":
+                codigo_ts,
+            "clave_ts":
+                clave_ts,
+            "terminal":
+                terminal,
+            "ruta_ida":
+                _normalizar_ts(
+                    getattr(
+                        fila,
+                        "ruta_ida",
+                        None,
+                    )
+                ),
+            "ruta_regreso":
+                _normalizar_ts(
+                    getattr(
+                        fila,
+                        "ruta_regreso",
+                        None,
+                    )
+                ),
+        })
+
+    return por_unidad
+
+
+def _resolver_patio_operativo(
+    mapa_servicios: dict,
+    unidad,
+    servicio_r16,
+) -> dict:
+
+    unidad_norm = _norm(
+        unidad
+    )
+
+    r16 = _normalizar_ts(
+        servicio_r16
+    )
+
+    if (
+        not unidad_norm
+        or
+        not r16
+    ):
+
+        return {
+            "resuelto": False,
+            "terminal_operativo": None,
+            "servicio_cliente": None,
+            "codigo_ts": None,
+            "resolucion": "SIN DATOS",
+        }
+
+
+    candidatos_unidad = (
+        mapa_servicios.get(
+            unidad_norm,
+            [],
+        )
+    )
+
+
+    # ================================================================
+    # 1. COINCIDENCIA EXACTA
+    # ================================================================
+
+    exactos = [
+        item
+        for item in candidatos_unidad
+        if item["clave_ts"] == r16
+    ]
+
+    if len(exactos) == 1:
+
+        item = exactos[0]
+
+        return {
+            "resuelto": True,
+            "terminal_operativo":
+                item["terminal"],
+            "servicio_cliente":
+                item["servicio_cliente"],
+            "codigo_ts":
+                item["codigo_ts"],
+            "resolucion":
+                "CODIGO_TS_EXACTO",
+        }
+
+
+    # ================================================================
+    # 2. COINCIDENCIA POR RUTA
+    #    Ejemplo:
+    #       R1.6 T818 E0
+    #       ruta T818 E0 00I
+    # ================================================================
+
+    candidatos_ruta = []
+
+    for item in candidatos_unidad:
+
+        ruta_ida = (
+            item["ruta_ida"]
+            or ""
+        )
+
+        ruta_regreso = (
+            item["ruta_regreso"]
+            or ""
+        )
+
+        if (
+            (
+                ruta_ida
+                and
+                ruta_ida.startswith(
+                    r16
+                )
+            )
+            or
+            (
+                ruta_regreso
+                and
+                ruta_regreso.startswith(
+                    r16
+                )
+            )
+        ):
+
+            candidatos_ruta.append(
+                item
+            )
+
+
+    if candidatos_ruta:
+
+        terminales = {
+            item["terminal"]
+            for item in candidatos_ruta
+        }
+
+        if len(terminales) == 1:
+
+            servicios_cliente = sorted({
+                item["servicio_cliente"]
+                for item in candidatos_ruta
+                if item["servicio_cliente"]
+            })
+
+            codigos_ts = sorted({
+                item["codigo_ts"]
+                for item in candidatos_ruta
+                if item["codigo_ts"]
+            })
+
+            return {
+                "resuelto": True,
+                "terminal_operativo":
+                    next(
+                        iter(
+                            terminales
+                        )
+                    ),
+                "servicio_cliente":
+                    " / ".join(
+                        servicios_cliente
+                    ),
+                "codigo_ts":
+                    " / ".join(
+                        codigos_ts
+                    ),
+                "resolucion":
+                    "RUTA",
+            }
+
+
+    # ================================================================
+    # 3. MISMO NUMERO TS
+    #
+    # Solo se acepta cuando TODOS los candidatos pertenecen
+    # al MISMO terminal.
+    #
+    # Ejemplos certificados:
+    #   T807C2
+    #   T830 E3
+    #   T841C2
+    #   T902 E3
+    #   T950 E3
+    # ================================================================
+
+    numero_r16 = re.search(
+        r"T(\d{3})",
+        r16,
+    )
+
+    candidatos_numero = []
+
+    if numero_r16:
+
+        numero = (
+            numero_r16.group(1)
+        )
+
+        for item in candidatos_unidad:
+
+            numero_codigo = re.search(
+                r"(\d{3})",
+                item["codigo_ts"],
+            )
+
+            if (
+                numero_codigo
+                and
+                numero_codigo.group(1)
+                ==
+                numero
+            ):
+
+                candidatos_numero.append(
+                    item
+                )
+
+
+    if candidatos_numero:
+
+        terminales = {
+            item["terminal"]
+            for item in candidatos_numero
+        }
+
+        if len(terminales) == 1:
+
+            servicios_cliente = sorted({
+                item["servicio_cliente"]
+                for item in candidatos_numero
+                if item["servicio_cliente"]
+            })
+
+            codigos_ts = sorted({
+                item["codigo_ts"]
+                for item in candidatos_numero
+                if item["codigo_ts"]
+            })
+
+            return {
+                "resuelto": True,
+                "terminal_operativo":
+                    next(
+                        iter(
+                            terminales
+                        )
+                    ),
+                "servicio_cliente":
+                    " / ".join(
+                        servicios_cliente
+                    ),
+                "codigo_ts":
+                    " / ".join(
+                        codigos_ts
+                    ),
+                "resolucion":
+                    (
+                        "MISMO_NUMERO_"
+                        "TERMINAL_UNICO"
+                    ),
+            }
+
+
+        # ============================================================
+        # Nunca decidir entre patios distintos.
+        # ============================================================
+
+        return {
+            "resuelto": False,
+            "terminal_operativo": None,
+            "servicio_cliente": None,
+            "codigo_ts": None,
+            "resolucion":
+                "MIXTO_REVISAR",
+        }
+
+
+    return {
+        "resuelto": False,
+        "terminal_operativo": None,
+        "servicio_cliente": None,
+        "codigo_ts": None,
+        "resolucion":
+            "SIN_MAPA",
+    }
+
 
 
 def _bool_csv(valor) -> bool:
@@ -1392,6 +1760,464 @@ def consultar_flota(
                     "porcentaje_operativa": porcentaje,
                 })
 
+    # ================================================================
+    # R11C - PRESTAMOS / RECIBIDOS
+    # ================================================================
+    #
+    # NO modifica:
+    #   resumen_terminal
+    #   resumen_terminal_global
+    #   total_global
+    #
+    # Produce informacion paralela para certificacion.
+    # ================================================================
+
+    mapa_patios_operativos = (
+        _construir_mapa_patios_operativos(
+            db
+        )
+    )
+
+    prestamos_detalle = []
+
+    # Deduplicacion:
+    # una PPU prestada se cuenta una vez por
+    # fecha + periodo + patio base + patio operativo.
+    claves_prestamo = set()
+
+    # PPU distintas por terminal dentro del rango consultado.
+    prestados_ppus_terminal = defaultdict(set)
+    recibidos_ppus_terminal = defaultdict(set)
+
+    for presencia in presencias:
+
+        ppu = presencia[
+            "ppu"
+        ]
+
+        asignacion = (
+            asignaciones.get(
+                ppu
+            )
+        )
+
+        if asignacion is None:
+
+            # obtener_asignaciones usa PPU normalizada,
+            # pero se mantiene fallback defensivo.
+            asignacion = (
+                asignaciones.get(
+                    _normalizar_ppu(
+                        ppu
+                    )
+                )
+            )
+
+        terminal_base = (
+            _norm(
+                asignacion.terminal
+            )
+            if asignacion is not None
+            else _norm(
+                presencia.get(
+                    "terminal"
+                )
+            )
+        )
+
+        resolucion = (
+            _resolver_patio_operativo(
+                mapa_patios_operativos,
+                presencia.get(
+                    "unidad"
+                ),
+                presencia.get(
+                    "servicio"
+                ),
+            )
+        )
+
+        terminal_operativo = (
+            _norm(
+                resolucion.get(
+                    "terminal_operativo"
+                )
+            )
+            if resolucion.get(
+                "terminal_operativo"
+            )
+            else None
+        )
+
+        estado_movimiento = (
+            "SIN MAPA"
+        )
+
+        if (
+            resolucion.get(
+                "resuelto"
+            )
+            and
+            terminal_operativo
+        ):
+
+            if (
+                terminal_base
+                ==
+                terminal_operativo
+            ):
+
+                estado_movimiento = (
+                    "BASE"
+                )
+
+            else:
+
+                estado_movimiento = (
+                    "PRESTADO"
+                )
+
+
+        if (
+            estado_movimiento
+            !=
+            "PRESTADO"
+        ):
+
+            continue
+
+
+        clave = (
+            presencia.get(
+                "fecha"
+            ),
+            int(
+                presencia.get(
+                    "periodo"
+                )
+                or 0
+            ),
+            ppu,
+            terminal_base,
+            terminal_operativo,
+        )
+
+        if clave in claves_prestamo:
+            continue
+
+        claves_prestamo.add(
+            clave
+        )
+
+        prestados_ppus_terminal[
+            terminal_base
+        ].add(
+            ppu
+        )
+
+        recibidos_ppus_terminal[
+            terminal_operativo
+        ].add(
+            ppu
+        )
+
+
+        prestamos_detalle.append({
+            "fecha":
+                presencia.get(
+                    "fecha"
+                ),
+            "periodo":
+                presencia.get(
+                    "periodo"
+                ),
+            "ppu":
+                ppu,
+            "unidad":
+                presencia.get(
+                    "unidad"
+                ),
+            "servicio_r16":
+                presencia.get(
+                    "servicio"
+                ),
+            "servicio_cliente":
+                resolucion.get(
+                    "servicio_cliente"
+                ),
+            "codigo_ts":
+                resolucion.get(
+                    "codigo_ts"
+                ),
+            "terminal_base":
+                terminal_base,
+            "terminal_base_nombre":
+                TERMINAL_LABELS.get(
+                    terminal_base,
+                    terminal_base.title(),
+                ),
+            "terminal_operativo":
+                terminal_operativo,
+            "terminal_operativo_nombre":
+                TERMINAL_LABELS.get(
+                    terminal_operativo,
+                    terminal_operativo.title(),
+                ),
+            "estado":
+                "PRESTADO",
+            "resolucion":
+                resolucion.get(
+                    "resolucion"
+                ),
+            "primera_transmision":
+                presencia.get(
+                    "primera_transmision"
+                ),
+            "ultima_transmision":
+                presencia.get(
+                    "ultima_transmision"
+                ),
+        })
+
+
+    # ================================================================
+    # CASOS SIN RESOLVER / MIXTOS
+    # Se informan por separado.
+    # ================================================================
+
+    prestamos_revision = []
+
+    claves_revision = set()
+
+    for presencia in presencias:
+
+        resolucion = (
+            _resolver_patio_operativo(
+                mapa_patios_operativos,
+                presencia.get(
+                    "unidad"
+                ),
+                presencia.get(
+                    "servicio"
+                ),
+            )
+        )
+
+        if resolucion.get(
+            "resuelto"
+        ):
+            continue
+
+        clave = (
+            presencia.get(
+                "unidad"
+            ),
+            presencia.get(
+                "servicio"
+            ),
+        )
+
+        if clave in claves_revision:
+            continue
+
+        claves_revision.add(
+            clave
+        )
+
+        prestamos_revision.append({
+            "unidad":
+                presencia.get(
+                    "unidad"
+                ),
+            "servicio_r16":
+                presencia.get(
+                    "servicio"
+                ),
+            "resolucion":
+                resolucion.get(
+                    "resolucion"
+                ),
+        })
+
+
+    # ================================================================
+    # RESUMEN POR TERMINAL
+    # ================================================================
+
+    terminales_movimiento = set(
+        asignada_terminal.keys()
+    )
+
+    terminales_movimiento.update(
+        prestados_ppus_terminal.keys()
+    )
+
+    terminales_movimiento.update(
+        recibidos_ppus_terminal.keys()
+    )
+
+    prestamos_resumen = []
+
+    # Operativa actual GLOBAL por base.
+    operativa_actual_por_terminal = defaultdict(
+        set
+    )
+
+    for presencia in presencias:
+
+        operativa_actual_por_terminal[
+            presencia.get(
+                "terminal"
+            )
+        ].add(
+            presencia.get(
+                "ppu"
+            )
+        )
+
+
+    # Operativa ajustada:
+    # PPU se asigna al patio donde realmente opera.
+    operativa_ajustada_ppus = defaultdict(
+        set
+    )
+
+    for presencia in presencias:
+
+        ppu = presencia.get(
+            "ppu"
+        )
+
+        asignacion = (
+            asignaciones.get(
+                ppu
+            )
+            or
+            asignaciones.get(
+                _normalizar_ppu(
+                    ppu
+                )
+            )
+        )
+
+        terminal_base = (
+            _norm(
+                asignacion.terminal
+            )
+            if asignacion is not None
+            else _norm(
+                presencia.get(
+                    "terminal"
+                )
+            )
+        )
+
+        resolucion = (
+            _resolver_patio_operativo(
+                mapa_patios_operativos,
+                presencia.get(
+                    "unidad"
+                ),
+                presencia.get(
+                    "servicio"
+                ),
+            )
+        )
+
+        terminal_destino = (
+            _norm(
+                resolucion.get(
+                    "terminal_operativo"
+                )
+            )
+            if (
+                resolucion.get(
+                    "resuelto"
+                )
+                and
+                resolucion.get(
+                    "terminal_operativo"
+                )
+            )
+            else terminal_base
+        )
+
+        if terminal_destino:
+
+            operativa_ajustada_ppus[
+                terminal_destino
+            ].add(
+                ppu
+            )
+
+
+    for term in sorted(
+        terminales_movimiento
+    ):
+
+        prestados = len(
+            prestados_ppus_terminal.get(
+                term,
+                set(),
+            )
+        )
+
+        recibidos = len(
+            recibidos_ppus_terminal.get(
+                term,
+                set(),
+            )
+        )
+
+        operativa_actual = len(
+            operativa_actual_por_terminal.get(
+                term,
+                set(),
+            )
+        )
+
+        operativa_ajustada = len(
+            operativa_ajustada_ppus.get(
+                term,
+                set(),
+            )
+        )
+
+        flota_base = (
+            int(
+                asignada_terminal.get(
+                    term,
+                    0,
+                )
+            )
+        )
+
+        prestamos_resumen.append({
+            "terminal":
+                term,
+            "terminal_nombre":
+                TERMINAL_LABELS.get(
+                    term,
+                    term.title(),
+                ),
+            "flota_base":
+                flota_base,
+            "operativa_actual":
+                operativa_actual,
+            "prestados":
+                prestados,
+            "recibidos":
+                recibidos,
+            "operativa_ajustada":
+                operativa_ajustada,
+            "saldo_prestamos":
+                recibidos
+                -
+                prestados,
+        })
+
+
+
     # =====================================================
     # GLOBAL POR TERMINAL
     # PPU DISTINCT en todo el rango de fechas/periodos elegido.
@@ -2073,6 +2899,9 @@ def consultar_flota(
         "cobertura_fuente": cobertura_fuente,
         "resumen_terminal": resumen_terminal,
         "resumen_terminal_global": resumen_terminal_global,
+        "prestamos_resumen": prestamos_resumen,
+        "prestamos_detalle": prestamos_detalle,
+        "prestamos_revision": prestamos_revision,
         "total_global": total_global,
         "sin_transmision_detalle": sin_transmision_detalle,
         "resumen_sin_transmision": resumen_sin_transmision,
