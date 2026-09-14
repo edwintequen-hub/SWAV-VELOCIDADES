@@ -2143,40 +2143,44 @@
                     .toUpperCase()
         );
 
-        let ultimoPeriodoCobertura = 24;
+        
+        let ultimoPeriodoCobertura = 0;
 
-        if (
-            coberturaUnidad
-            &&
-            coberturaUnidad.dia_completo !== true
-            &&
-            coberturaUnidad.hasta
-        ) {
+        if (coberturaUnidad) {
 
-            const matchHora = String(
+            if (
+                coberturaUnidad.dia_completo === true
+            ) {
+
+                ultimoPeriodoCobertura = 24;
+
+            } else if (
                 coberturaUnidad.hasta
-            ).match(
-                /^(\d{1,2}):(\d{2})/
-            );
+            ) {
 
-            if (matchHora) {
-
-                const horaCobertura = Number(
-                    matchHora[1]
+                const matchHora = String(
+                    coberturaUnidad.hasta
+                ).match(
+                    /^(\d{1,2}):(\d{2})/
                 );
 
-                if (
-                    Number.isInteger(
-                        horaCobertura
-                    )
-                    &&
-                    horaCobertura >= 0
-                    &&
-                    horaCobertura <= 23
-                ) {
+                if (matchHora) {
 
-                    ultimoPeriodoCobertura =
-                        horaCobertura + 1;
+                    const horaCobertura = Number(
+                        matchHora[1]
+                    );
+
+                    if (
+                        Number.isInteger(horaCobertura)
+                        &&
+                        horaCobertura >= 0
+                        &&
+                        horaCobertura <= 23
+                    ) {
+
+                        ultimoPeriodoCobertura =
+                            horaCobertura + 1;
+                    }
                 }
             }
         }
@@ -2185,22 +2189,13 @@
             periodo
         ) => {
 
-            if (!coberturaUnidad) {
-                return true;
-            }
-
-            if (
-                coberturaUnidad.dia_completo === true
-            ) {
-                return true;
-            }
-
             return (
                 Number(periodo)
                 <=
                 ultimoPeriodoCobertura
             );
         };
+
 
         const filasPeriodo = (
             datos.resumen_terminal_acumulado
