@@ -3007,6 +3007,152 @@ def consultar_flota(
                 }
 
 
+    # ================================================================
+    # R16I - FALLBACK COBERTURA DESDE HISTORICO REAL
+    # ================================================================
+    #
+    # Si archivo_origen no permite determinar la cobertura (por ejemplo
+    # en PostgreSQL/Render), usamos el ultimo PERIODO REAL persistido
+    # en HistoricoFlotaOperativa para la fecha consultada y cada unidad.
+    #
+    # IMPORTANTE:
+    # - NO crea periodos.
+    # - NO usa resumen_terminal_acumulado.
+    # - NO modifica historico.
+    # - NO afecta Velocidades.
+    # ================================================================
+
+    if not cobertura_por_unidad:
+
+        q_periodo_real = db.query(
+            HistoricoFlotaOperativa.unidad,
+            HistoricoFlotaOperativa.fecha,
+            func.max(
+                HistoricoFlotaOperativa.periodo
+            ).label("ultimo_periodo"),
+        )
+
+        if f_cobertura_desde:
+            q_periodo_real = q_periodo_real.filter(
+                HistoricoFlotaOperativa.fecha
+                >=
+                f_cobertura_desde
+            )
+
+        if f_cobertura_hasta:
+            q_periodo_real = q_periodo_real.filter(
+                HistoricoFlotaOperativa.fecha
+                <=
+                f_cobertura_hasta
+            )
+
+        if unidad:
+            q_periodo_real = q_periodo_real.filter(
+                func.upper(
+                    HistoricoFlotaOperativa.unidad
+                )
+                ==
+                _norm(unidad)
+            )
+
+        filas_periodo_real = (
+            q_periodo_real
+            .group_by(
+                HistoricoFlotaOperativa.unidad,
+                HistoricoFlotaOperativa.fecha,
+            )
+            .all()
+        )
+
+        for (
+            unidad_real,
+            fecha_real,
+            ultimo_periodo_real,
+        ) in filas_periodo_real:
+
+            codigo_unidad = _norm(
+                unidad_real
+            )
+
+            if codigo_unidad not in (
+                "U8",
+                "U9",
+            ):
+                continue
+
+            try:
+                periodo_real = int(
+                    ultimo_periodo_real
+                )
+            except (
+                TypeError,
+                ValueError,
+            ):
+                continue
+
+            if not (
+                1 <= periodo_real <= 24
+            ):
+                continue
+
+            # Periodo 1 = 00:00-00:59
+            # Periodo 18 = 17:00-17:59
+            hora_fin = periodo_real - 1
+
+            hasta_real = (
+                f"{hora_fin:02d}:59"
+            )
+
+            minutos_real = (
+                hora_fin * 60
+                +
+                59
+            )
+
+            clave_real = (
+                fecha_real,
+                periodo_real,
+            )
+
+            actual = cobertura_por_unidad.get(
+                codigo_unidad
+            )
+
+            if (
+                actual is None
+                or
+                clave_real
+                >
+                actual.get(
+                    "_clave",
+                    (
+                        date.min,
+                        0,
+                    )
+                )
+            ):
+                cobertura_por_unidad[
+                    codigo_unidad
+                ] = {
+                    "_clave": clave_real,
+                    "unidad": codigo_unidad,
+                    "fecha": (
+                        fecha_real.isoformat()
+                        if fecha_real
+                        else None
+                    ),
+                    "desde": "00:00",
+                    "hasta": hasta_real,
+                    "minutos": minutos_real,
+                    "dia_completo":
+                        periodo_real >= 24,
+                    "ultimo_periodo":
+                        periodo_real,
+                    "fuente":
+                        "historico_flota_operativa",
+                }
+
+
     for codigo_unidad in sorted(
         cobertura_por_unidad.keys()
     ):
