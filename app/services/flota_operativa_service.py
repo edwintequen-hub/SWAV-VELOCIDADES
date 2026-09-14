@@ -2218,6 +2218,162 @@ def consultar_flota(
 
 
 
+    # ================================================================
+    # R13C - ACUMULADO PROGRESIVO PPU DISTINCT
+    # Exclusivo para matriz Comportamiento por periodo.
+    #
+    # P01 = PPU unicas observadas hasta P01
+    # P02 = PPU unicas observadas hasta P02
+    # ...
+    # P24 = PPU unicas observadas durante todo el rango consultado
+    #
+    # Una misma PPU nunca suma dos veces.
+    # ================================================================
+
+    ppus_exactas_terminal_periodo = defaultdict(
+        lambda: defaultdict(set)
+    )
+
+    for presencia in presencias:
+
+        term_acum = presencia.get(
+            "terminal"
+        )
+
+        ppu_acum = presencia.get(
+            "ppu"
+        )
+
+        try:
+            periodo_acum = int(
+                presencia.get(
+                    "periodo"
+                )
+                or 0
+            )
+        except (TypeError, ValueError):
+            periodo_acum = 0
+
+        if (
+            not term_acum
+            or
+            not ppu_acum
+            or
+            periodo_acum < 1
+            or
+            periodo_acum > 24
+        ):
+            continue
+
+        ppus_exactas_terminal_periodo[
+            term_acum
+        ][
+            periodo_acum
+        ].add(
+            ppu_acum
+        )
+
+
+    resumen_terminal_acumulado = []
+
+    terminales_acumulado = set(
+        asignada_terminal.keys()
+    )
+
+    terminales_acumulado.update(
+        ppus_exactas_terminal_periodo.keys()
+    )
+
+
+    for term_acum in sorted(
+        terminales_acumulado
+    ):
+
+        acumuladas = set()
+
+        asignada_acum = int(
+            asignada_terminal.get(
+                term_acum,
+                0
+            )
+            or 0
+        )
+
+        for periodo_acum in range(
+            1,
+            25
+        ):
+
+            acumuladas.update(
+                ppus_exactas_terminal_periodo.get(
+                    term_acum,
+                    {}
+                ).get(
+                    periodo_acum,
+                    set()
+                )
+            )
+
+            operativa_acum = len(
+                acumuladas
+            )
+
+            sin_tx_acum = max(
+                asignada_acum
+                -
+                operativa_acum,
+                0
+            )
+
+            porcentaje_acum = (
+                round(
+                    (
+                        operativa_acum
+                        /
+                        asignada_acum
+                    )
+                    *
+                    100,
+                    2
+                )
+                if asignada_acum > 0
+                else None
+            )
+
+            resumen_terminal_acumulado.append({
+                "terminal":
+                    term_acum,
+
+                "terminal_nombre":
+                    TERMINAL_LABELS.get(
+                        term_acum,
+                        term_acum.title(),
+                    ),
+
+                "periodo":
+                    periodo_acum,
+
+                "hora_inicio":
+                    f"{periodo_acum - 1:02d}:00:00",
+
+                "hora_fin":
+                    f"{periodo_acum - 1:02d}:59:59",
+
+                "asignada":
+                    asignada_acum,
+
+                "operativa":
+                    operativa_acum,
+
+                "sin_transmision":
+                    sin_tx_acum,
+
+                "porcentaje_operativa":
+                    porcentaje_acum,
+            })
+
+
+
     # =====================================================
     # GLOBAL POR TERMINAL
     # PPU DISTINCT en todo el rango de fechas/periodos elegido.
@@ -2898,6 +3054,7 @@ def consultar_flota(
         "resumen_unidades": resumen_unidades,
         "cobertura_fuente": cobertura_fuente,
         "resumen_terminal": resumen_terminal,
+        "resumen_terminal_acumulado": resumen_terminal_acumulado,
         "resumen_terminal_global": resumen_terminal_global,
         "prestamos_resumen": prestamos_resumen,
         "prestamos_detalle": prestamos_detalle,

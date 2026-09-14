@@ -47,7 +47,7 @@
             valor === null ||
             valor === undefined
         ) {
-            return "â€”";
+            return "—";
         }
 
         return (
@@ -135,7 +135,7 @@
             return "Revisar";
         }
 
-        return "Mejor condiciÃ³n";
+        return "Mejor condición";
     }
 
 
@@ -226,12 +226,12 @@
 
         $("catalogoVersion").textContent =
             (
-                "CatÃ¡logo "
+                "Catálogo "
                 +
                 (
                     datos.catalogo_version
                     ||
-                    "sin versiÃ³n"
+                    "sin versión"
                 )
             );
 
@@ -329,7 +329,7 @@
 
             const etiqueta =
                 (
-                    `${p} Â· ${inicio}-${fin}`
+                    `${p} · ${inicio}-${fin}`
                 );
 
 
@@ -409,7 +409,7 @@
         ) {
 
             alert(
-                "El perÃ­odo inicial no puede ser mayor que el perÃ­odo final."
+                "El período inicial no puede ser mayor que el período final."
             );
 
             return;
@@ -621,7 +621,7 @@
         ) {
 
             titulo +=
-                " â€” "
+                " — "
                 +
                 fechaCL(
                     desde
@@ -633,7 +633,7 @@
         ) {
 
             titulo +=
-                " â€” "
+                " — "
                 +
                 fechaCL(
                     desde
@@ -665,7 +665,7 @@
 
         $("subtituloConsulta").textContent =
             (
-                "PerÃ­odos seleccionados: "
+                "Períodos seleccionados: "
                 +
                 pi
                 +
@@ -748,7 +748,7 @@
                 `
                 <tr>
                     <td colspan="5" class="empty-cell">
-                        Sin informaciÃ³n por unidad.
+                        Sin información por unidad.
                     </td>
                 </tr>
                 `;
@@ -889,7 +889,7 @@
 
                         ${
                             completa
-                            ? "? dÃ­a completo"
+                            ? "? día completo"
                             : "? cobertura parcial"
                         }
 
@@ -1138,6 +1138,48 @@
     }
 
 
+    // ================================================================
+    // R15H-G4D - ROTULO LIMPIO PARA TABLA SIN TX
+    // FORMATO: U8 ALFA | Condell
+    // ================================================================
+
+    function etiquetaSinTxUnidadTerminal(
+        terminal
+    ) {
+
+        const unidad =
+            unidadPorTerminal(
+                terminal
+            );
+
+        const unidadTexto = String(
+            unidad.texto
+            || unidad.codigo
+            || ""
+        )
+            .replace(/\?/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+
+        const terminalTexto = String(
+            terminal
+            || "-"
+        ).trim();
+
+        return `
+            <strong class="terminal-name-clean">
+                ${escapeHtml(
+                    unidadTexto
+                )}
+                |
+                ${escapeHtml(
+                    terminalTexto
+                )}
+            </strong>
+        `;
+    }
+
+
     function renderGraficoTerminales(filas) {
 
         const contenedor =
@@ -1162,7 +1204,7 @@
             contenedor.innerHTML =
                 `
                 <div class="empty-support">
-                    Sin informaciÃ³n.
+                    Sin información.
                 </div>
                 `;
 
@@ -1846,7 +1888,7 @@
 
                 terminalesElemento.innerHTML = `
                     <div class="empty-support">
-                        Sin informaciÃ³n para ${unidad}.
+                        Sin información para ${unidad}.
                     </div>
                 `;
 
@@ -2062,7 +2104,107 @@
         // MATRIZ P01-P24
         // ------------------------------------------------------------
 
+        // ============================================================
+        // R13F - CORTE COBERTURA REAL R1.6
+        //
+        // El acumulado solamente se muestra hasta el periodo
+        // alcanzado por el ultimo archivo R1.6 de la unidad.
+        //
+        // Ejemplo:
+        // hasta 15:09 -> P16 visible -> P17-P24 sin cobertura.
+        // ============================================================
+
+        const coberturasR16 = Array.isArray(
+            datos.cobertura_fuente
+        )
+            ? datos.cobertura_fuente
+            : (
+                datos.cobertura_fuente
+                    ? [datos.cobertura_fuente]
+                    : []
+            );
+
+        const coberturaUnidad = coberturasR16.find(
+            fila =>
+                String(
+                    fila?.unidad
+                    ||
+                    ""
+                )
+                    .trim()
+                    .toUpperCase()
+                ===
+                String(
+                    unidad
+                    ||
+                    ""
+                )
+                    .trim()
+                    .toUpperCase()
+        );
+
+        let ultimoPeriodoCobertura = 24;
+
+        if (
+            coberturaUnidad
+            &&
+            coberturaUnidad.dia_completo !== true
+            &&
+            coberturaUnidad.hasta
+        ) {
+
+            const matchHora = String(
+                coberturaUnidad.hasta
+            ).match(
+                /^(\d{1,2}):(\d{2})/
+            );
+
+            if (matchHora) {
+
+                const horaCobertura = Number(
+                    matchHora[1]
+                );
+
+                if (
+                    Number.isInteger(
+                        horaCobertura
+                    )
+                    &&
+                    horaCobertura >= 0
+                    &&
+                    horaCobertura <= 23
+                ) {
+
+                    ultimoPeriodoCobertura =
+                        horaCobertura + 1;
+                }
+            }
+        }
+
+        const periodoTieneCobertura = (
+            periodo
+        ) => {
+
+            if (!coberturaUnidad) {
+                return true;
+            }
+
+            if (
+                coberturaUnidad.dia_completo === true
+            ) {
+                return true;
+            }
+
+            return (
+                Number(periodo)
+                <=
+                ultimoPeriodoCobertura
+            );
+        };
+
         const filasPeriodo = (
+            datos.resumen_terminal_acumulado
+            ||
             datos.resumen_terminal
             ||
             []
@@ -2078,6 +2220,7 @@
         renderMatrizUnidad(
             unidad,
             filasPeriodo,
+            ultimoPeriodoCobertura,
             terminales
         );
     }
@@ -2592,6 +2735,9 @@
             `${ppusUnicas.size} PPU en la calle`;
 
 
+
+
+
         if (!filas.length) {
 
             tbody.innerHTML = `
@@ -2673,6 +2819,7 @@
     function renderMatrizUnidad(
         unidad,
         filasPeriodo,
+        ultimoPeriodoCobertura,
         filasGlobal
     ) {
 
@@ -2905,11 +3052,19 @@
             ) {
 
                 const valor =
-                    periodos.get(
-                        periodo
+                    (
+                        Number(periodo)
+                        <=
+                        Number(ultimoPeriodoCobertura)
                     )
-                    ??
-                    0;
+                        ? (
+                            periodos.get(
+                                periodo
+                            )
+                            ??
+                            0
+                        )
+                        : null;
 
                 totalesPeriodo.set(
                     periodo,
@@ -2943,7 +3098,11 @@
                             }
                         ">
                         <strong>
-                            ${numero(valor)}
+                            ${
+                                valor === null
+                                    ? "\u2014"
+                                    : numero(valor)
+                            }
                         </strong>
                     </td>
                 `;
@@ -3057,11 +3216,17 @@
                         }
                     ">
                     <strong>
-                        ${numero(
-                            totalesPeriodo.get(periodo)
-                            ||
-                            0
-                        )}
+                        ${
+                            Number(periodo)
+                            >
+                            Number(ultimoPeriodoCobertura)
+                                ? "\u2014"
+                                : numero(
+                                    totalesPeriodo.get(periodo)
+                                    ||
+                                    0
+                                )
+                        }
                     </strong>
                 </td>
             `;
@@ -3298,7 +3463,7 @@
 
         cabecera += `
             <th class="num matriz-sin-tx">
-                Sin transmisiÃ³n
+                Sin transmisión
             </th>
 
             <th class="num">
@@ -3306,7 +3471,7 @@
             </th>
 
             <th>
-                AcciÃ³n
+                Acción
             </th>
         `;
 
@@ -4186,7 +4351,7 @@
                 aviso.innerHTML =
                     `
                     <strong>
-                        DÃ­as sin informaciÃ³n:
+                        Días sin información:
                     </strong>
 
                     ${fechasSinDatos
@@ -4194,7 +4359,7 @@
                         .join(", ")}.
 
                     No se consideran como
-                    dÃ­as sin transmisiÃ³n.
+                    días sin transmisión.
                     `;
 
             } else {
@@ -4217,7 +4382,7 @@
                         colspan="6"
                         class="empty-cell">
 
-                        Sin informaciÃ³n para
+                        Sin información para
                         la consulta seleccionada.
 
                     </td>
@@ -4276,20 +4441,12 @@
 
                             <td>
                                 <div class="terminal-name">
-                                    <strong>
-                                        ${escapeHtml(
-                                            fila.terminal_nombre
-                                            ||
-                                            fila.terminal
-                                            ||
-                                            "-"
-                                        )}
-                                    </strong>
-
-                                    ${etiquetaUnidadTerminal(
+                                    ${etiquetaSinTxUnidadTerminal(
+                                        fila.terminal_nombre
+                                        ||
                                         fila.terminal
                                         ||
-                                        fila.terminal_nombre
+                                        "-"
                                     )}
                                 </div>
                             </td>
@@ -4307,7 +4464,7 @@
                             <td>
 
                                 <div class="tipo-bus-list">
-                                    ${tipos || "â€”"}
+                                    ${tipos || "—"}
                                 </div>
 
                             </td>
@@ -4424,7 +4581,7 @@
                     </strong>
                 </td>
 
-                <td>â€”</td>
+                <td>—</td>
 
                 <td class="num">
                     <strong>
@@ -4992,11 +5149,11 @@
         $("modalTitulo").textContent =
             terminalNombre
             ? (
-                "PPU sin transmisiÃ³n â€” "
+                "PPU sin transmisión — "
                 +
                 terminalNombre
             )
-            : "PPU sin transmisiÃ³n â€” Todas las terminales";
+            : "PPU sin transmisión — Todas las terminales";
 
 
         const pi =
@@ -5031,7 +5188,7 @@
                     : ""
                 )
                 +
-                " Â· "
+                " · "
                 +
                 pi
                 +
@@ -5051,7 +5208,7 @@
                 `
                 <tr>
                     <td colspan="6" class="empty-cell">
-                        No existen PPU sin transmisiÃ³n para esta consulta.
+                        No existen PPU sin transmisión para esta consulta.
                     </td>
                 </tr>
                 `;
@@ -5071,23 +5228,23 @@
                         </td>
 
                         <td>
-                            ${escapeHtml(fila.interno || "â€”")}
+                            ${escapeHtml(fila.interno || "—")}
                         </td>
 
                         <td>
-                            ${escapeHtml(fila.unidad || "â€”")}
+                            ${escapeHtml(fila.unidad || "—")}
                         </td>
 
                         <td>
-                            ${escapeHtml(fila.terminal_nombre || fila.terminal || "â€”")}
+                            ${escapeHtml(fila.terminal_nombre || fila.terminal || "—")}
                         </td>
 
                         <td>
-                            ${escapeHtml(fila.tipo_bus || "â€”")}
+                            ${escapeHtml(fila.tipo_bus || "—")}
                         </td>
 
                         <td>
-                            ${escapeHtml(fila.tipo_flota || "â€”")}
+                            ${escapeHtml(fila.tipo_flota || "—")}
                         </td>
 
                     </tr>
@@ -5696,7 +5853,7 @@
             catch (error) {
 
                 console.warn(
-                    "ActualizaciÃ³n automÃ¡tica Flota Operativa:",
+                    "Actualización automática Flota Operativa:",
                     error
                 );
             }
@@ -5888,7 +6045,7 @@
                             </span>
 
                             <h3 id="prestamosModalTitulo">
-                                Buses en pr?stamo
+                                Buses en pr\u00e9stamo
                             </h3>
 
                             <p id="prestamosModalSubtitulo">
@@ -5908,6 +6065,17 @@
                     <div class="prestamos-modal-body">
 
                         <div class="prestamos-modal-resumen">
+                            <strong id="prestamosModalBuses">
+                                0
+                            </strong>
+                            <span id="prestamosModalBusesLabel">
+                                buses
+                            </span>
+
+                            <span>
+                                /
+                            </span>
+
                             <strong id="prestamosModalTotal">
                                 0
                             </strong>
@@ -5922,12 +6090,12 @@
 
                                 <thead>
                                     <tr>
-                                        <th>Fecha</th>
-                                        <th>Per?odo</th>
                                         <th>PPU</th>
-                                        <th>Servicio</th>
                                         <th>Patio base</th>
                                         <th>Patio operativo</th>
+                                        <th>Servicios</th>
+                                        <th>Per\u00edodos</th>
+                                        <th>Movimientos</th>
                                     </tr>
                                 </thead>
 
@@ -6011,6 +6179,37 @@
             );
 
 
+        const busesElemento =
+            document.getElementById(
+                "prestamosModalBuses"
+            );
+
+        const busesLabelElemento =
+            document.getElementById(
+                "prestamosModalBusesLabel"
+            );
+
+        const ppuUnicas = new Set(
+            filas
+                .map(
+                    item =>
+                        String(
+                            item.ppu
+                            ||
+                            item.patente
+                            ||
+                            ""
+                        )
+                            .trim()
+                            .toUpperCase()
+                )
+                .filter(Boolean)
+        );
+
+        const totalBusesUnicos =
+            ppuUnicas.size;
+
+
         titulo.textContent =
             tipo === "prestados"
                 ? "Buses prestados"
@@ -6021,15 +6220,147 @@
             (
                 terminal
                 +
-                " ? "
+                " \u00b7 "
                 +
                 unidad
             );
 
 
+        busesElemento.textContent =
+            String(
+                totalBusesUnicos
+            );
+
+        busesLabelElemento.textContent =
+            tipo === "prestados"
+                ? (
+                    totalBusesUnicos === 1
+                        ? "bus prestado"
+                        : "buses prestados"
+                )
+                : (
+                    totalBusesUnicos === 1
+                        ? "bus recibido"
+                        : "buses recibidos"
+                );
+
         total.textContent =
             String(
                 filas.length
+            );
+
+
+        const filasAgrupadasMapa =
+            new Map();
+
+        for (const item of filas) {
+
+            const ppuClave =
+                String(
+                    item.ppu
+                    ||
+                    item.patente
+                    ||
+                    ""
+                )
+                    .trim()
+                    .toUpperCase();
+
+            if (!ppuClave) {
+                continue;
+            }
+
+            if (
+                !filasAgrupadasMapa.has(
+                    ppuClave
+                )
+            ) {
+
+                filasAgrupadasMapa.set(
+                    ppuClave,
+                    {
+                        ppu:
+                            ppuClave,
+
+                        terminal_base:
+                            item.terminal_base_nombre
+                            ||
+                            item.terminal_base
+                            ||
+                            "",
+
+                        terminal_operativo:
+                            item.terminal_operativo_nombre
+                            ||
+                            item.terminal_operativo
+                            ||
+                            "",
+
+                        servicios:
+                            new Set(),
+
+                        periodos:
+                            new Set(),
+
+                        movimientos:
+                            0,
+                    }
+                );
+            }
+
+            const agrupado =
+                filasAgrupadasMapa.get(
+                    ppuClave
+                );
+
+            const servicio =
+                String(
+                    item.servicio_r16
+                    ||
+                    ""
+                ).trim();
+
+            if (servicio) {
+                agrupado.servicios.add(
+                    servicio
+                );
+            }
+
+            const periodoNumero =
+                Number(
+                    item.periodo
+                    ||
+                    0
+                );
+
+            if (
+                Number.isInteger(
+                    periodoNumero
+                )
+                &&
+                periodoNumero >= 1
+                &&
+                periodoNumero <= 24
+            ) {
+
+                agrupado.periodos.add(
+                    periodoNumero
+                );
+            }
+
+            agrupado.movimientos += 1;
+        }
+
+
+        const filasAgrupadas =
+            Array.from(
+                filasAgrupadasMapa.values()
+            )
+            .sort(
+                (a, b) =>
+                    a.ppu.localeCompare(
+                        b.ppu
+                    )
             );
 
 
@@ -6048,31 +6379,10 @@
         } else {
 
             tbody.innerHTML =
-                filas
+                filasAgrupadas
                 .map(
                     item => `
                         <tr>
-
-                            <td>
-                                ${escapeHtml(
-                                    item.fecha
-                                    ||
-                                    ""
-                                )}
-                            </td>
-
-                            <td class="num">
-                                P${String(
-                                    Number(
-                                        item.periodo
-                                        ||
-                                        0
-                                    )
-                                ).padStart(
-                                    2,
-                                    "0"
-                                )}
-                            </td>
 
                             <td>
                                 <strong class="ppu-value">
@@ -6086,16 +6396,6 @@
 
                             <td>
                                 ${escapeHtml(
-                                    item.servicio_r16
-                                    ||
-                                    ""
-                                )}
-                            </td>
-
-                            <td>
-                                ${escapeHtml(
-                                    item.terminal_base_nombre
-                                    ||
                                     item.terminal_base
                                     ||
                                     ""
@@ -6104,12 +6404,50 @@
 
                             <td>
                                 ${escapeHtml(
-                                    item.terminal_operativo_nombre
-                                    ||
                                     item.terminal_operativo
                                     ||
                                     ""
                                 )}
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                                    Array.from(
+                                        item.servicios
+                                    )
+                                    .sort()
+                                    .join(", ")
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                                    Array.from(
+                                        item.periodos
+                                    )
+                                    .sort(
+                                        (a, b) =>
+                                            a - b
+                                    )
+                                    .map(
+                                        periodo =>
+                                            `P${String(
+                                                periodo
+                                            ).padStart(
+                                                2,
+                                                "0"
+                                            )}`
+                                    )
+                                    .join(", ")
+                                )}
+                            </td>
+
+                            <td class="num">
+                                <strong>
+                                    ${numero(
+                                        item.movimientos
+                                    )}
+                                </strong>
                             </td>
 
                         </tr>
@@ -6260,4 +6598,27 @@
     );
 
 })();
+
+
+    // ================================================================
+    // R15H-E3 - EXCEL HISTORICO SIN TX
+    // ================================================================
+
+    const btnExcelHistoricoSinTx =
+        document.getElementById(
+            "btnExcelHistoricoSinTx"
+        );
+
+    if (btnExcelHistoricoSinTx) {
+
+        btnExcelHistoricoSinTx.addEventListener(
+            "click",
+            () => {
+
+                window.location.href =
+                    "/api/flota-operativa/exportar-sin-tx-historico";
+            }
+        );
+    }
+
 
