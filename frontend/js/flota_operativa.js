@@ -4007,6 +4007,1333 @@
         }
 
 
+        // ============================================================
+        // R17B - MOTOR DE RECOMENDACION DE APOYO OPERACIONAL
+        // ============================================================
+        //
+        // Reglas:
+        // - Receptor: terminal bajo 50 %.
+        // - Objetivo: llevarlo como minimo a 50 %.
+        // - Donantes: solamente terminales de la misma unidad.
+        // - Un donante nunca puede quedar bajo 50 %.
+        // - Se pueden combinar hasta 3 terminales.
+        // - Prioridad: mayor cantidad de buses disponibles.
+        //
+        // IMPORTANTE:
+        // Esta funcion NO modifica los datos reales.
+        // Solamente genera una simulacion/recomendacion.
+        // ============================================================
+
+        function calcularRecomendacionApoyo(
+            terminales,
+            receptor
+        ) {
+
+            const OBJETIVO = 0.50;
+
+            const asignadaReceptor =
+                Number(
+                    receptor.asignada
+                    ||
+                    0
+                );
+
+            const operativaReceptor =
+                Number(
+                    receptor.operativa
+                    ||
+                    0
+                );
+
+            const minimoReceptor =
+                Math.ceil(
+                    asignadaReceptor
+                    *
+                    OBJETIVO
+                );
+
+            const necesidadInicial =
+                Math.max(
+                    0,
+                    minimoReceptor
+                    -
+                    operativaReceptor
+                );
+
+            if (
+                asignadaReceptor <= 0
+                ||
+                necesidadInicial <= 0
+            ) {
+
+                return {
+                    aplica: false,
+                    necesidad: 0,
+                    entregados: 0,
+                    deficit: 0,
+                    donantes: [],
+                    estado: "SIN APOYO REQUERIDO"
+                };
+            }
+
+
+            // --------------------------------------------------------
+            // CALCULAR CAPACIDAD REAL DE CADA POSIBLE DONANTE
+            // --------------------------------------------------------
+
+            const candidatos =
+                terminales
+                .filter(
+                    fila =>
+                        fila !== receptor
+                )
+                .map(
+                    fila => {
+
+                        const asignada =
+                            Number(
+                                fila.asignada
+                                ||
+                                0
+                            );
+
+                        const operativa =
+                            Number(
+                                fila.operativa
+                                ||
+                                0
+                            );
+
+                        const minimo =
+                            Math.ceil(
+                                asignada
+                                *
+                                OBJETIVO
+                            );
+
+                        const disponible =
+                            Math.max(
+                                0,
+                                operativa
+                                -
+                                minimo
+                            );
+
+                        return {
+                            fila,
+                            asignada,
+                            operativa,
+                            minimo,
+                            disponible
+                        };
+                    }
+                )
+                .filter(
+                    candidato =>
+                        candidato.disponible > 0
+                )
+                .sort(
+                    (a, b) => {
+
+                        const porcentajeA =
+                            a.asignada
+                                ? (
+                                    a.operativa
+                                    /
+                                    a.asignada
+                                    *
+                                    100
+                                )
+                                : 0;
+
+                        const porcentajeB =
+                            b.asignada
+                                ? (
+                                    b.operativa
+                                    /
+                                    b.asignada
+                                    *
+                                    100
+                                )
+                                : 0;
+
+                        // R17M-B2:
+                        // primero el terminal con mejor
+                        // porcentaje operativo.
+
+                        if (
+                            porcentajeB
+                            !==
+                            porcentajeA
+                        ) {
+                            return (
+                                porcentajeB
+                                -
+                                porcentajeA
+                            );
+                        }
+
+                        // Si existe empate porcentual,
+                        // priorizar mayor capacidad segura.
+
+                        return (
+                            b.disponible
+                            -
+                            a.disponible
+                        );
+                    }
+                )
+
+
+            // --------------------------------------------------------
+            // DISTRIBUIR NECESIDAD
+            // --------------------------------------------------------
+
+            let pendiente =
+                necesidadInicial;
+
+            const donantes = candidatos.map(
+                candidato => ({
+                    terminal:
+                        candidato.fila.terminal_nombre
+                        ||
+                        candidato.fila.terminal
+                        ||
+                        "",
+                    cantidad: 0,
+                    cantidad_sugerida: 0,
+                    asignada:
+                        candidato.asignada,
+                    operativa_actual:
+                        candidato.operativa,
+                    operativa_proyectada:
+                        candidato.operativa,
+                    porcentaje_proyectado:
+                        candidato.asignada
+                            ? (
+                                candidato.operativa
+                                /
+                                candidato.asignada
+                                *
+                                100
+                            )
+                            : 0,
+                    capacidad_disponible:
+                        candidato.disponible
+                })
+            );
+
+            // ====================================================
+            // R17N - REPARTO EQUILIBRADO
+            // ====================================================
+            //
+            // Cada bus se asigna al donante que conserve el mayor
+            // porcentaje operativo DESPUES de realizar el aporte.
+            //
+            // Esto distribuye el esfuerzo entre terminales y evita
+            // cargar toda la necesidad a un solo patio.
+            // ====================================================
+
+            while (pendiente > 0) {
+
+                const disponibles =
+                    donantes
+                    .filter(
+                        donante =>
+                            donante.cantidad
+                            <
+                            donante.capacidad_disponible
+                    )
+                    .map(
+                        donante => {
+
+                            const despues =
+                                donante.operativa_actual
+                                -
+                                donante.cantidad
+                                -
+                                1;
+
+                            const porcentajeDespues =
+                                donante.asignada
+                                    ? (
+                                        despues
+                                        /
+                                        donante.asignada
+                                        *
+                                        100
+                                    )
+                                    : 0;
+
+                            return {
+                                donante,
+                                despues,
+                                porcentajeDespues
+                            };
+                        }
+                    )
+                    .sort(
+                        (a, b) => {
+
+                            if (
+                                b.porcentajeDespues
+                                !==
+                                a.porcentajeDespues
+                            ) {
+                                return (
+                                    b.porcentajeDespues
+                                    -
+                                    a.porcentajeDespues
+                                );
+                            }
+
+                            const margenA =
+                                a.donante.capacidad_disponible
+                                -
+                                a.donante.cantidad;
+
+                            const margenB =
+                                b.donante.capacidad_disponible
+                                -
+                                b.donante.cantidad;
+
+                            return (
+                                margenB
+                                -
+                                margenA
+                            );
+                        }
+                    );
+
+                if (!disponibles.length) {
+                    break;
+                }
+
+                const elegido =
+                    disponibles[0].donante;
+
+                elegido.cantidad += 1;
+                elegido.cantidad_sugerida =
+                    elegido.cantidad;
+
+                elegido.operativa_proyectada =
+                    elegido.operativa_actual
+                    -
+                    elegido.cantidad;
+
+                elegido.porcentaje_proyectado =
+                    elegido.asignada
+                        ? (
+                            elegido.operativa_proyectada
+                            /
+                            elegido.asignada
+                            *
+                            100
+                        )
+                        : 0;
+
+                pendiente -= 1;
+            }
+
+            const aporteTotal =
+                donantes.reduce(
+                    (
+                        total,
+                        donante
+                    ) =>
+                        total
+                        +
+                        donante.cantidad,
+                    0
+                );
+
+                        // ====================================================
+            // R17N-B - TOTAL REAL ENTREGADO
+            // ====================================================
+
+            const entregados =
+                aporteTotal;
+
+const operativaReceptorProyectada =
+                operativaReceptor
+                +
+                entregados;
+
+            const porcentajeReceptorProyectado =
+                asignadaReceptor
+                    ? (
+                        operativaReceptorProyectada
+                        /
+                        asignadaReceptor
+                        *
+                        100
+                    )
+                    : 0;
+
+
+            let estado =
+                "SIN CAPACIDAD INTERNA";
+
+            if (
+                entregados > 0
+                &&
+                pendiente === 0
+            ) {
+                estado =
+                    "APOYO COMPLETO";
+            }
+            else if (
+                entregados > 0
+                &&
+                pendiente > 0
+            ) {
+                estado =
+                    "APOYO PARCIAL";
+            }
+
+
+            return {
+                aplica: true,
+
+                terminal_receptor:
+                    receptor.terminal_nombre
+                    ||
+                    receptor.terminal
+                    ||
+                    "",
+
+                asignada_receptor:
+                    asignadaReceptor,
+
+                operativa_receptor:
+                    operativaReceptor,
+
+                minimo_objetivo:
+                    minimoReceptor,
+
+                necesidad:
+                    necesidadInicial,
+
+                entregados,
+
+                deficit:
+                    pendiente,
+
+                operativa_proyectada:
+                    operativaReceptorProyectada,
+
+                porcentaje_proyectado:
+                    porcentajeReceptorProyectado,
+
+                donantes,
+
+                estado
+            };
+        }
+
+
+
+        // ============================================================
+        // R17C - PRESENTACION RECOMENDACION APOYO OPERACIONAL
+        // ============================================================
+
+        function renderRecomendacionApoyo(
+            unidad,
+            terminales
+        ) {
+
+            const filasValidas =
+                terminales.filter(
+                    fila =>
+                        Number(fila.asignada || 0) > 0
+                );
+
+            const receptoresCriticos =
+                filasValidas
+                .filter(
+                    fila => {
+
+                        const asignada =
+                            Number(
+                                fila.asignada
+                                ||
+                                0
+                            );
+
+                        const operativa =
+                            Number(
+                                fila.operativa
+                                ||
+                                0
+                            );
+
+                        if (asignada <= 0) {
+                            return false;
+                        }
+
+                        return (
+                            operativa
+                            /
+                            asignada
+                            *
+                            100
+                        ) < 50;
+                    }
+                )
+                .sort(
+                    (a, b) => {
+
+                        const pa =
+                            Number(a.asignada || 0)
+                                ? (
+                                    Number(a.operativa || 0)
+                                    /
+                                    Number(a.asignada)
+                                    *
+                                    100
+                                )
+                                : 0;
+
+                        const pb =
+                            Number(b.asignada || 0)
+                                ? (
+                                    Number(b.operativa || 0)
+                                    /
+                                    Number(b.asignada)
+                                    *
+                                    100
+                                )
+                                : 0;
+
+                        return pa - pb;
+                    }
+                );
+
+            if (!receptoresCriticos.length) {
+
+                return `
+                    <div class="recomendacion-apoyo recomendacion-apoyo-ok">
+                        <div class="recomendacion-apoyo-icono">
+                            &#10003;
+                        </div>
+
+                        <div>
+                            <strong>
+                                Sin terminales cr\u00edticos
+                            </strong>
+
+                            <span>
+                                No se requiere redistribuci\u00f3n para alcanzar
+                                el umbral m\u00ednimo del 50 %.
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+
+
+            // Prioridad operacional:
+            // terminal con menor porcentaje operativo.
+            const receptor =
+                receptoresCriticos[0];
+
+            const recomendacion =
+                calcularRecomendacionApoyo(
+                    filasValidas,
+                    receptor
+                );
+
+            const terminalReceptor =
+                recomendacion.terminal_receptor
+                ||
+                receptor.terminal_nombre
+                ||
+                receptor.terminal
+                ||
+                "Terminal";
+
+            const asignada =
+                Number(
+                    recomendacion.asignada_receptor
+                    ||
+                    0
+                );
+
+            const operativa =
+                Number(
+                    recomendacion.operativa_receptor
+                    ||
+                    0
+                );
+
+            const porcentajeActual =
+                asignada
+                    ? (
+                        operativa
+                        /
+                        asignada
+                        *
+                        100
+                    )
+                    : 0;
+
+            const porcentajeProyectado =
+                Number(
+                    recomendacion.porcentaje_proyectado
+                    ||
+                    porcentajeActual
+                );
+
+            const empresa =
+                String(unidad).toUpperCase() === "U8"
+                    ? "ALFA"
+                    : "OMEGA";
+
+            const estadoClase =
+                recomendacion.estado === "APOYO COMPLETO"
+                    ? "completo"
+                    : (
+                        recomendacion.estado === "APOYO PARCIAL"
+                            ? "parcial"
+                            : "sin-capacidad"
+                    );
+
+            const donantesHtml =
+                recomendacion.donantes.length
+                    ? recomendacion.donantes
+                        .map(
+                            (donante, indice) => {
+
+                                const porcentajeAntes =
+                                    donante.asignada
+                                        ? (
+                                            donante.operativa_actual
+                                            /
+                                            donante.asignada
+                                            *
+                                            100
+                                        )
+                                        : 0;
+
+                                return `
+                                    <div class="recomendacion-donante">
+
+                                        <div class="recomendacion-donante-numero">
+                                            ${indice + 1}
+                                        </div>
+
+                                        <div class="recomendacion-donante-terminal">
+                                            <strong>
+                                                ${escapeHtml(
+                                                    donante.terminal
+                                                )}
+                                            </strong>
+
+                                            <span>
+                                                ${donante.operativa_actual}
+                                                /
+                                                ${donante.asignada}
+                                                &nbsp;&middot;&nbsp;
+                                                ${porcentajeAntes.toFixed(2)} %
+                                            </span>
+                                        </div>
+
+                                        <div class="recomendacion-donante-sugerido">
+                                            <span>
+                                                SUGERIDO
+                                            </span>
+                                            <strong>
+                                                ${donante.cantidad}
+                                            </strong>
+                                            <small>
+                                                buses
+                                            </small>
+                                        </div>
+
+                                        <div class="recomendacion-donante-simulador">
+
+                                            <label>
+                                                APORTE SIMULADO
+                                            </label>
+
+                                            <div class="simulador-aporte-control">
+
+                                                <button
+                                                    type="button"
+                                                    class="simulador-menos"
+                                                    data-simulador-menos
+                                                    aria-label="Disminuir aporte"
+                                                >-</button>
+
+                                                <input
+                                                    type="number"
+                                                    class="simulador-aporte-input"
+                                                    data-simulador-aporte
+                                                    min="0"
+                                                    max="${donante.capacidad_disponible}"
+                                                    step="1"
+                                                    value="${donante.cantidad}"
+                                                    data-sugerido="${donante.cantidad}"
+                                                    data-capacidad="${donante.capacidad_disponible}"
+                                                    data-operativa="${donante.operativa_actual}"
+                                                    data-asignada="${donante.asignada}"
+                                                    data-terminal="${escapeHtml(
+                                                        donante.terminal
+                                                    )}"
+                                                >
+
+                                                <button
+                                                    type="button"
+                                                    class="simulador-mas"
+                                                    data-simulador-mas
+                                                    aria-label="Aumentar aporte"
+                                                >+</button>
+
+                                            </div>
+
+                                            <small>
+                                                Disponible seguro:
+                                                ${donante.capacidad_disponible}
+                                            </small>
+
+                                        </div>
+
+                                        <div class="recomendacion-donante-proyeccion">
+                                            <span>
+                                                DESPUÉS DEL APOYO
+                                            </span>
+
+                                            <strong data-donante-resultado>
+                                                ${donante.operativa_proyectada}
+                                                /
+                                                ${donante.asignada}
+                                                &nbsp;&middot;&nbsp;
+                                                ${Number(
+                                                    donante.porcentaje_proyectado
+                                                ).toFixed(2)} %
+                                            </strong>
+                                        </div>
+
+                                    </div>
+                                `;
+                            }
+                        )
+                        .join("")
+                    : `
+                        <div class="recomendacion-sin-donante">
+                            No existe capacidad interna disponible
+                            para prestar buses sin dejar otro terminal
+                            bajo el 50 %.
+                        </div>
+                    `;
+
+
+            return `
+                <div
+                    class="recomendacion-apoyo"
+                    data-simulador-apoyo="1"
+                    data-unidad="${escapeHtml(
+                        String(unidad).toUpperCase()
+                    )}"
+                    data-receptor="${escapeHtml(
+                        terminalReceptor
+                    )}"
+                    data-receptor-operativa="${operativa}"
+                    data-receptor-asignada="${asignada}"
+                    data-necesidad="${recomendacion.necesidad}"
+                >
+
+                    <div class="recomendacion-apoyo-header">
+
+                        <div>
+                            <span class="recomendacion-apoyo-eyebrow">
+                                RECOMENDACION DE APOYO OPERACIONAL
+                            </span>
+
+                            <h4>
+                                ${escapeHtml(
+                                    String(unidad).toUpperCase()
+                                )}
+                                &middot;
+                                ${empresa}
+                            </h4>
+                        </div>
+
+                        <div class="recomendacion-estado ${estadoClase}">
+                            ${escapeHtml(
+                                recomendacion.estado
+                            )}
+                        </div>
+
+                    </div>
+
+
+                    <div class="recomendacion-apoyo-principal">
+
+                        <div class="recomendacion-prioridad">
+
+                            <span class="recomendacion-label">
+                                PRIORIDAD DE APOYO
+                            </span>
+
+                            <strong class="recomendacion-terminal-critico">
+                                ${escapeHtml(
+                                    terminalReceptor
+                                )}
+                            </strong>
+
+                            <div class="recomendacion-actual">
+                                <strong>
+                                    ${operativa}/${asignada}
+                                </strong>
+
+                                <span>
+                                    ${porcentajeActual.toFixed(2)} %
+                                    operativa
+                                </span>
+                            </div>
+
+                        </div>
+
+
+                        <div class="recomendacion-kpi">
+                            <span>
+                                OBJETIVO
+                            </span>
+
+                            <strong>
+                                50 %
+                            </strong>
+
+                            <small>
+                                m\u00ednimo operacional
+                            </small>
+                        </div>
+
+
+                        <div class="recomendacion-kpi">
+                            <span>
+                                NECESITA
+                            </span>
+
+                            <strong>
+                                ${recomendacion.necesidad}
+                            </strong>
+
+                            <small>
+                                buses
+                            </small>
+                        </div>
+
+
+                        <div class="recomendacion-kpi">
+                            <span>
+                                APOYO PROPUESTO
+                            </span>
+
+                            <strong>
+                                <span data-simulador-total>
+                                    ${recomendacion.entregados}
+                                </span>
+                            </strong>
+
+                            <small>
+                                buses
+                            </small>
+                        </div>
+
+
+                        <div class="recomendacion-kpi recomendacion-proyectada">
+                            <span>
+                                PROYECCI\u00d3N
+                            </span>
+
+                            <strong>
+                                <span data-simulador-receptor-resultado>
+                                    ${recomendacion.operativa_proyectada}
+                                    /
+                                    ${asignada}
+                                </span>
+                            </strong>
+
+                            <small data-simulador-receptor-porcentaje>
+                                ${porcentajeProyectado.toFixed(2)} %
+                            </small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="recomendacion-apoyo-subtitulo">
+                        <strong>
+                            Distribucion sugerida del apoyo
+                        </strong>
+
+                        <span>
+                            Todos los terminales disponibles de la misma unidad,
+                            sin dejar un donante bajo 50 %.
+                        </span>
+                    </div>
+
+
+                    <div class="recomendacion-donantes">
+                        ${donantesHtml}
+                    </div>
+
+
+                    ${
+                        recomendacion.deficit > 0
+                            ? `
+                                <div class="recomendacion-deficit">
+                                    D\u00e9ficit pendiente:
+                                    <strong>
+                                        ${recomendacion.deficit}
+                                        buses
+                                    </strong>
+                                </div>
+                            `
+                            : ""
+                    }
+
+                    <div class="simulador-resumen">
+
+                        <div>
+                            <span>
+                                APOYO SIMULADO
+                            </span>
+                            <strong data-simulador-resumen-total>
+                                ${recomendacion.entregados} buses
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>
+                                NECESIDAD
+                            </span>
+                            <strong>
+                                ${recomendacion.necesidad} buses
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>
+                                BALANCE
+                            </span>
+                            <strong data-simulador-balance>
+                                ${
+                                    recomendacion.deficit > 0
+                                        ? `Faltan ${recomendacion.deficit}`
+                                        : "Nivelado"
+                                }
+                            </strong>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="simulador-restablecer"
+                            data-simulador-restablecer
+                        >
+                            Restablecer sugerido
+                        </button>
+
+                    </div>
+
+
+                    <div class="recomendacion-nota">
+                        Simulacion operacional basada en la flota
+                        operativa observada. No ejecuta movimientos
+                        de buses ni modifica la asignaci\u00f3n real.
+                    </div>
+
+                </div>
+            `;
+        }
+
+
+
+        // ============================================================
+        // R17I-C - RECALCULO INTERACTIVO DE APOYO
+        // ============================================================
+
+        function recalcularSimuladorApoyo(contenedor) {
+
+            if (!contenedor) {
+                return;
+            }
+
+            const operativaReceptor =
+                Number(
+                    contenedor.dataset.receptorOperativa
+                    ||
+                    0
+                );
+
+            const asignadaReceptor =
+                Number(
+                    contenedor.dataset.receptorAsignada
+                    ||
+                    0
+                );
+
+            const necesidad =
+                Number(
+                    contenedor.dataset.necesidad
+                    ||
+                    0
+                );
+
+            const inputs = Array.from(
+                contenedor.querySelectorAll(
+                    "[data-simulador-aporte]"
+                )
+            );
+
+            let total = 0;
+
+            inputs.forEach(
+                input => {
+
+                    const capacidad =
+                        Math.max(
+                            0,
+                            Number(
+                                input.dataset.capacidad
+                                ||
+                                0
+                            )
+                        );
+
+                    let aporte =
+                        Number(
+                            input.value
+                            ||
+                            0
+                        );
+
+                    if (!Number.isFinite(aporte)) {
+                        aporte = 0;
+                    }
+
+                    aporte =
+                        Math.round(aporte);
+
+                    aporte =
+                        Math.max(
+                            0,
+                            Math.min(
+                                capacidad,
+                                aporte
+                            )
+                        );
+
+                    input.value =
+                        aporte;
+
+                    total +=
+                        aporte;
+
+                    const operativa =
+                        Number(
+                            input.dataset.operativa
+                            ||
+                            0
+                        );
+
+                    const asignada =
+                        Number(
+                            input.dataset.asignada
+                            ||
+                            0
+                        );
+
+                    const despues =
+                        Math.max(
+                            0,
+                            operativa
+                            -
+                            aporte
+                        );
+
+                    const porcentaje =
+                        asignada > 0
+                            ? (
+                                despues
+                                /
+                                asignada
+                                *
+                                100
+                            )
+                            : 0;
+
+                    const fila =
+                        input.closest(
+                            ".recomendacion-donante"
+                        );
+
+                    const resultado =
+                        fila
+                            ? fila.querySelector(
+                                "[data-donante-resultado]"
+                            )
+                            : null;
+
+                    if (resultado) {
+
+                        resultado.textContent =
+                            `${despues} / ${asignada} \u00b7 ${porcentaje.toFixed(2)} %`;
+
+                        resultado.classList.toggle(
+                            "simulacion-alerta",
+                            porcentaje < 50
+                        );
+                    }
+                }
+            );
+
+
+            const receptorDespues =
+                operativaReceptor
+                +
+                total;
+
+            const porcentajeReceptor =
+                asignadaReceptor > 0
+                    ? (
+                        receptorDespues
+                        /
+                        asignadaReceptor
+                        *
+                        100
+                    )
+                    : 0;
+
+
+            const totalKpi =
+                contenedor.querySelector(
+                    "[data-simulador-total]"
+                );
+
+            if (totalKpi) {
+                totalKpi.textContent =
+                    total;
+            }
+
+
+            const resultadoReceptor =
+                contenedor.querySelector(
+                    "[data-simulador-receptor-resultado]"
+                );
+
+            if (resultadoReceptor) {
+                resultadoReceptor.textContent =
+                    `${receptorDespues} / ${asignadaReceptor}`;
+            }
+
+
+            const porcentajeElemento =
+                contenedor.querySelector(
+                    "[data-simulador-receptor-porcentaje]"
+                );
+
+            if (porcentajeElemento) {
+                porcentajeElemento.textContent =
+                    `${porcentajeReceptor.toFixed(2)} %`;
+            }
+
+
+            const resumenTotal =
+                contenedor.querySelector(
+                    "[data-simulador-resumen-total]"
+                );
+
+            if (resumenTotal) {
+                resumenTotal.textContent =
+                    `${total} buses`;
+            }
+
+
+            const balance =
+                contenedor.querySelector(
+                    "[data-simulador-balance]"
+                );
+
+            const diferencia =
+                total
+                -
+                necesidad;
+
+            if (balance) {
+
+                balance.classList.remove(
+                    "balance-ok",
+                    "balance-falta",
+                    "balance-superavit"
+                );
+
+                if (diferencia === 0) {
+
+                    balance.textContent =
+                        "Nivelado";
+
+                    balance.classList.add(
+                        "balance-ok"
+                    );
+
+                } else if (diferencia < 0) {
+
+                    balance.textContent =
+                        `Faltan ${Math.abs(diferencia)} buses`;
+
+                    balance.classList.add(
+                        "balance-falta"
+                    );
+
+                } else {
+
+                    balance.textContent =
+                        `+${diferencia} buses sobre objetivo`;
+
+                    balance.classList.add(
+                        "balance-superavit"
+                    );
+                }
+            }
+        }
+
+
+        function activarSimuladoresApoyo() {
+
+            document
+                .querySelectorAll(
+                    "[data-simulador-apoyo]"
+                )
+                .forEach(
+                    contenedor => {
+
+                        if (
+                            contenedor.dataset.simuladorActivo
+                            ===
+                            "1"
+                        ) {
+                            return;
+                        }
+
+                        contenedor.dataset.simuladorActivo =
+                            "1";
+
+
+                        contenedor.addEventListener(
+                            "input",
+                            event => {
+
+                                if (
+                                    event.target.matches(
+                                        "[data-simulador-aporte]"
+                                    )
+                                ) {
+                                    recalcularSimuladorApoyo(
+                                        contenedor
+                                    );
+                                }
+                            }
+                        );
+
+
+                        contenedor.addEventListener(
+                            "click",
+                            event => {
+
+                                const botonMenos =
+                                    event.target.closest(
+                                        "[data-simulador-menos]"
+                                    );
+
+                                const botonMas =
+                                    event.target.closest(
+                                        "[data-simulador-mas]"
+                                    );
+
+                                const botonReset =
+                                    event.target.closest(
+                                        "[data-simulador-restablecer]"
+                                    );
+
+
+                                if (
+                                    botonMenos
+                                    ||
+                                    botonMas
+                                ) {
+
+                                    const fila =
+                                        event.target.closest(
+                                            ".recomendacion-donante"
+                                        );
+
+                                    const input =
+                                        fila
+                                            ? fila.querySelector(
+                                                "[data-simulador-aporte]"
+                                            )
+                                            : null;
+
+                                    if (!input) {
+                                        return;
+                                    }
+
+                                    const actual =
+                                        Number(
+                                            input.value
+                                            ||
+                                            0
+                                        );
+
+                                    input.value =
+                                        botonMas
+                                            ? actual + 1
+                                            : actual - 1;
+
+                                    recalcularSimuladorApoyo(
+                                        contenedor
+                                    );
+
+                                    return;
+                                }
+
+
+                                if (botonReset) {
+
+                                    contenedor
+                                        .querySelectorAll(
+                                            "[data-simulador-aporte]"
+                                        )
+                                        .forEach(
+                                            input => {
+
+                                                input.value =
+                                                    input.dataset.sugerido
+                                                    ||
+                                                    "0";
+                                            }
+                                        );
+
+                                    recalcularSimuladorApoyo(
+                                        contenedor
+                                    );
+                                }
+                            }
+                        );
+
+
+                        recalcularSimuladorApoyo(
+                            contenedor
+                        );
+                    }
+                );
+        }
+
+
+
         function construirUnidad(unidad) {
 
             const terminalesEsperados =
@@ -4211,7 +5538,13 @@
 
                     </div>
 
-                </section>
+                
+                    ${renderRecomendacionApoyo(
+                        unidad,
+                        datosUnidad
+                    )}
+
+</section>
             `;
         }
 
@@ -4248,6 +5581,9 @@
 
             </div>
         `;
+
+        activarSimuladoresApoyo();
+
     }
 
 
@@ -6103,7 +7439,7 @@
 
                     </div>
 
-                </div>
+                                </div>
             `;
 
 
