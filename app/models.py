@@ -1307,6 +1307,166 @@ class FlotaAsignacionTerminal(Base):
 
 
 # =============================================================================
+# FLOTA OPERATIVA - SNAPSHOT R001 / R003
+# =============================================================================
+#
+# R001:
+#   Fotografia agregada de Total Flota por terminal.
+#
+# R003:
+#   Fotografia de PPU declaradas disponibles.
+#
+# Estas tablas NO reemplazan:
+#   - expediciones R1.6
+#   - historico_flota_operativa
+#   - historico_flota_operativa_servicio
+#   - flota_asignacion_terminal
+#
+# Cada carga conserva su identificador de snapshot para mantener historico.
+# =============================================================================
+
+
+class FlotaSnapshotR001(Base):
+
+    __tablename__ = "flota_snapshot_r001"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+    snapshot_id = Column(
+        String(50),
+        nullable=False,
+        index=True,
+    )
+
+    fecha_reporte = Column(
+        DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    terminal = Column(
+        String(60),
+        nullable=False,
+        index=True,
+    )
+
+    total_flota = Column(
+        Integer,
+        nullable=False,
+    )
+
+    buses_disponibles = Column(
+        Integer,
+        nullable=True,
+    )
+
+    buses_no_disponibles = Column(
+        Integer,
+        nullable=True,
+    )
+
+    archivo_origen = Column(
+        String(250),
+        nullable=True,
+    )
+
+    carga_hash = Column(
+        String(64),
+        nullable=True,
+        index=True,
+    )
+
+    fecha_importacion = Column(
+        DateTime,
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "snapshot_id",
+            "terminal",
+            name="uq_flota_r001_snapshot_terminal",
+        ),
+    )
+
+
+class FlotaSnapshotR003(Base):
+
+    __tablename__ = "flota_snapshot_r003"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+    snapshot_id = Column(
+        String(50),
+        nullable=False,
+        index=True,
+    )
+
+    fecha_reporte = Column(
+        DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    ppu = Column(
+        String(20),
+        nullable=False,
+        index=True,
+    )
+
+    terminal = Column(
+        String(60),
+        nullable=True,
+        index=True,
+    )
+
+    interno = Column(
+        String(30),
+        nullable=True,
+    )
+
+    tipo_bus = Column(
+        String(60),
+        nullable=True,
+    )
+
+    archivo_origen = Column(
+        String(250),
+        nullable=True,
+    )
+
+    carga_hash = Column(
+        String(64),
+        nullable=True,
+        index=True,
+    )
+
+    fecha_importacion = Column(
+        DateTime,
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "snapshot_id",
+            "ppu",
+            name="uq_flota_r003_snapshot_ppu",
+        ),
+    )
+
+
+
+# =============================================================================
 # FLOTA OPERATIVA - HISTORICO INDEPENDIENTE
 # =============================================================================
 # Este modelo NO pertenece al motor de velocidades.

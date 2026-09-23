@@ -24,6 +24,7 @@ from typing import Iterable
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+from app.services.flota_r002_service import cargar_r002
 
 from app.config import CATALOGOS_DIR
 from app.models import (
@@ -50,6 +51,8 @@ TERMINAL_LABELS = {
     "SIN ASIGNAR": "Sin asignar",
 }
 
+
+from app.models import FlotaSnapshotR001
 
 def _texto(valor) -> str:
     return str(valor or "").strip()
@@ -1676,6 +1679,59 @@ def construir_sin_transmision_por_dias(
 
 
 
+
+def _obtener_totales_r001_actuales(db: Session):
+    """
+    Total Flota por terminal desde el ultimo snapshot R001.
+
+    R001 es el denominador agregado del dashboard.
+    Si no existe R001 se conserva el catalogo historico
+    como fallback.
+    """
+    ultimo = (
+        db.query(FlotaSnapshotR001)
+        .order_by(
+            FlotaSnapshotR001.fecha_importacion.desc(),
+            FlotaSnapshotR001.id.desc(),
+        )
+        .first()
+    )
+
+    if ultimo is None:
+        return None
+
+    filas = (
+        db.query(FlotaSnapshotR001)
+        .filter(
+            FlotaSnapshotR001.snapshot_id
+            == ultimo.snapshot_id
+        )
+        .all()
+    )
+
+    if not filas:
+        return None
+
+    totales = {
+        _norm(x.terminal): int(x.total_flota or 0)
+        for x in filas
+        if _norm(x.terminal)
+    }
+
+    if not totales:
+        return None
+
+    return {
+        "snapshot_id": ultimo.snapshot_id,
+        "fecha_reporte": (
+            ultimo.fecha_reporte.isoformat()
+            if ultimo.fecha_reporte
+            else None
+        ),
+        "totales": totales,
+    }
+
+
 def consultar_flota(
     db: Session,
     fecha_desde=None,
@@ -1698,11 +1754,23 @@ def consultar_flota(
     )
 
     asignaciones = obtener_asignaciones(db)
+
+    # Total Flota:
+    #   R001 = denominador agregado oficial de la carga.
+    #   Catalogo = fallback y detalle PPU.
+    # Flota Operativa sigue proviniendo de R1.6.
+    r001_actual = _obtener_totales_r001_actuales(db)
+
     asignada_terminal = defaultdict(int)
-    for a in asignaciones.values():
-        if unidad and _norm(a.unidad) != _norm(unidad):
-            continue
-        asignada_terminal[a.terminal] += 1
+
+    if r001_actual:
+        for term, cantidad in r001_actual["totales"].items():
+            asignada_terminal[term] = int(cantidad)
+    else:
+        for a in asignaciones.values():
+            if unidad and _norm(a.unidad) != _norm(unidad):
+                continue
+            asignada_terminal[_norm(a.terminal)] += 1
 
     # Resumen terminal: PPU DISTINCT por fecha+periodo+terminal, independiente del servicio.
     terminal_ppus = defaultdict(set)
@@ -2457,34 +2525,39 @@ def consultar_flota(
     # sin sumar una misma PPU varias veces por per?odo.
     # -----------------------------------------------------
 
-    ppus_catalogo_global = {
-        _normalizar_ppu(a.ppu)
-        for a in asignaciones.values()
-        if _normalizar_ppu(a.ppu)
-        and (
-            not unidad
-            or _norm(a.unidad) == _norm(unidad)
-        )
-        and (
-            not terminal
-            or _norm(a.terminal) == _norm(terminal)
-        )
-    }
+    # -----------------------------------------------------
+    # TOTAL GLOBAL R001 + R1.6
+    # -----------------------------------------------------
+    # Total Flota:
+    #   proviene del R001 vigente.
+    #
+    # Flota Operativa:
+    #   PPU DISTINCT que realmente aparece en las presencias
+    #   construidas desde R1.6 para el rango consultado.
+    #
+    # IMPORTANTE:
+    #   Ya NO se restringe la operativa al catalogo historico
+    #   de 737 PPU, porque R001 declara el universo agregado
+    #   vigente y R1.6 es la fuente operacional.
+    # -----------------------------------------------------
 
     ppus_transmitiendo_global = {
-        p["ppu"]
+        _normalizar_ppu(p["ppu"])
         for p in presencias
-        if p["ppu"] in ppus_catalogo_global
+        if _normalizar_ppu(p.get("ppu"))
+        and (
+            not terminal
+            or _norm(p.get("terminal")) == _norm(terminal)
+        )
     }
 
     total_operativa = len(
         ppus_transmitiendo_global
     )
 
-    total_sin_transmision = len(
-        ppus_catalogo_global
-        -
-        ppus_transmitiendo_global
+    total_sin_transmision = max(
+        total_asignada - total_operativa,
+        0,
     )
 
     porcentaje_global = (
@@ -3188,7 +3261,113 @@ def consultar_flota(
         terminal=terminal,
     )
 
+
+    # ================================================================
+    # R002 - ESTADO ACTUAL POWER BI
+    # ================================================================
+    #
+    # Capa exclusivamente informativa.
+    #
+    # NO modifica:
+    # - flota asignada
+    # - operativa R1.6
+    # - sin transmision
+    # - porcentajes
+    # - prestamos
+    # - historicos
+    #
+    # R002 puede tener una fecha distinta al rango R1.6 consultado.
+    # Por eso se presenta como "Estado actual Power BI" y NO como
+    # causa historica de una ausencia de transmision.
+    # ================================================================
+
+    r002 = cargar_r002()
+
+    mapa_r002 = (
+        r002.get("ppus", {})
+        if r002.get("disponible")
+        else {}
+    )
+
+    for item in sin_transmision_detalle:
+
+        ppu_r002 = _normalizar_ppu(
+            item.get("ppu")
+        )
+
+        dato_r002 = mapa_r002.get(
+            ppu_r002
+        )
+
+        if dato_r002:
+
+            item["r002_encontrado"] = True
+            item["estado_r002"] = (
+                dato_r002.get("estado_r002")
+            )
+            item["terminal_r002"] = (
+                dato_r002.get("terminal_r002")
+            )
+            item["interno_r002"] = (
+                dato_r002.get("interno_r002")
+            )
+
+            terminal_base_r002 = _norm(
+                item.get("terminal")
+                or item.get("terminal_nombre")
+            )
+
+            terminal_powerbi = _norm(
+                dato_r002.get("terminal_r002")
+            )
+
+            item["terminal_r002_difiere"] = bool(
+                terminal_powerbi
+                and terminal_base_r002
+                and terminal_powerbi != terminal_base_r002
+            )
+
+        else:
+
+            item["r002_encontrado"] = False
+            item["estado_r002"] = None
+            item["terminal_r002"] = None
+            item["interno_r002"] = None
+            item["terminal_r002_difiere"] = False
+
+    estado_r002_resumen = {
+        "disponible":
+            bool(r002.get("disponible")),
+
+        "archivo":
+            r002.get("archivo"),
+
+        "fecha_generacion":
+            r002.get("fecha_generacion"),
+
+        "total_ppu":
+            int(r002.get("total_ppu") or 0),
+
+        "total_cargas_sin_ppu":
+            int(
+                r002.get(
+                    "total_cargas_sin_ppu"
+                )
+                or 0
+            ),
+
+        "cargas_sin_ppu":
+            r002.get(
+                "cargas_sin_ppu",
+                {}
+            ),
+
+        "error":
+            r002.get("error"),
+    }
+
     return {
+        "estado_actual_r002": estado_r002_resumen,
         "resumen_sin_transmision_dias": sin_tx_dias["resumen"],
         "sin_transmision_detalle_dias": sin_tx_dias["detalle"],
         "dias_rango_sin_transmision": sin_tx_dias["dias_rango"],
