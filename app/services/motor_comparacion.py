@@ -22,6 +22,14 @@ class MotorComparacion:
     def __init__(self, db: Session):
         self.db = db
 
+        # Cache por ejecucion del motor.
+        # Evita consultar HistorialImportacion una vez por grupo.
+        self._archivo_origen_cache = {}
+
+        # Cache de HistoricoRegistro por identidad operacional.
+        # Se prepara una vez por ejecucion de procesar().
+        self._historico_registro_cache = {}
+
     # =====================================================
     # PROCESAR
     # =====================================================
@@ -141,6 +149,64 @@ class MotorComparacion:
             velocidades=velocidades,
             carga_hash=carga_hash,
         )
+
+        # =====================================================
+        # PRECARGA HISTORICO REGISTRO
+        # =====================================================
+        # Conserva exactamente la identidad operacional usada
+        # por guardar_historico(). carga_hash NO forma parte
+        # de esta identidad.
+        # =====================================================
+
+        unidades_grupos = {
+            grupo["unidad"]
+            for grupo in grupos.values()
+            if grupo.get("unidad") is not None
+        }
+
+        fechas_grupos = {
+            grupo["fecha_operacional"]
+            for grupo in grupos.values()
+            if grupo.get("fecha_operacional") is not None
+        }
+
+        self._historico_registro_cache = {}
+
+        if unidades_grupos and fechas_grupos:
+
+            historicos_existentes = (
+                self.db.query(
+                    HistoricoRegistro
+                )
+                .filter(
+                    HistoricoRegistro.unidad.in_(
+                        unidades_grupos
+                    ),
+                    HistoricoRegistro.fecha_operacional.in_(
+                        fechas_grupos
+                    ),
+                )
+                .all()
+            )
+
+            for historico in historicos_existentes:
+
+                clave_historico = (
+                    historico.unidad,
+                    historico.fecha_operacional,
+                    historico.tipo_dia,
+                    historico.servicio,
+                    historico.codigo_ts,
+                    historico.ruta,
+                    historico.ruta_normalizada,
+                    historico.sentido,
+                    historico.periodo,
+                    historico.indicador_tiempo_espera,
+                )
+
+                self._historico_registro_cache[
+                    clave_historico
+                ] = historico
 
         return self.guardar_registro(
             grupos,
@@ -301,6 +367,57 @@ class MotorComparacion:
 
         motivos = {}
 
+        # =====================================================
+        # OPTIMIZACION AIVEN
+        # Conserva EXACTAMENTE la identidad usada anteriormente:
+        # unidad + fecha_operacional + patente
+        # + inicio_servicio + ruta.
+        #
+        # La diferencia es solamente de rendimiento:
+        # se precargan las identidades existentes una vez
+        # y luego se comparan en memoria.
+        # =====================================================
+        unidades_lote = {
+            exp.unidad
+            for exp in expediciones
+            if exp.unidad is not None
+        }
+
+        fechas_lote = {
+            exp.fecha
+            for exp in expediciones
+            if exp.fecha is not None
+        }
+
+        existentes_db = set()
+
+        if unidades_lote and fechas_lote:
+            filas_existentes = (
+                self.db.query(
+                    HistoricoExpedicion.unidad,
+                    HistoricoExpedicion.fecha_operacional,
+                    HistoricoExpedicion.patente,
+                    HistoricoExpedicion.inicio_servicio,
+                    HistoricoExpedicion.ruta,
+                )
+                .filter(
+                    HistoricoExpedicion.unidad.in_(unidades_lote),
+                    HistoricoExpedicion.fecha_operacional.in_(fechas_lote),
+                )
+                .all()
+            )
+
+            existentes_db = {
+                (
+                    fila.unidad,
+                    fila.fecha_operacional,
+                    fila.patente,
+                    fila.inicio_servicio,
+                    fila.ruta,
+                )
+                for fila in filas_existentes
+            }
+
         for exp in expediciones:
 
             # -------------------------------------------------
@@ -317,30 +434,15 @@ class MotorComparacion:
             # Anti-duplicidad
             # -------------------------------------------------
 
-            existente = (
-                self.db.query(
-                    HistoricoExpedicion.id
-                )
-                .filter(
-                    HistoricoExpedicion.unidad
-                    == exp.unidad,
-
-                    HistoricoExpedicion.fecha_operacional
-                    == exp.fecha,
-
-                    HistoricoExpedicion.patente
-                    == exp.patente,
-
-                    HistoricoExpedicion.inicio_servicio
-                    == exp.inicio_servicio,
-
-                    HistoricoExpedicion.ruta
-                    == exp.ruta,
-                )
-                .first()
+            identidad_expedicion = (
+                exp.unidad,
+                exp.fecha,
+                exp.patente,
+                exp.inicio_servicio,
+                exp.ruta,
             )
 
-            if existente:
+            if identidad_expedicion in existentes_db:
 
                 existentes += 1
                 continue
@@ -358,8 +460,8 @@ class MotorComparacion:
             if tipo_dia == "DIA NORMAL":
                 tipo_dia = "LABORAL"
 
-            elif tipo_dia == "DIA SABADO":
-                tipo_dia = "SABADO"
+            elif tipo_dia in ("DIA SABADO", "SABADO", "SÁBADO"):
+                tipo_dia = "SÁBADO"
 
             elif tipo_dia == "DIA DOMINGO":
                 tipo_dia = "DOMINGO"
@@ -598,6 +700,10 @@ class MotorComparacion:
                 nuevo
             )
 
+            existentes_db.add(
+                identidad_expedicion
+            )
+
             insertadas += 1
 
         print("=" * 80)
@@ -687,8 +793,8 @@ class MotorComparacion:
             if tipo_dia == "DIA NORMAL":
                 tipo_dia = "LABORAL"
 
-            elif tipo_dia == "DIA SABADO":
-                tipo_dia = "SABADO"
+            elif tipo_dia in ("DIA SABADO", "SABADO", "SÁBADO"):
+                tipo_dia = "SÁBADO"
 
             elif tipo_dia == "DIA DOMINGO":
                 tipo_dia = "DOMINGO"
@@ -994,73 +1100,67 @@ class MotorComparacion:
         # El hash queda solamente para auditoria.
         # =====================================================
 
+        clave_historico = (
+            grupo["unidad"],
+            fecha,
+            grupo["tipo_dia"],
+            grupo["servicio"],
+            grupo["codigo_ts"],
+            grupo["ruta"],
+            grupo["ruta_normalizada"],
+            grupo["sentido"],
+            grupo["periodo"],
+            indicador,
+        )
+
         historico_registro = (
-            self.db.query(
-                HistoricoRegistro
+            self._historico_registro_cache.get(
+                clave_historico
             )
-            .filter(
-                HistoricoRegistro.unidad
-                == grupo["unidad"],
-
-                HistoricoRegistro.fecha_operacional
-                == fecha,
-
-                HistoricoRegistro.tipo_dia
-                == grupo["tipo_dia"],
-
-                HistoricoRegistro.servicio
-                == grupo["servicio"],
-
-                HistoricoRegistro.codigo_ts
-                == grupo["codigo_ts"],
-
-                HistoricoRegistro.ruta
-                == grupo["ruta"],
-
-                HistoricoRegistro.ruta_normalizada
-                == grupo["ruta_normalizada"],
-
-                HistoricoRegistro.sentido
-                == grupo["sentido"],
-
-                HistoricoRegistro.periodo
-                == grupo["periodo"],
-
-                HistoricoRegistro.indicador_tiempo_espera
-                == indicador,
-            )
-            .first()
         )
 
         # =====================================================
         # IDENTIDAD / AUDITORIA DE LA CARGA
         # =====================================================
 
-        historial = (
-            self.db.query(
-                HistorialImportacion
-            )
-            .filter(
-                HistorialImportacion.tipo_archivo
-                == "R1.6",
-
-                HistorialImportacion.unidad
-                == grupo["unidad"],
-
-                HistorialImportacion.carga_hash
-                == carga_hash,
-            )
-            .order_by(
-                HistorialImportacion.id.desc()
-            )
-            .first()
+        clave_archivo = (
+            grupo["unidad"],
+            carga_hash,
         )
 
-        archivo_origen = (
-            historial.archivo
-            if historial
-            else ""
-        )
+        if clave_archivo not in self._archivo_origen_cache:
+
+            historial = (
+                self.db.query(
+                    HistorialImportacion
+                )
+                .filter(
+                    HistorialImportacion.tipo_archivo
+                    == "R1.6",
+
+                    HistorialImportacion.unidad
+                    == grupo["unidad"],
+
+                    HistorialImportacion.carga_hash
+                    == carga_hash,
+                )
+                .order_by(
+                    HistorialImportacion.id.desc()
+                )
+                .first()
+            )
+
+            self._archivo_origen_cache[
+                clave_archivo
+            ] = (
+                historial.archivo
+                if historial
+                else ""
+            )
+
+        archivo_origen = self._archivo_origen_cache[
+            clave_archivo
+        ]
 
         # =====================================================
         # INSERTAR O ACTUALIZAR CONSOLIDADO
@@ -1145,7 +1245,12 @@ class MotorComparacion:
                 historico_registro
             )
 
+            # Se necesita el ID para HistoricoPPU.
             self.db.flush()
+
+            self._historico_registro_cache[
+                clave_historico
+            ] = historico_registro
 
         else:
 
@@ -1224,6 +1329,38 @@ class MotorComparacion:
         ppu_insertadas = 0
         ppu_existentes = 0
 
+        # =====================================================
+        # PRECARGA ANTI-DUPLICIDAD PPU
+        # =====================================================
+        # Antes se ejecutaba un SELECT por cada expedicion.
+        # Ahora se cargan una sola vez las identidades PPU
+        # existentes para este HistoricoRegistro.
+        #
+        # La identidad se conserva exactamente:
+        # historico_id + patente + inicio_servicio + ruta.
+        # historico_id queda fijado por esta consulta.
+        # =====================================================
+
+        ppu_existentes_db = {
+            (
+                fila.patente,
+                fila.inicio_servicio,
+                fila.ruta,
+            )
+            for fila in (
+                self.db.query(
+                    HistoricoPPU.patente,
+                    HistoricoPPU.inicio_servicio,
+                    HistoricoPPU.ruta,
+                )
+                .filter(
+                    HistoricoPPU.historico_id
+                    == historico_registro.id
+                )
+                .all()
+            )
+        }
+
         for exp in detalle:
 
             if not exp.patente:
@@ -1242,27 +1379,13 @@ class MotorComparacion:
             # ANTI-DUPLICIDAD PPU
             # -------------------------------------------------
 
-            ppu_existente = (
-                self.db.query(
-                    HistoricoPPU.id
-                )
-                .filter(
-                    HistoricoPPU.historico_id
-                    == historico_registro.id,
-
-                    HistoricoPPU.patente
-                    == exp.patente,
-
-                    HistoricoPPU.inicio_servicio
-                    == exp.inicio_servicio,
-
-                    HistoricoPPU.ruta
-                    == exp.ruta,
-                )
-                .first()
+            identidad_ppu = (
+                exp.patente,
+                exp.inicio_servicio,
+                exp.ruta,
             )
 
-            if ppu_existente:
+            if identidad_ppu in ppu_existentes_db:
 
                 ppu_existentes += 1
                 continue
@@ -1383,6 +1506,12 @@ class MotorComparacion:
                 historico_ppu
             )
 
+            # Evita duplicados tambien dentro del mismo lote,
+            # antes del commit final.
+            ppu_existentes_db.add(
+                identidad_ppu
+            )
+
             ppu_insertadas += 1
 
         print(
@@ -1470,4 +1599,3 @@ class MotorComparacion:
                 return "SIMPLE"
 
             return "COMPLEJO"
-
