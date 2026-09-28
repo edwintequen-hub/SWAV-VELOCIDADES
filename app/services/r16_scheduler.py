@@ -148,12 +148,18 @@ def ejecutar_r16_automatico():
                     )
                 )
 
+                # La siguiente ejecucion se programa desde el
+                # FIN real del procesamiento, no desde su inicio.
+                # Asi un ciclo largo no provoca ejecuciones
+                # consecutivas para "recuperar" tiempo atrasado.
+                fin_ejecucion = _ahora_chile()
+
                 configuracion.ultima_ejecucion = (
-                    ahora
+                    fin_ejecucion
                 )
 
                 configuracion.proxima_ejecucion = (
-                    ahora
+                    fin_ejecucion
                     + timedelta(
                         minutes=intervalo
                     )
