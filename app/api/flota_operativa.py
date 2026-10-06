@@ -3475,32 +3475,43 @@ def comercial_r16_fechas(
 
     filas = db.execute(
         text(f"""
-            SELECT
+            SELECT DISTINCT
                 fecha_operacional,
-                GROUP_CONCAT(
-                    DISTINCT unidad
-                ) AS unidades
+                unidad
             FROM historico_reporte_comercial_r16
             {where}
-            GROUP BY fecha_operacional
-            ORDER BY fecha_operacional DESC
+            ORDER BY
+                fecha_operacional DESC,
+                unidad
         """),
         parametros,
     ).mappings().all()
 
+    fechas_por_dia = {}
+
+    for fila in filas:
+        fecha = str(fila["fecha_operacional"])
+        unidad_fila = str(fila["unidad"])
+
+        fechas_por_dia.setdefault(
+            fecha,
+            set(),
+        ).add(unidad_fila)
+
+    fechas = [
+        {
+            "fecha": fecha,
+            "unidades": sorted(unidades),
+        }
+        for fecha, unidades
+        in fechas_por_dia.items()
+    ]
+
     return {
         "ok": True,
         "fuente": "HISTORICO_R1.6",
-        "total_fechas": len(filas),
-        "fechas": [
-            {
-                "fecha": str(f["fecha_operacional"]),
-                "unidades": sorted(
-                    str(f["unidades"]).split(",")
-                ),
-            }
-            for f in filas
-        ],
+        "total_fechas": len(fechas),
+        "fechas": fechas,
     }
 
 
