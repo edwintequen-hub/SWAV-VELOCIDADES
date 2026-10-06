@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from datetime import date
+from datetime import date, datetime
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -274,6 +274,60 @@ def detectar_ppu_desde_historico(
 
     catalogo_ts = construir_catalogo_ts(
         db
+    )
+
+    # =====================================================
+    # NORMALIZAR FECHAS PARA SQLITE / POSTGRESQL
+    # =====================================================
+    #
+    # PostgreSQL no permite comparar una columna DATE
+    # directamente contra VARCHAR. La API historica de esta
+    # funcion admite date | str, por lo que normalizamos los
+    # textos ISO YYYY-MM-DD a datetime.date antes del filtro.
+    # =====================================================
+
+    def normalizar_fecha_filtro(valor):
+
+        if valor is None:
+            return None
+
+        if isinstance(valor, datetime):
+            return valor.date()
+
+        if isinstance(valor, date):
+            return valor
+
+        if isinstance(valor, str):
+
+            valor = valor.strip()
+
+            if not valor:
+                return None
+
+            try:
+                return datetime.strptime(
+                    valor,
+                    "%Y-%m-%d",
+                ).date()
+
+            except ValueError as exc:
+                raise ValueError(
+                    "Fecha invalida para detector PPU: "
+                    + valor
+                    + ". Formato esperado: YYYY-MM-DD."
+                ) from exc
+
+        raise TypeError(
+            "Tipo de fecha no soportado por detector PPU: "
+            + type(valor).__name__
+        )
+
+    fecha_desde = normalizar_fecha_filtro(
+        fecha_desde
+    )
+
+    fecha_hasta = normalizar_fecha_filtro(
+        fecha_hasta
     )
 
     consulta = db.query(
