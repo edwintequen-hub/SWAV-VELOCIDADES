@@ -172,7 +172,7 @@ def _catalogo_terminal_ts(
             COUNT(DISTINCT UPPER(TRIM(terminal))) AS cantidad_terminales,
             MAX(UPPER(TRIM(terminal))) AS terminal
         FROM servicios
-        WHERE COALESCE(activo, 1) = 1
+        WHERE activo IS NOT FALSE
         GROUP BY
             unidad,
             UPPER(TRIM(codigo_ts))
@@ -219,7 +219,7 @@ def _catalogo_terminal_servicio(
             COUNT(DISTINCT UPPER(TRIM(terminal))) AS cantidad_terminales,
             MAX(UPPER(TRIM(terminal))) AS terminal
         FROM servicios
-        WHERE COALESCE(activo, 1) = 1
+        WHERE activo IS NOT FALSE
         GROUP BY
             unidad,
             UPPER(TRIM(servicio))
