@@ -30,6 +30,9 @@ from app.services.historico_flota_operativa_servicio_r16_service import (
 from app.services.flota_ppu_detector_service import (
     detectar_ppu_desde_historico,
 )
+from app.services.reporte_comercial_r16_service import (
+    sincronizar_historico_reporte_comercial_r16,
+)
 from app.services.sinoptico_r16_service import SinopticoR16Service
 from app.models import CredencialSinoptico
 
@@ -478,6 +481,66 @@ def descargar_r16(
                     persistencia_fecha,
             }
 
+        # =================================================
+        # HISTORICO REPORTE COMERCIAL R1.6
+        # =================================================
+        #
+        # Usa exclusivamente fechas reconocidas por ambos
+        # historicos de Flota Operativa. La funcion es
+        # idempotente y participa en esta misma transaccion.
+        # =================================================
+
+        resultado_reporte_comercial_r16 = {
+            "estado": "OK",
+            "fechas_procesadas": [],
+            "insertados": 0,
+            "actualizados": 0,
+            "detalle_por_fecha": {},
+        }
+
+        for fecha_comercial in fechas_detector:
+
+            resultado_fecha_comercial = (
+                sincronizar_historico_reporte_comercial_r16(
+                    db=flota_db,
+                    fecha=fecha_comercial,
+                    unidad=unidad,
+                    commit=False,
+                )
+            )
+
+            resultado_reporte_comercial_r16[
+                "fechas_procesadas"
+            ].append(
+                fecha_comercial
+            )
+
+            resultado_reporte_comercial_r16[
+                "insertados"
+            ] += (
+                resultado_fecha_comercial.get(
+                    "insertados",
+                    0,
+                )
+                or 0
+            )
+
+            resultado_reporte_comercial_r16[
+                "actualizados"
+            ] += (
+                resultado_fecha_comercial.get(
+                    "actualizados",
+                    0,
+                )
+                or 0
+            )
+
+            resultado_reporte_comercial_r16[
+                "detalle_por_fecha"
+            ][fecha_comercial] = (
+                resultado_fecha_comercial
+            )
+
         flota_db.commit()
 
     except Exception as exc:
@@ -652,6 +715,9 @@ def descargar_r16(
 
         "detector_ppu":
             resultado_detector_ppu,
+
+        "reporte_comercial_r16":
+            resultado_reporte_comercial_r16,
 
         "mensaje":
             (
