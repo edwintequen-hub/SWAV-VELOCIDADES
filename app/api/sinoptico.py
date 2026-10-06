@@ -11,6 +11,7 @@ from pathlib import Path
 import os
 import json
 import subprocess
+import time
 
 
 from fastapi import APIRouter
@@ -206,12 +207,24 @@ def descargar_r16(
             espera_reintento=3,
         )
 
+        _trace_t0 = time.monotonic()
+        print(
+            f"[R16 TRACE] {unidad} DESCARGA INICIO",
+            flush=True,
+        )
+
         datos_bridge = servicio_r16.descargar(
             usuario=usuario_sinoptico,
             unidad=unidad,
             fecha=fecha,
             hora_desde=hora_inicio,
             hora_hasta=hora_fin,
+        )
+
+        print(
+            f"[R16 TRACE] {unidad} DESCARGA FIN "
+            f"{time.monotonic() - _trace_t0:.2f}s",
+            flush=True,
         )
 
     except Exception as exc:
@@ -316,6 +329,12 @@ def descargar_r16(
 
     try:
 
+        _trace_t0 = time.monotonic()
+        print(
+            f"[R16 TRACE] {unidad} FLOTA GENERAL INICIO",
+            flush=True,
+        )
+
         resultado_flota_operativa = (
             procesar_archivo_r16(
                 db=flota_db,
@@ -324,12 +343,30 @@ def descargar_r16(
             )
         )
 
+        print(
+            f"[R16 TRACE] {unidad} FLOTA GENERAL FIN "
+            f"{time.monotonic() - _trace_t0:.2f}s",
+            flush=True,
+        )
+
+        _trace_t0 = time.monotonic()
+        print(
+            f"[R16 TRACE] {unidad} FLOTA SERVICIOS INICIO",
+            flush=True,
+        )
+
         resultado_flota_servicios = (
             procesar_r16_servicios(
                 db=flota_db,
                 archivo=str(archivo),
                 unidad=unidad,
             )
+        )
+
+        print(
+            f"[R16 TRACE] {unidad} FLOTA SERVICIOS FIN "
+            f"{time.monotonic() - _trace_t0:.2f}s",
+            flush=True,
         )
 
         # =================================================
@@ -401,6 +438,13 @@ def descargar_r16(
 
         for fecha_detector in fechas_detector:
 
+            _trace_t0 = time.monotonic()
+            print(
+                f"[R16 TRACE] {unidad} DETECTOR INICIO "
+                f"fecha={fecha_detector}",
+                flush=True,
+            )
+
             resultado_fecha_detector = (
                 detectar_ppu_desde_historico(
                     db=flota_db,
@@ -408,6 +452,13 @@ def descargar_r16(
                     fecha_hasta=fecha_detector,
                     dry_run=False,
                 )
+            )
+
+            print(
+                f"[R16 TRACE] {unidad} DETECTOR FIN "
+                f"fecha={fecha_detector} "
+                f"{time.monotonic() - _trace_t0:.2f}s",
+                flush=True,
             )
 
             persistencia_fecha = (
@@ -500,6 +551,13 @@ def descargar_r16(
 
         for fecha_comercial in fechas_detector:
 
+            _trace_t0 = time.monotonic()
+            print(
+                f"[R16 TRACE] {unidad} COMERCIAL INICIO "
+                f"fecha={fecha_comercial}",
+                flush=True,
+            )
+
             resultado_fecha_comercial = (
                 sincronizar_historico_reporte_comercial_r16(
                     db=flota_db,
@@ -507,6 +565,13 @@ def descargar_r16(
                     unidad=unidad,
                     commit=False,
                 )
+            )
+
+            print(
+                f"[R16 TRACE] {unidad} COMERCIAL FIN "
+                f"fecha={fecha_comercial} "
+                f"{time.monotonic() - _trace_t0:.2f}s",
+                flush=True,
             )
 
             resultado_reporte_comercial_r16[
@@ -541,7 +606,19 @@ def descargar_r16(
                 resultado_fecha_comercial
             )
 
+        _trace_t0 = time.monotonic()
+        print(
+            f"[R16 TRACE] {unidad} COMMIT FLOTA INICIO",
+            flush=True,
+        )
+
         flota_db.commit()
+
+        print(
+            f"[R16 TRACE] {unidad} COMMIT FLOTA FIN "
+            f"{time.monotonic() - _trace_t0:.2f}s",
+            flush=True,
+        )
 
     except Exception as exc:
 
@@ -578,9 +655,21 @@ def descargar_r16(
             db
         )
 
+        _trace_t0 = time.monotonic()
+        print(
+            f"[R16 TRACE] {unidad} SWAV INICIO",
+            flush=True,
+        )
+
         resultado = procesador.procesar(
             archivo=str(archivo),
             unidad=unidad,
+        )
+
+        print(
+            f"[R16 TRACE] {unidad} SWAV FIN "
+            f"{time.monotonic() - _trace_t0:.2f}s",
+            flush=True,
         )
 
     except Exception as exc:
