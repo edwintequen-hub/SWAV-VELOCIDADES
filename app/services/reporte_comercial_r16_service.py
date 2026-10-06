@@ -24,6 +24,7 @@ REGLAS:
 from __future__ import annotations
 
 from collections import defaultdict
+import time
 from datetime import date, datetime, time
 from pathlib import Path
 from typing import Any
@@ -551,10 +552,32 @@ def construir_reporte_comercial_r16(
             "Use 30MIN o 1H."
         )
 
+    _trace_t0 = time.monotonic()
+    print(
+        f"[R16 COMERCIAL TRACE] {unidad} "
+        f"{fecha_obj} TIPO_DIA INICIO",
+        flush=True,
+    )
+
     tipo_dia = _obtener_tipo_dia_real(
         db,
         fecha_obj,
         unidad,
+    )
+
+    print(
+        f"[R16 COMERCIAL TRACE] {unidad} "
+        f"{fecha_obj} TIPO_DIA FIN "
+        f"{time.monotonic() - _trace_t0:.2f}s "
+        f"tipo={tipo_dia}",
+        flush=True,
+    )
+
+    _trace_t0 = time.monotonic()
+    print(
+        f"[R16 COMERCIAL TRACE] {unidad} "
+        f"{fecha_obj} PERFIL INICIO",
+        flush=True,
     )
 
     (
@@ -565,6 +588,21 @@ def construir_reporte_comercial_r16(
         db,
         unidad,
         tipo_dia,
+    )
+
+    print(
+        f"[R16 COMERCIAL TRACE] {unidad} "
+        f"{fecha_obj} PERFIL FIN "
+        f"{time.monotonic() - _trace_t0:.2f}s "
+        f"servicios={len(perfil_servicio_30)}",
+        flush=True,
+    )
+
+    _trace_t0 = time.monotonic()
+    print(
+        f"[R16 COMERCIAL TRACE] {unidad} "
+        f"{fecha_obj} REAL_R16 INICIO",
+        flush=True,
     )
 
     (
@@ -578,6 +616,15 @@ def construir_reporte_comercial_r16(
         db,
         fecha_obj,
         unidad,
+    )
+
+    print(
+        f"[R16 COMERCIAL TRACE] {unidad} "
+        f"{fecha_obj} REAL_R16 FIN "
+        f"{time.monotonic() - _trace_t0:.2f}s "
+        f"servicios={len(real_servicio_30)} "
+        f"detalle={len(detalle)}",
+        flush=True,
     )
 
     if granularidad == "1H":
@@ -791,11 +838,26 @@ def sincronizar_historico_reporte_comercial_r16(
     fecha_obj = _parse_fecha(fecha)
     unidad = _norm(unidad)
 
+    _trace_t0 = time.monotonic()
+    print(
+        f"[R16 COMERCIAL TRACE] {unidad} "
+        f"{fecha_obj} CONSTRUCTOR INICIO",
+        flush=True,
+    )
+
     reporte = construir_reporte_comercial_r16(
         db=db,
         fecha=fecha_obj,
         unidad=unidad,
         granularidad="30MIN",
+    )
+
+    print(
+        f"[R16 COMERCIAL TRACE] {unidad} "
+        f"{fecha_obj} CONSTRUCTOR FIN "
+        f"{time.monotonic() - _trace_t0:.2f}s "
+        f"filas={len(reporte['servicios'])}",
+        flush=True,
     )
 
     fecha_iso = fecha_obj.isoformat()
@@ -806,7 +868,20 @@ def sincronizar_historico_reporte_comercial_r16(
     insertados = 0
     actualizados = 0
 
-    for fila in reporte["servicios"]:
+    _trace_persistencia = time.monotonic()
+    _trace_total_filas = len(reporte["servicios"])
+
+    print(
+        f"[R16 COMERCIAL TRACE] {unidad} "
+        f"{fecha_obj} PERSISTENCIA INICIO "
+        f"filas={_trace_total_filas}",
+        flush=True,
+    )
+
+    for _trace_indice, fila in enumerate(
+        reporte["servicios"],
+        start=1,
+    ):
 
         parametros = {
             "fecha":
@@ -909,6 +984,28 @@ def sincronizar_historico_reporte_comercial_r16(
             })
 
             actualizados += 1
+
+        if (
+            _trace_indice == 1
+            or _trace_indice % 250 == 0
+            or _trace_indice == _trace_total_filas
+        ):
+            print(
+                f"[R16 COMERCIAL TRACE] {unidad} "
+                f"{fecha_obj} PERSISTENCIA PROGRESO "
+                f"{_trace_indice}/{_trace_total_filas} "
+                f"{time.monotonic() - _trace_persistencia:.2f}s",
+                flush=True,
+            )
+
+    print(
+        f"[R16 COMERCIAL TRACE] {unidad} "
+        f"{fecha_obj} PERSISTENCIA FIN "
+        f"{time.monotonic() - _trace_persistencia:.2f}s "
+        f"insertados={insertados} "
+        f"actualizados={actualizados}",
+        flush=True,
+    )
 
     if commit:
         db.commit()
