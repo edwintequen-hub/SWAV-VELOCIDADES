@@ -71,175 +71,210 @@
         <!-- CABECERA                                                  -->
         <!-- ========================================================= -->
 
-        <header class="top-header">
+        <header class="top-header top-header-v2">
 
-            <div>
+            <div class="top-v2-title">
 
-                <div class="eyebrow">
-                    CENTRO DE CONTROL OPERACIONAL
+                <div class="top-v2-icon" aria-hidden="true">
+                    &#128652;
                 </div>
-
-                <h1>Flota Operativa</h1>
-
-                <p>
-                    Estado global de la flota con transmisión real,
-                    por terminal y período seleccionado.
-                </p>
-
-            </div>
-
-            <div class="catalog-badge">
-
-                <span class="catalog-status"></span>
 
                 <div>
-                    <strong>Histórico BD</strong>
-                    <small id="catalogoVersion">
-                        Catálogo terminales
-                    </small>
-                </div>
-
-            </div>
-
-
-            <div
-                id="r16MonitorFlota"
-                class="r16-live-monitor r16-live-pending">
-
-                <div class="r16-live-main">
-
-                    <span
-                        id="r16MonitorDot"
-                        class="r16-live-dot">
-                    </span>
-
-                    <div>
-                        <strong id="r16MonitorEstado">
-                            R1.6 VERIFICANDO
-                        </strong>
-
-                        <small id="r16MonitorUnidades">
-                            U8 -- | U9 --
-                        </small>
-                    </div>
-
-                </div>
-
-                <div class="r16-live-times">
-
-                    <span>
-                        Ultima
-                        <strong id="r16MonitorUltima">--</strong>
-                    </span>
-
-                    <span>
-                        Proxima
-                        <strong id="r16MonitorProxima">--</strong>
-                    </span>
-
-                    <span>
-                        Frecuencia
-                        <strong id="r16MonitorFrecuencia">--</strong>
-                    </span>
-
-                </div>
-
-            </div>
-
-        </header>
-
-
-        <!-- ========================================================= -->
-        <!-- FILTROS                                                   -->
-        <!-- ========================================================= -->
-
-        <section class="panel filter-panel">
-
-            <div class="panel-header">
-
-                <div>
-                    <h2>Consulta histórica</h2>
+                    <h1>Flota Operativa</h1>
                     <p>
-                        Selecciona fecha, unidad, terminal, servicio
-                        y períodos.
+                        Operación por unidad, terminal y períodos
                     </p>
                 </div>
 
             </div>
 
 
-            <div class="filters-grid">
+            <div class="top-v2-actions">
 
-                <div class="field">
-                    <label for="fechaDesde">Fecha desde</label>
-                    <input id="fechaDesde" type="date">
-                </div>
+                <div class="top-v2-date">
+                    <span class="top-v2-action-icon" aria-hidden="true">
+                        &#128197;
+                    </span>
 
-                <div class="field">
-                    <label for="fechaHasta">Fecha hasta</label>
-                    <input id="fechaHasta" type="date">
-                </div>
-
-                <div class="field">
-                    <label for="unidad">Unidad</label>
-
-                    <select id="unidad">
-                        <option value="">Todas</option>
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label for="terminal">Terminal</label>
-
-                    <select id="terminal">
-                        <option value="">Todos</option>
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label for="servicio">Servicio</label>
-
-                    <select id="servicio">
-                        <option value="">Todos</option>
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label for="periodoInicial">Período inicial</label>
-                    <select id="periodoInicial"></select>
-                </div>
-
-                <div class="field">
-                    <label for="periodoFinal">Período final</label>
-                    <select id="periodoFinal"></select>
+                    <input
+                        id="fechaDesde"
+                        type="date"
+                        aria-label="Fecha desde">
                 </div>
 
 
-                <div class="filter-actions">
+                <div
+                    id="r16MonitorFlota"
+                    class="r16-live-monitor r16-live-pending top-v2-r16">
 
-                    <button
-                        type="button"
-                        id="btnConsultar"
-                        class="btn btn-primary">
+                    <div class="r16-live-main">
 
-                        Consultar
+                        <span
+                            id="r16MonitorDot"
+                            class="r16-live-dot">
+                        </span>
 
-                    </button>
+                        <div>
+                            <strong id="r16MonitorEstado">
+                                R1.6 VERIFICANDO
+                            </strong>
 
-                    <button
-                        type="button"
-                        id="btnExportar"
-                        class="btn btn-excel">
+                            <small id="r16MonitorUnidades">
+                                U8 -- | U9 --
+                            </small>
+                        </div>
 
-                        Exportar Excel
+                    </div>
 
-                    </button>
+                    <div class="r16-live-times">
+
+                        <span>
+                            Última
+                            <strong id="r16MonitorUltima">--</strong>
+                        </span>
+
+                        <span class="top-v2-next">
+                            Próxima
+                            <strong id="r16MonitorProxima">--</strong>
+                        </span>
+
+                        <span class="top-v2-frequency">
+                            Frecuencia
+                            <strong id="r16MonitorFrecuencia">--</strong>
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="top-v2-update">
+
+                    <span class="top-v2-action-icon" aria-hidden="true">
+                        &#9719;
+                    </span>
+
+                    <div>
+                        <small>Última actualización</small>
+                        <strong id="topV2HoraConsulta">--:--:--</strong>
+                        <span
+                            id="catalogoVersion"
+                            class="top-v2-catalog-version"
+                            hidden>
+                            Catalogo
+                        </span>
+                    </div>
+
+                </div>
+
+
+                
+
+            </div>
+
+        </header>
+
+
+        <details class="advanced-filters">
+
+            <summary>
+                <span>
+                    Filtros avanzados
+                </span>
+
+                <small>
+                    Unidad ? Terminal ? Servicio ? Períodos ? Rango de fechas
+                </small>
+            </summary>
+
+            <div class="advanced-filters-body">
+
+                <div class="filters-grid">
+
+                    <div class="field">
+                        <label for="fechaHasta">
+                            Fecha hasta
+                        </label>
+
+                        <input
+                            id="fechaHasta"
+                            type="date">
+                    </div>
+
+
+                    <div class="field">
+                        <label for="unidad">
+                            Unidad
+                        </label>
+
+                        <select id="unidad">
+                            <option value="">
+                                Todas
+                            </option>
+                        </select>
+                    </div>
+
+
+                    <div class="field">
+                        <label for="terminal">
+                            Terminal
+                        </label>
+
+                        <select id="terminal">
+                            <option value="">
+                                Todos
+                            </option>
+                        </select>
+                    </div>
+
+
+                    <div class="field">
+                        <label for="servicio">
+                            Servicio
+                        </label>
+
+                        <select id="servicio">
+                            <option value="">
+                                Todos
+                            </option>
+                        </select>
+                    </div>
+
+
+                    <div class="field">
+                        <label for="periodoInicial">
+                            Período inicial
+                        </label>
+
+                        <select id="periodoInicial"></select>
+                    </div>
+
+
+                    <div class="field">
+                        <label for="periodoFinal">
+                            Período final
+                        </label>
+
+                        <select id="periodoFinal"></select>
+                    </div>
+
+
+                    <div class="filter-actions">
+
+                        <button
+                            type="button"
+                            id="btnConsultar"
+                            class="btn btn-primary">
+                            Consultar
+                        </button>
+
+                    </div>
 
                 </div>
 
             </div>
 
-        </section>
+        </details>
 
 
         <!-- ========================================================= -->
@@ -286,7 +321,14 @@
 
 <section class="kpi-grid">
 
-            <article class="kpi-card">
+            <article class="kpi-card fo-v2-kpi fo-v2-kpi-asignada">
+                <span
+                    class="fo-v2-kpi-icon"
+                    data-fo-icon="kpiAsignada"
+                    aria-hidden="true">
+                    &#128652;
+                </span>
+
 
                 <span class="kpi-title">
                     FLOTA ASIGNADA
@@ -303,7 +345,14 @@
             </article>
 
 
-            <article class="kpi-card kpi-operativa">
+            <article class="kpi-card kpi-operativa fo-v2-kpi fo-v2-kpi-operativa">
+                <span
+                    class="fo-v2-kpi-icon"
+                    data-fo-icon="kpiOperativa"
+                    aria-hidden="true">
+                    &#10003;
+                </span>
+
 
                 <span class="kpi-title">
                     FLOTA OPERATIVA
@@ -320,7 +369,14 @@
             </article>
 
 
-            <article class="kpi-card kpi-sin-tx">
+            <article class="kpi-card kpi-sin-tx fo-v2-kpi fo-v2-kpi-sin-tx">
+                <span
+                    class="fo-v2-kpi-icon"
+                    data-fo-icon="kpiSinTx"
+                    aria-hidden="true">
+                    !
+                </span>
+
 
                 <span class="kpi-title">
                     SIN TRANSMISIÓN
@@ -337,7 +393,14 @@
             </article>
 
 
-            <article class="kpi-card kpi-porcentaje">
+            <article class="kpi-card kpi-porcentaje fo-v2-kpi fo-v2-kpi-porcentaje">
+                <span
+                    class="fo-v2-kpi-icon"
+                    data-fo-icon="kpiPorcentaje"
+                    aria-hidden="true">
+                    %
+                </span>
+
 
                 <span class="kpi-title">
                     % OPERATIVA
@@ -475,8 +538,6 @@
 
             </div>
 
-            </div>
-
         </section>
 
 <section
@@ -493,7 +554,7 @@
 
                     <p>
                         Cada unidad se analiza por separado:
-                        flota, terminales y per?odos.
+                        flota, terminales y períodos.
                     </p>
 
                 </div>
@@ -508,7 +569,15 @@
                 <!-- U8 / ALFA                                        -->
                 <!-- ================================================= -->
 
-                <article
+                
+            <!-- ================================================= -->
+            <!-- FUENTES DE DATOS - FLOTA OPERATIVA                -->
+            <!-- ================================================= -->
+
+            
+
+
+<article
                     class="unidad-operacion-card unidad-u8">
 
                     <div class="unidad-operacion-header">
@@ -567,6 +636,77 @@
                         id="matrizUnidadU8"
                         class="unidad-matriz-scroll">
                     </div>
+
+                    <!-- ============================================= -->
+                    <!-- SALIDAS COMERCIALES R1.6 - U8                 -->
+                    <!-- ============================================= -->
+
+                    <section
+                        id="comercialR16UnidadU8"
+                        class="comercial-r16">
+
+                        <div class="comercial-r16-header">
+
+                            <div>
+                                <div class="unidad-subtitulo">
+                                    Salidas Comerciales R1.6
+                                </div>
+
+                                <small>
+                                    Histórico diario por terminal y período
+                                </small>
+                            </div>
+
+                            <div class="comercial-r16-controles">
+
+                                <input
+                                    type="date"
+                                    id="comercialR16FechaU8"
+                                    class="comercial-r16-fecha"
+                                    aria-label="Fecha reporte comercial U8">
+
+                                <select
+                                    id="comercialR16GranularidadU8"
+                                    aria-label="Granularidad U8">
+
+                                    <option value="30MIN">
+                                        30 minutos
+                                    </option>
+
+                                    <option value="1H">
+                                        1 hora
+                                    </option>
+
+                                </select>
+
+                                
+
+                            </div>
+
+                        </div>
+
+                        <div
+                            id="comercialR16EstadoU8"
+                            class="comercial-r16-estado">
+                            Seleccione una fecha para consultar el histórico.
+                        </div>
+
+                        <div
+                            id="comercialR16ResumenU8"
+                            class="comercial-r16-resumen">
+                        </div>
+
+                        <div
+                            id="comercialR16MatrizU8"
+                            class="comercial-r16-matriz unidad-matriz-scroll">
+                        </div>
+
+                        <div
+                            id="comercialR16DetalleU8"
+                            class="comercial-r16-detalle">
+                        </div>
+
+                    </section>
 
                 </article>
 
@@ -634,12 +774,149 @@
                         class="unidad-matriz-scroll">
                     </div>
 
+                    <!-- ============================================= -->
+                    <!-- SALIDAS COMERCIALES R1.6 - U9                 -->
+                    <!-- ============================================= -->
+
+                    <section
+                        id="comercialR16UnidadU9"
+                        class="comercial-r16">
+
+                        <div class="comercial-r16-header">
+
+                            <div>
+                                <div class="unidad-subtitulo">
+                                    Salidas Comerciales R1.6
+                                </div>
+
+                                <small>
+                                    Histórico diario por terminal y período
+                                </small>
+                            </div>
+
+                            <div class="comercial-r16-controles">
+
+                                <input
+                                    type="date"
+                                    id="comercialR16FechaU9"
+                                    class="comercial-r16-fecha"
+                                    aria-label="Fecha reporte comercial U9">
+
+                                <select
+                                    id="comercialR16GranularidadU9"
+                                    aria-label="Granularidad U9">
+
+                                    <option value="30MIN">
+                                        30 minutos
+                                    </option>
+
+                                    <option value="1H">
+                                        1 hora
+                                    </option>
+
+                                </select>
+
+                                
+
+                            </div>
+
+                        </div>
+
+                        <div
+                            id="comercialR16EstadoU9"
+                            class="comercial-r16-estado">
+                            Seleccione una fecha para consultar el histórico.
+                        </div>
+
+                        <div
+                            id="comercialR16ResumenU9"
+                            class="comercial-r16-resumen">
+                        </div>
+
+                        <div
+                            id="comercialR16MatrizU9"
+                            class="comercial-r16-matriz unidad-matriz-scroll">
+                        </div>
+
+                        <div
+                            id="comercialR16DetalleU9"
+                            class="comercial-r16-detalle">
+                        </div>
+
+                    </section>
+
                 </article>
 
 
             </div>
 
         </section>
+
+        <!-- ========================================================= -->
+        <!-- FUENTES DE DATOS - REUBICADO PASO 21B.2                  -->
+        <!-- ========================================================= -->
+
+<section
+                id="fuentesDatosFlota"
+                class="fuentes-flota">
+
+                <div class="fuentes-flota-titulo">
+                    FUENTES DE DATOS
+                </div>
+
+                <div class="fuentes-flota-grid">
+
+                    <div class="fuente-flota-card fuente-r16">
+                        <div class="fuente-flota-cabecera">
+                            <strong>R1.6 HISTÓRICO</strong>
+                            <span class="fuente-estado fuente-estado-ok">
+                                FUENTE ACTIVA
+                            </span>
+                        </div>
+
+                        <div class="fuente-flota-descripcion">
+                            Salidas comerciales y presencia PPU por terminal y período
+                        </div>
+
+                        <div class="fuente-flota-pie">
+                            Histórico persistido en base de datos
+                        </div>
+                    </div>
+
+                    <div class="fuente-flota-card">
+                        <strong>PERFIL OPERACIONAL</strong>
+                        <div class="fuente-flota-descripcion">
+                            perfil_operacional.xlsx
+                        </div>
+                        <div class="fuente-flota-pie">
+                            Perfil requerido por terminal y período
+                        </div>
+                    </div>
+
+                    <div class="fuente-flota-card">
+                        <strong>ASIGNACIÓN DE FLOTA</strong>
+                        <div class="fuente-flota-descripcion">
+                            PPU → Terminal
+                        </div>
+                        <div class="fuente-flota-pie">
+                            Distribución vigente de buses por terminal
+                        </div>
+                    </div>
+
+                    <div class="fuente-flota-card">
+                        <strong>R1.6</strong>
+                        <div class="fuente-flota-descripcion">
+                            Presencia de PPU asociada a servicio
+                        </div>
+                        <div class="fuente-flota-pie">
+                            Fuente complementaria de operación comercial
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
 
 
 
@@ -658,6 +935,53 @@
 <!-- ========================================================= -->
         <!-- APOYO OPERACIONAL                                         -->
         <!-- ========================================================= -->
+
+        <!-- ========================================================= -->
+        <!-- DETECTOR PPU NO RECONOCIDA                               -->
+        <!-- ========================================================= -->
+
+        <section
+            id="alertasPpuPanel"
+            class="panel alertas-ppu-panel">
+
+            <div class="alertas-ppu-header">
+
+                <div>
+                    <h2>
+                        Control de PPU no reconocidas
+                    </h2>
+
+                    <p>
+                        Detección desde operación R1.6 para revisión
+                        de posibles apoyos externos o nuevas PPU.
+                    </p>
+                </div>
+
+                <span
+                    id="alertasPpuEstado"
+                    class="alertas-ppu-estado">
+                    SIN ALERTAS
+                </span>
+
+            </div>
+
+            <div
+                id="alertasPpuContenido"
+                class="alertas-ppu-contenido">
+
+                <div class="alertas-ppu-vacio">
+                    Sin PPU no reconocidas pendientes de validación.
+                </div>
+
+            </div>
+
+            <div class="alertas-ppu-pie">
+                Las PPU pendientes o externas se muestran
+                separadamente y no incrementan la Flota Operativa propia.
+            </div>
+
+        </section>
+
 
         <section class="panel support-panel">
 
@@ -1016,6 +1340,45 @@
 
 
 <script src="/js/flota_operativa.js?v=20260911_r8f2"></script>
+
+
+
+        <span
+            id="countTerminal"
+            hidden>
+            0 terminales
+        </span>
+<script id="swavTopV2Bridge">
+(function () {
+    function sincronizarTopV2() {
+        const origen = document.getElementById("horaConsulta");
+        const destino = document.getElementById("topV2HoraConsulta");
+
+        if (origen && destino) {
+            destino.textContent = origen.textContent || "--:--:--";
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        sincronizarTopV2();
+
+        const origen = document.getElementById("horaConsulta");
+
+        if (origen && window.MutationObserver) {
+            const observer = new MutationObserver(sincronizarTopV2);
+
+            observer.observe(
+                origen,
+                {
+                    childList: true,
+                    characterData: true,
+                    subtree: true
+                }
+            );
+        }
+    });
+})();
+</script>
 
 </body>
 </html>

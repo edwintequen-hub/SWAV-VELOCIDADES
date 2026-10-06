@@ -1086,3 +1086,699 @@ html body main.main-content {
     padding-right: 24px !important;
 }
 
+
+/* =====================================================================
+   R12 - DASHBOARD ALTO RELIEVE
+   Solo presentacion.
+   NO modifica datos, calculos, API ni JavaScript.
+   ===================================================================== */
+
+
+/* ---------------------------------------------------------------------
+   TARJETAS SUPERIORES / INFORMACION
+   --------------------------------------------------------------------- */
+
+.info-card {
+    border: 1px solid rgba(150, 168, 188, .30) !important;
+    border-radius: 13px !important;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #f7f9fc 55%,
+            #edf2f7 100%
+        ) !important;
+
+    box-shadow:
+        0 7px 15px rgba(24, 48, 76, .13),
+        0 2px 4px rgba(24, 48, 76, .08),
+        inset 0 1px 0 rgba(255,255,255,.98),
+        inset 0 -1px 0 rgba(115,140,165,.10)
+        !important;
+
+    transition:
+        transform .16s ease,
+        box-shadow .16s ease
+        !important;
+}
+
+.info-card:hover {
+    transform: translateY(-2px) !important;
+
+    box-shadow:
+        0 10px 20px rgba(24,48,76,.17),
+        0 3px 6px rgba(24,48,76,.10),
+        inset 0 1px 0 rgba(255,255,255,1)
+        !important;
+}
+
+
+/* ---------------------------------------------------------------------
+   KPI PRINCIPALES
+   --------------------------------------------------------------------- */
+
+.eventos-kpi-grid .kpi-card {
+    border-radius: 15px !important;
+
+    border:
+        1px solid
+        rgba(137,157,179,.28)
+        !important;
+
+    box-shadow:
+        0 8px 18px rgba(20,46,76,.16),
+        0 2px 5px rgba(20,46,76,.08),
+        inset 0 1px 0 rgba(255,255,255,.88),
+        inset 0 -2px 3px rgba(28,55,85,.06)
+        !important;
+
+    transition:
+        transform .16s ease,
+        box-shadow .16s ease
+        !important;
+}
+
+.eventos-kpi-grid .kpi-card:hover {
+    transform:
+        translateY(-3px)
+        scale(1.008)
+        !important;
+
+    box-shadow:
+        0 12px 24px rgba(20,46,76,.20),
+        0 3px 7px rgba(20,46,76,.10),
+        inset 0 1px 0 rgba(255,255,255,.92)
+        !important;
+}
+
+
+/* ICONOS KPI */
+
+.eventos-kpi-grid .kpi-icon {
+    border-radius: 13px !important;
+
+    box-shadow:
+        0 5px 10px rgba(17,42,71,.18),
+        inset 0 1px 1px rgba(255,255,255,.40),
+        inset 0 -2px 3px rgba(0,0,0,.08)
+        !important;
+}
+
+
+/* NUMEROS KPI */
+
+.eventos-kpi-grid .kpi-body strong,
+.eventos-kpi-grid .kpi-body h2 {
+    text-shadow:
+        0 1px 0 rgba(255,255,255,.85)
+        !important;
+}
+
+
+/* ---------------------------------------------------------------------
+   PANEL EVENTOS PRIORITARIOS
+   --------------------------------------------------------------------- */
+
+.panel-eventos-prioritarios {
+    border-radius: 16px !important;
+
+    border:
+        1px solid
+        rgba(137,157,179,.27)
+        !important;
+
+    background: #ffffff !important;
+
+    box-shadow:
+        0 9px 21px rgba(20,46,76,.14),
+        0 2px 5px rgba(20,46,76,.07),
+        inset 0 1px 0 rgba(255,255,255,.95)
+        !important;
+
+    overflow: hidden !important;
+}
+
+
+/* TITULO PANEL */
+
+.panel-eventos-prioritarios > .panel-title {
+    box-shadow:
+        inset 0 -1px 0 rgba(115,140,165,.15),
+        0 3px 7px rgba(20,46,76,.07)
+        !important;
+}
+
+
+/* ---------------------------------------------------------------------
+   TARJETAS RESUMEN PRIORITARIOS
+   --------------------------------------------------------------------- */
+
+.prioritario-resumen-card {
+    border-radius: 13px !important;
+
+    border:
+        1px solid
+        rgba(137,157,179,.25)
+        !important;
+
+    box-shadow:
+        0 6px 13px rgba(20,46,76,.13),
+        inset 0 1px 0 rgba(255,255,255,.90),
+        inset 0 -2px 3px rgba(30,55,82,.05)
+        !important;
+
+    transition:
+        transform .15s ease,
+        box-shadow .15s ease
+        !important;
+}
+
+.prioritario-resumen-card:hover {
+    transform: translateY(-2px) !important;
+
+    box-shadow:
+        0 9px 17px rgba(20,46,76,.17),
+        inset 0 1px 0 rgba(255,255,255,.95)
+        !important;
+}
+
+.prioritario-resumen-icon {
+    box-shadow:
+        0 4px 9px rgba(20,46,76,.16),
+        inset 0 1px 1px rgba(255,255,255,.38)
+        !important;
+}
+
+
+/* ---------------------------------------------------------------------
+   TABLA EVENTOS
+   --------------------------------------------------------------------- */
+
+.prioritarios-table-wrapper {
+    border-radius: 12px !important;
+
+    border:
+        1px solid
+        rgba(142,162,184,.25)
+        !important;
+
+    box-shadow:
+        inset 0 2px 4px rgba(25,50,78,.05),
+        0 5px 12px rgba(20,46,76,.08)
+        !important;
+
+    overflow: hidden !important;
+}
+
+.prioritarios-table thead th {
+    box-shadow:
+        inset 0 -1px 0 rgba(84,111,139,.18),
+        0 2px 4px rgba(20,46,76,.06)
+        !important;
+}
+
+
+/* ---------------------------------------------------------------------
+   GRAFICOS
+   --------------------------------------------------------------------- */
+
+.grafico-card {
+    border-radius: 16px !important;
+
+    border:
+        1px solid
+        rgba(137,157,179,.28)
+        !important;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #fbfcfe 65%,
+            #f3f6fa 100%
+        ) !important;
+
+    box-shadow:
+        0 9px 20px rgba(20,46,76,.14),
+        0 2px 5px rgba(20,46,76,.07),
+        inset 0 1px 0 rgba(255,255,255,.98)
+        !important;
+
+    transition:
+        transform .16s ease,
+        box-shadow .16s ease
+        !important;
+}
+
+.grafico-card:hover {
+    transform: translateY(-2px) !important;
+
+    box-shadow:
+        0 12px 24px rgba(20,46,76,.17),
+        0 3px 6px rgba(20,46,76,.08),
+        inset 0 1px 0 rgba(255,255,255,1)
+        !important;
+}
+
+.grafico-card-header {
+    border-radius:
+        15px 15px 0 0
+        !important;
+
+    box-shadow:
+        inset 0 -1px 0 rgba(120,145,170,.12)
+        !important;
+}
+
+
+/* ---------------------------------------------------------------------
+   AUDITORIA
+   --------------------------------------------------------------------- */
+
+.audit-card {
+    border-radius: 13px !important;
+
+    border:
+        1px solid
+        rgba(137,157,179,.27)
+        !important;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff,
+            #f3f6fa
+        ) !important;
+
+    box-shadow:
+        0 6px 14px rgba(20,46,76,.13),
+        inset 0 1px 0 rgba(255,255,255,.95),
+        inset 0 -2px 3px rgba(20,46,76,.04)
+        !important;
+
+    transition:
+        transform .15s ease,
+        box-shadow .15s ease
+        !important;
+}
+
+.audit-card:hover {
+    transform: translateY(-2px) !important;
+
+    box-shadow:
+        0 9px 18px rgba(20,46,76,.17),
+        inset 0 1px 0 rgba(255,255,255,1)
+        !important;
+}
+
+
+/* ---------------------------------------------------------------------
+   PANELES GENERALES
+   --------------------------------------------------------------------- */
+
+main.main-content .panel:not(.panel-eventos-prioritarios) {
+    border-radius: 15px !important;
+
+    border:
+        1px solid
+        rgba(137,157,179,.25)
+        !important;
+
+    box-shadow:
+        0 8px 18px rgba(20,46,76,.12),
+        0 2px 4px rgba(20,46,76,.06),
+        inset 0 1px 0 rgba(255,255,255,.95)
+        !important;
+}
+
+
+/* ---------------------------------------------------------------------
+   BOTONES
+   --------------------------------------------------------------------- */
+
+.main-content .btn,
+.main-content button.r16-action {
+    box-shadow:
+        0 4px 9px rgba(20,46,76,.16),
+        inset 0 1px 1px rgba(255,255,255,.30),
+        inset 0 -2px 3px rgba(0,0,0,.07)
+        !important;
+
+    transition:
+        transform .14s ease,
+        box-shadow .14s ease
+        !important;
+}
+
+.main-content .btn:hover,
+.main-content button.r16-action:hover {
+    transform: translateY(-1px) !important;
+
+    box-shadow:
+        0 7px 13px rgba(20,46,76,.20),
+        inset 0 1px 1px rgba(255,255,255,.35)
+        !important;
+}
+
+.main-content .btn:active,
+.main-content button.r16-action:active {
+    transform: translateY(1px) !important;
+
+    box-shadow:
+        inset 0 2px 5px rgba(15,38,64,.16),
+        0 1px 2px rgba(20,46,76,.10)
+        !important;
+}
+
+
+/* ---------------------------------------------------------------------
+   RESPONSIVE
+   --------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+
+    .info-card,
+    .eventos-kpi-grid .kpi-card,
+    .prioritario-resumen-card,
+    .grafico-card,
+    .audit-card {
+        box-shadow:
+            0 5px 12px rgba(20,46,76,.12),
+            inset 0 1px 0 rgba(255,255,255,.95)
+            !important;
+    }
+}
+
+
+/* =====================================================================
+   R12A - DASHBOARD / TARJETAS ALTO RELIEVE
+   REFERENCIA VISUAL: FLOTA OPERATIVA
+   SOLO PRESENTACION
+   ===================================================================== */
+
+
+/* =========================================================
+   TARJETAS DE INFORMACION SUPERIOR
+   ========================================================= */
+
+.info-card {
+    position: relative !important;
+    overflow: hidden !important;
+
+    border:
+        1px solid rgba(160, 181, 202, .42)
+        !important;
+
+    border-radius:
+        15px
+        !important;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #fbfdff 46%,
+            #eef4f9 100%
+        )
+        !important;
+
+    box-shadow:
+        0 7px 15px rgba(26, 54, 83, .15),
+        0 2px 4px rgba(26, 54, 83, .08),
+        inset 0 2px 1px rgba(255,255,255,.98),
+        inset 0 -2px 3px rgba(63,94,124,.07)
+        !important;
+
+    transition:
+        transform .16s ease,
+        box-shadow .16s ease
+        !important;
+}
+
+
+.info-card::before {
+    content: "" !important;
+
+    position: absolute !important;
+
+    top: 0 !important;
+    left: 10px !important;
+    right: 10px !important;
+
+    height: 2px !important;
+
+    border-radius: 999px !important;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255,255,255,.98),
+            transparent
+        )
+        !important;
+
+    pointer-events: none !important;
+}
+
+
+.info-card:hover {
+    transform:
+        translateY(-2px)
+        !important;
+
+    box-shadow:
+        0 11px 21px rgba(26,54,83,.19),
+        0 3px 6px rgba(26,54,83,.10),
+        inset 0 2px 1px rgba(255,255,255,1),
+        inset 0 -2px 3px rgba(63,94,124,.07)
+        !important;
+}
+
+
+/* ETIQUETA */
+
+.info-card .label {
+    font-weight:
+        700
+        !important;
+
+    letter-spacing:
+        .02em
+        !important;
+}
+
+
+/* VALOR PRINCIPAL */
+
+.info-card .value {
+    font-weight:
+        800
+        !important;
+
+    text-shadow:
+        0 1px 0 rgba(255,255,255,.95)
+        !important;
+}
+
+
+/* =========================================================
+   KPI IP / IE / EVENTOS
+   ========================================================= */
+
+.eventos-kpi-grid .kpi-card {
+    position: relative !important;
+    overflow: hidden !important;
+
+    border:
+        1px solid rgba(154,176,199,.40)
+        !important;
+
+    border-radius:
+        16px
+        !important;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.98) 0%,
+            rgba(249,252,255,.98) 52%,
+            rgba(237,244,250,.98) 100%
+        )
+        !important;
+
+    box-shadow:
+        0 8px 17px rgba(21,50,80,.16),
+        0 2px 5px rgba(21,50,80,.08),
+        inset 0 2px 1px rgba(255,255,255,.98),
+        inset 0 -2px 4px rgba(38,70,101,.07)
+        !important;
+
+    transition:
+        transform .16s ease,
+        box-shadow .16s ease
+        !important;
+}
+
+
+.eventos-kpi-grid .kpi-card::before {
+    content: "" !important;
+
+    position: absolute !important;
+
+    top: 0 !important;
+    left: 12px !important;
+    right: 12px !important;
+
+    height: 2px !important;
+
+    border-radius: 999px !important;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255,255,255,1),
+            transparent
+        )
+        !important;
+
+    pointer-events: none !important;
+}
+
+
+.eventos-kpi-grid .kpi-card:hover {
+    transform:
+        translateY(-3px)
+        !important;
+
+    box-shadow:
+        0 13px 25px rgba(21,50,80,.20),
+        0 4px 7px rgba(21,50,80,.10),
+        inset 0 2px 1px rgba(255,255,255,1)
+        !important;
+}
+
+
+/* =========================================================
+   ICONOS KPI EN RELIEVE
+   ========================================================= */
+
+.eventos-kpi-grid .kpi-icon {
+    border:
+        1px solid rgba(255,255,255,.55)
+        !important;
+
+    border-radius:
+        14px
+        !important;
+
+    box-shadow:
+        0 6px 12px rgba(18,46,76,.20),
+        inset 0 2px 2px rgba(255,255,255,.45),
+        inset 0 -3px 4px rgba(0,0,0,.09)
+        !important;
+
+    text-shadow:
+        0 2px 3px rgba(0,0,0,.12)
+        !important;
+}
+
+
+/* =========================================================
+   CONTENIDO KPI
+   ========================================================= */
+
+.eventos-kpi-grid .kpi-body {
+    position:
+        relative
+        !important;
+
+    z-index:
+        1
+        !important;
+}
+
+
+.eventos-kpi-grid .kpi-body span {
+    font-weight:
+        700
+        !important;
+}
+
+
+.eventos-kpi-grid .kpi-body strong,
+.eventos-kpi-grid .kpi-body h2 {
+    font-weight:
+        800
+        !important;
+
+    text-shadow:
+        0 1px 0 rgba(255,255,255,.95)
+        !important;
+}
+
+
+/* =========================================================
+   BOTONES R1.6
+   ========================================================= */
+
+.main-content button.r16-action {
+    border-radius:
+        12px
+        !important;
+
+    box-shadow:
+        0 5px 11px rgba(20,47,76,.17),
+        inset 0 2px 1px rgba(255,255,255,.30),
+        inset 0 -2px 3px rgba(0,0,0,.08)
+        !important;
+
+    transition:
+        transform .14s ease,
+        box-shadow .14s ease
+        !important;
+}
+
+
+.main-content button.r16-action:hover {
+    transform:
+        translateY(-2px)
+        !important;
+
+    box-shadow:
+        0 8px 15px rgba(20,47,76,.21),
+        inset 0 2px 1px rgba(255,255,255,.35)
+        !important;
+}
+
+
+.main-content button.r16-action:active {
+    transform:
+        translateY(1px)
+        !important;
+
+    box-shadow:
+        inset 0 3px 6px rgba(10,35,62,.18),
+        0 1px 2px rgba(20,47,76,.10)
+        !important;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .info-card,
+    .eventos-kpi-grid .kpi-card {
+
+        box-shadow:
+            0 5px 12px rgba(21,50,80,.14),
+            inset 0 1px 0 rgba(255,255,255,.96)
+            !important;
+    }
+}
+

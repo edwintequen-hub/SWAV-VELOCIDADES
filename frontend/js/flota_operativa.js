@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
 
     "use strict";
 
@@ -380,8 +380,13 @@
             estado;
 
 
-        $("btnExportar").disabled =
-            estado;
+        const btnExportar =
+            $("btnExportar");
+
+        if (btnExportar) {
+            btnExportar.disabled =
+                estado;
+        }
     }
 
 
@@ -389,7 +394,286 @@
     // CONSULTA
     // ================================================================
 
+
+    // ================================================================
+    // MATRICES FLOTA U8/U9 PARA VISTA GENERAL
+    // ================================================================
+
+    async function completarMatricesFlota(
+        datos
+    ) {
+
+        const unidadSeleccionada =
+            String(
+                $("unidad").value
+                ||
+                ""
+            )
+                .trim()
+                .toUpperCase();
+
+        // Si existe filtro de unidad, la respuesta principal
+        // ya contiene la matriz individual certificada.
+        if (unidadSeleccionada) {
+            return datos;
+        }
+
+        const matricesFlota = {};
+
+        await Promise.all(
+            ["U8", "U9"].map(
+                async unidadMatriz => {
+
+                    const paramsUnidad =
+                        queryParams({
+                            unidad:
+                                unidadMatriz
+                        });
+
+                    const respuestaUnidad =
+                        await fetch(
+                            (
+                                "/api/flota-operativa/consulta?"
+                                +
+                                paramsUnidad.toString()
+                                +
+                                "&_ts="
+                                +
+                                Date.now()
+                            ),
+                            {
+                                cache:
+                                    "no-store"
+                            }
+                        );
+
+                    if (!respuestaUnidad.ok) {
+                        throw new Error(
+                            "No fue posible cargar matriz "
+                            +
+                            unidadMatriz
+                        );
+                    }
+
+                    const datosUnidad =
+                        await respuestaUnidad.json();
+
+                    const matrizUnidad =
+                        datosUnidad.matriz_flota
+                        ||
+                        null;
+
+                    if (
+                        matrizUnidad
+                        &&
+                        String(
+                            matrizUnidad.unidad
+                            ||
+                            ""
+                        )
+                            .trim()
+                            .toUpperCase()
+                        ===
+                        unidadMatriz
+                    ) {
+                        matricesFlota[
+                            unidadMatriz
+                        ] =
+                            matrizUnidad;
+                    }
+                }
+            )
+        );
+
+        datos.matrices_flota =
+            matricesFlota;
+
+        return datos;
+    }
+
+    // ================================================================
+    // R22-FRONTEND-ESTADO-AUTOMATICO
+    // Estado informativo del scheduler.
+    // No ejecuta descargas.
+    // ================================================================
+
+    function formatearHoraR22(valor) {
+
+        if (!valor) {
+            return "--";
+        }
+
+        const texto = String(valor);
+
+        const coincidencia =
+            texto.match(
+                /(\d{2}):(\d{2}):(\d{2})/
+            );
+
+        if (!coincidencia) {
+            return texto;
+        }
+
+        return (
+            coincidencia[1]
+            + ":"
+            + coincidencia[2]
+            + ":"
+            + coincidencia[3]
+        );
+    }
+
+
+    async function actualizarEstadoR22() {
+
+        try {
+
+            const respuesta =
+                await fetch(
+                    "/api/flota-operativa/r22/estado",
+                    {
+                        cache: "no-store"
+                    }
+                );
+
+            if (!respuesta.ok) {
+                throw new Error(
+                    `HTTP ${respuesta.status}`
+                );
+            }
+
+            const estado =
+                await respuesta.json();
+
+            const frecuencia =
+                $("r22Frecuencia");
+
+            const ultima =
+                $("r22UltimaDescarga");
+
+            const proxima =
+                $("r22ProximaDescarga");
+
+            const estadoU8 =
+                $("r22EstadoU8");
+
+            const estadoU9 =
+                $("r22EstadoU9");
+
+            const badge =
+                $("r22EstadoBadge");
+
+
+            if (frecuencia) {
+                frecuencia.textContent =
+                    estado.intervalo_minutos
+                        ? `cada ${estado.intervalo_minutos} min`
+                        : "--";
+            }
+
+
+            if (ultima) {
+                ultima.textContent =
+                    formatearHoraR22(
+                        estado.ultima_ejecucion
+                    );
+            }
+
+
+            if (proxima) {
+                proxima.textContent =
+                    formatearHoraR22(
+                        estado.proxima_ejecucion
+                    );
+            }
+
+
+            const resultados =
+                estado.resultados || {};
+
+
+            if (estadoU8) {
+                estadoU8.textContent =
+                    resultados.U8?.estado
+                    || "--";
+            }
+
+
+            if (estadoU9) {
+                estadoU9.textContent =
+                    resultados.U9?.estado
+                    || "--";
+            }
+
+
+            if (badge) {
+
+                badge.classList.remove(
+                    "fuente-estado-ok",
+                    "fuente-estado-error",
+                    "fuente-estado-espera"
+                );
+
+                if (
+                    estado.activo
+                    &&
+                    !estado.ultimo_error
+                ) {
+
+                    badge.textContent =
+                        estado.ejecutando
+                            ? "ACTUALIZANDO"
+                            : "AUTOMÁTICO ACTIVO";
+
+                    badge.classList.add(
+                        "fuente-estado-ok"
+                    );
+
+                }
+                else {
+
+                    badge.textContent =
+                        "REVISAR";
+
+                    badge.classList.add(
+                        "fuente-estado-error"
+                    );
+                }
+            }
+
+        }
+        catch (error) {
+
+            console.error(
+                "Estado R2.2:",
+                error
+            );
+
+            const badge =
+                $("r22EstadoBadge");
+
+            if (badge) {
+
+                badge.textContent =
+                    "SIN CONEXIÓN";
+
+                badge.classList.remove(
+                    "fuente-estado-ok",
+                    "fuente-estado-espera"
+                );
+
+                badge.classList.add(
+                    "fuente-estado-error"
+                );
+            }
+        }
+    }
+
+
     async function consultar() {
+
+        // R2.2 retirado del flujo activo.
+        // Su codigo/backend se conserva como respaldo.
 
         const periodoInicial =
             Number(
@@ -445,6 +729,11 @@
                     "Error al consultar Flota Operativa."
                 );
             }
+
+
+            await completarMatricesFlota(
+                datos
+            );
 
 
             datosActuales =
@@ -515,6 +804,24 @@
         renderVistaOperacionPorUnidad(
             datos
         );
+
+        try {
+
+            renderAlertasPpu(
+                datos.alertas_ppu
+                ||
+                {}
+            );
+
+        } catch (errorAlertasPpu) {
+
+            console.error(
+                "ERROR RENDER ALERTAS PPU:",
+                errorAlertasPpu
+            );
+        }
+
+
 
         // ============================================================
         // R8D2
@@ -1671,7 +1978,743 @@
             "U9",
             datos
         );
+
+        // Reporte operacional independiente.
+        // No modifica la matriz de Flota/R2.2.
+        cargarComercialR16Unidad(
+            "U8"
+        );
+
+        cargarComercialR16Unidad(
+            "U9"
+        );
     }
+
+
+
+    // ================================================================
+    // COMERCIAL-R16-HISTORICO-FRONTEND
+    // Salidas comerciales desde historico persistido en BD.
+    // Independiente de la matriz Flota/R2.2.
+    // ================================================================
+
+    const comercialR16Estado = {
+        U8: {
+            cargando: false,
+            clave: "",
+            fechas: null,
+            ultimaFecha: ""
+        },
+        U9: {
+            cargando: false,
+            clave: "",
+            fechas: null,
+            ultimaFecha: ""
+        }
+    };
+
+
+    // SWAV-19C4H-FECHA-COMERCIAL
+    function fechaComercialR16Seleccionada(
+        unidad
+    ) {
+        const control =
+            $(`comercialR16Fecha${unidad}`);
+
+        const fecha =
+            control
+                ? control.value
+                : "";
+
+        if (!fecha) {
+            return {
+                fecha: "",
+                error:
+                    "Seleccione una fecha del histórico R1.6."
+            };
+        }
+
+        return {
+            fecha,
+            error: ""
+        };
+    }
+
+
+    async function obtenerFechasComercialR16(
+        unidad,
+        forzar = false
+    ) {
+        const estadoUnidad =
+            comercialR16Estado[
+                unidad
+            ];
+
+        if (
+            !forzar
+            &&
+            estadoUnidad.fechas
+            instanceof Set
+        ) {
+            return estadoUnidad;
+        }
+
+        const params =
+            new URLSearchParams({
+                unidad:
+                    unidad
+            });
+
+        const respuesta =
+            await fetch(
+                `/api/flota-operativa/comercial-r16/fechas?${params.toString()}`
+            );
+
+        const datos =
+            await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(
+                datos.detail
+                ||
+                "No fue posible consultar las fechas históricas R1.6."
+            );
+        }
+
+        const fechas =
+            Array.isArray(
+                datos.fechas
+            )
+                ? datos.fechas
+                    .map(
+                        fila =>
+                            String(
+                                fila.fecha
+                                ||
+                                ""
+                            )
+                    )
+                    .filter(Boolean)
+                : [];
+
+        estadoUnidad.fechas =
+            new Set(
+                fechas
+            );
+
+        estadoUnidad.ultimaFecha =
+            fechas.length
+                ? fechas[0]
+                : "";
+
+        return estadoUnidad;
+    }
+
+
+    function mensajeFechaNoDisponibleComercialR16(
+        unidad,
+        fecha
+    ) {
+        const ultima =
+            comercialR16Estado[
+                unidad
+            ].ultimaFecha;
+
+        return (
+            `Sin histórico R1.6 disponible para ${fecha}.`
+            +
+            (
+                ultima
+                    ? ` Última fecha disponible: ${ultima}.`
+                    : ""
+            )
+        );
+    }
+
+
+    function actualizarBotonExcelComercialR16(
+        unidad,
+        habilitado
+    ) {
+        const boton =
+            $(
+                `btnComercialR16Excel${unidad}`
+            );
+
+        if (!boton) {
+            return;
+        }
+
+        boton.disabled =
+            !habilitado;
+
+        boton.title =
+            habilitado
+                ? "Descargar reporte diario R1.6"
+                : "No existe histórico R1.6 para la fecha seleccionada";
+    }
+
+
+    async function cargarComercialR16Unidad(
+        unidad,
+        forzar = false
+    ) {
+        const estado =
+            $(
+                `comercialR16Estado${unidad}`
+            );
+
+        const resumen =
+            $(
+                `comercialR16Resumen${unidad}`
+            );
+
+        const matriz =
+            $(
+                `comercialR16Matriz${unidad}`
+            );
+
+        if (
+            !estado
+            ||
+            !resumen
+            ||
+            !matriz
+        ) {
+            return;
+        }
+
+        const seleccion =
+            fechaComercialR16Seleccionada(unidad);
+
+        if (seleccion.error) {
+
+            estado.textContent =
+                seleccion.error;
+
+            resumen.innerHTML = "";
+            matriz.innerHTML = "";
+
+            comercialR16Estado[
+                unidad
+            ].clave = "";
+
+            return;
+        }
+
+        const selector =
+            $(
+                `comercialR16Granularidad${unidad}`
+            );
+
+        const granularidad =
+            selector
+                ? selector.value
+                : "30MIN";
+
+        const clave =
+            `${seleccion.fecha}|${granularidad}`;
+
+        if (
+            !forzar
+            &&
+            comercialR16Estado[
+                unidad
+            ].clave === clave
+        ) {
+            return;
+        }
+
+        if (
+            comercialR16Estado[
+                unidad
+            ].cargando
+        ) {
+            return;
+        }
+
+        comercialR16Estado[
+            unidad
+        ].cargando = true;
+
+        estado.textContent =
+            "Validando fecha hist?rica R1.6...";
+
+        resumen.innerHTML = "";
+        matriz.innerHTML = "";
+
+        actualizarBotonExcelComercialR16(
+            unidad,
+            false
+        );
+
+        try {
+
+            const fechasDisponibles =
+                await obtenerFechasComercialR16(
+                    unidad
+                );
+
+            if (
+                !fechasDisponibles.fechas.has(
+                    seleccion.fecha
+                )
+            ) {
+                const mensaje =
+                    mensajeFechaNoDisponibleComercialR16(
+                        unidad,
+                        seleccion.fecha
+                    );
+
+                estado.textContent =
+                    mensaje;
+
+                resumen.innerHTML = "";
+
+                matriz.innerHTML = `
+                    <div class="empty-cell">
+                        ${escapeHtml(
+                            mensaje
+                        )}
+                    </div>
+                `;
+
+                comercialR16Estado[
+                    unidad
+                ].clave = "";
+
+                return;
+            }
+
+            estado.textContent =
+                "Cargando histórico comercial R1.6...";
+
+            actualizarBotonExcelComercialR16(
+                unidad,
+                true
+            );
+
+            const params =
+                new URLSearchParams({
+                    fecha:
+                        seleccion.fecha,
+                    unidad:
+                        unidad,
+                    granularidad:
+                        granularidad
+                });
+
+            const respuesta =
+                await fetch(
+                    `/api/flota-operativa/comercial-r16/reporte?${params.toString()}`
+                );
+
+            const datos =
+                await respuesta.json();
+
+            if (!respuesta.ok) {
+                throw new Error(
+                    datos.detail
+                    ||
+                    "No fue posible cargar el reporte comercial R1.6."
+                );
+            }
+
+            comercialR16Estado[
+                unidad
+            ].clave = clave;
+
+            estado.innerHTML = `
+                <strong>
+                    ${escapeHtml(
+                        unidad
+                    )}
+                    ?
+                    ${escapeHtml(
+                        seleccion.fecha
+                    )}
+                    ?
+                    ${escapeHtml(
+                        granularidad
+                    )}
+                </strong>
+
+                <span>
+                    ${textoCoberturaComercialR16(
+                        datos
+                    )}
+                </span>
+            `;
+
+            renderResumenComercialR16(
+                unidad,
+                datos
+            );
+
+            renderMatrizComercialR16(
+                unidad,
+                datos
+            );
+
+        }
+        catch (error) {
+
+            console.error(
+                "ERROR COMERCIAL R1.6",
+                unidad,
+                error
+            );
+
+            estado.textContent =
+                error.message;
+
+            resumen.innerHTML = "";
+
+            matriz.innerHTML = `
+                <div class="empty-cell">
+                    No fue posible cargar Salidas Comerciales R1.6.
+                </div>
+            `;
+
+            comercialR16Estado[
+                unidad
+            ].clave = "";
+        }
+        finally {
+
+            comercialR16Estado[
+                unidad
+            ].cargando = false;
+        }
+    }
+
+
+    // SWAV-19C4L-DESCARGA-XLSX
+    async function descargarExcelComercialR16(
+        unidad
+    ) {
+        const seleccion =
+            fechaComercialR16Seleccionada(unidad);
+
+        if (seleccion.error) {
+            alert(seleccion.error);
+            return;
+        }
+
+        const boton =
+            $(`btnComercialR16Excel${unidad}`);
+
+        try {
+            const fechasDisponibles =
+                await obtenerFechasComercialR16(
+                    unidad
+                );
+
+            if (
+                !fechasDisponibles.fechas.has(
+                    seleccion.fecha
+                )
+            ) {
+                alert(
+                    mensajeFechaNoDisponibleComercialR16(
+                        unidad,
+                        seleccion.fecha
+                    )
+                );
+
+                actualizarBotonExcelComercialR16(
+                    unidad,
+                    false
+                );
+
+                return;
+            }
+
+            if (boton) {
+                boton.disabled = true;
+                boton.dataset.textoOriginal =
+                    boton.textContent;
+
+                boton.textContent =
+                    "Generando Excel...";
+            }
+
+            const params =
+                new URLSearchParams({
+                    fecha:
+                        seleccion.fecha,
+                    unidad:
+                        unidad
+                });
+
+            const url =
+                `/api/flota-operativa/comercial-r16/exportar-excel?${params.toString()}`;
+
+            console.log(
+                "DESCARGA COMERCIAL R1.6:",
+                url
+            );
+
+            const respuesta =
+                await fetch(
+                    url,
+                    {
+                        method: "GET",
+                        cache: "no-store"
+                    }
+                );
+
+            if (!respuesta.ok) {
+                let detalle = "";
+
+                try {
+                    detalle =
+                        await respuesta.text();
+                }
+                catch (_) {
+                    detalle = "";
+                }
+
+                throw new Error(
+                    `HTTP ${respuesta.status}`
+                    +
+                    (
+                        detalle
+                            ? ` - ${detalle}`
+                            : ""
+                    )
+                );
+            }
+
+            const blob =
+                await respuesta.blob();
+
+            if (!blob || blob.size === 0) {
+                throw new Error(
+                    "El servidor devolvi? un archivo vac?o."
+                );
+            }
+
+            let nombre =
+                `REPORTE_COMERCIAL_R16_${unidad}_${seleccion.fecha}.xlsx`;
+
+            const disposition =
+                respuesta.headers.get(
+                    "Content-Disposition"
+                )
+                ||
+                "";
+
+            const match =
+                disposition.match(
+                    /filename="?([^";]+)"?/i
+                );
+
+            if (
+                match
+                &&
+                match[1]
+            ) {
+                nombre =
+                    match[1].trim();
+            }
+
+            const blobUrl =
+                URL.createObjectURL(
+                    blob
+                );
+
+            const enlace =
+                document.createElement(
+                    "a"
+                );
+
+            enlace.href =
+                blobUrl;
+
+            enlace.download =
+                nombre;
+
+            enlace.style.display =
+                "none";
+
+            document.body.appendChild(
+                enlace
+            );
+
+            enlace.click();
+
+            enlace.remove();
+
+            setTimeout(
+                () => {
+                    URL.revokeObjectURL(
+                        blobUrl
+                    );
+                },
+                1500
+            );
+        }
+        catch (error) {
+            console.error(
+                "ERROR DESCARGANDO EXCEL COMERCIAL R1.6",
+                unidad,
+                error
+            );
+
+            alert(
+                "No fue posible descargar el Excel comercial R1.6.\n\n"
+                +
+                (
+                    error?.message
+                    ||
+                    String(error)
+                )
+            );
+        }
+        finally {
+            if (boton) {
+                boton.disabled = false;
+
+                boton.textContent =
+                    boton.dataset.textoOriginal
+                    ||
+                    "Descargar Excel";
+            }
+        }
+    }
+
+
+    async function prepararFechaComercialR16(
+        unidad
+    ) {
+        const control =
+            $(`comercialR16Fecha${unidad}`);
+
+        if (!control) {
+            return;
+        }
+
+        const disponibles =
+            await obtenerFechasComercialR16(
+                unidad
+            );
+
+        const fechas =
+            disponibles.fechas;
+
+        // SWAV-22C-FECHA-COMERCIAL-INDEPENDIENTE
+        // Este m?dulo usa su propio hist?rico R1.6.
+        // No hereda la fecha del filtro global de Flota.
+        const fechaElegida =
+            disponibles.ultimaFecha
+            ||
+            "";
+
+        if (fechaElegida) {
+            control.value =
+                fechaElegida;
+        }
+
+        if (
+            !control.dataset.comercialR16FechaEvento
+        ) {
+            control.dataset.comercialR16FechaEvento =
+                "1";
+
+            control.addEventListener(
+                "change",
+                () => {
+                    cargarComercialR16Unidad(
+                        unidad,
+                        true
+                    );
+                }
+            );
+        }
+    }
+
+
+    function instalarEventosComercialR16() {
+
+        for (
+            const unidad
+            of ["U8", "U9"]
+        ) {
+            const selector =
+                $(
+                    `comercialR16Granularidad${unidad}`
+                );
+
+            if (
+                selector
+                &&
+                !selector.dataset.comercialR16Evento
+            ) {
+                selector.dataset.comercialR16Evento =
+                    "1";
+
+                selector.addEventListener(
+                    "change",
+                    () => {
+                        cargarComercialR16Unidad(
+                            unidad,
+                            true
+                        );
+                    }
+                );
+            }
+
+            const boton =
+                $(
+                    `btnComercialR16Excel${unidad}`
+                );
+
+            if (
+                boton
+                &&
+                !boton.dataset.comercialR16Evento
+            ) {
+                boton.dataset.comercialR16Evento =
+                    "1";
+
+                boton.addEventListener(
+                    "click",
+                    () => {
+                        descargarExcelComercialR16(
+                            unidad
+                        );
+                    }
+                );
+            }
+        }
+    }
+
+
+    instalarEventosComercialR16();
+
+    Promise.all([
+        prepararFechaComercialR16("U8"),
+        prepararFechaComercialR16("U9")
+    ])
+    .then(() => {
+        cargarComercialR16Unidad(
+            "U8",
+            true
+        );
+
+        cargarComercialR16Unidad(
+            "U9",
+            true
+        );
+    })
+    .catch(error => {
+        console.error(
+            "ERROR PREPARANDO FECHAS COMERCIAL R1.6",
+            error
+        );
+    });
+
 
 
     function renderUnidadOperacion(
@@ -2114,20 +3157,21 @@
         // hasta 15:09 -> P16 visible -> P17-P24 sin cobertura.
         // ============================================================
 
-        const coberturasR16 = Array.isArray(
-            datos.cobertura_fuente
-        )
-            ? datos.cobertura_fuente
-            : (
-                datos.cobertura_fuente
-                    ? [datos.cobertura_fuente]
-                    : []
-            );
+        // ============================================================
+        // R13F-R22 - COBERTURA REAL DE LA MATRIZ DE FLOTA
+        //
+        // Los valores acumulados de esta matriz provienen de R2.2.
+        // Su corte temporal tambien debe provenir de cobertura_r22.
+        //
+        // La cobertura R1.6 permanece intacta para las otras vistas.
+        // ============================================================
 
-        const coberturaUnidad = coberturasR16.find(
-            fila =>
+        const coberturaUnidad =
+            (
+                datos.cobertura_r22
+                &&
                 String(
-                    fila?.unidad
+                    datos.cobertura_r22.unidad
                     ||
                     ""
                 )
@@ -2141,49 +3185,102 @@
                 )
                     .trim()
                     .toUpperCase()
-        );
+            )
+                ? datos.cobertura_r22
+                : null;
 
-        
+
+        const unidadNormalizada =
+            String(
+                unidad
+                ||
+                ""
+            )
+                .trim()
+                .toUpperCase();
+
+        const matrizFlotaIndividual =
+            (
+                datos.matriz_flota
+                &&
+                String(
+                    datos.matriz_flota.unidad
+                    ||
+                    ""
+                )
+                    .trim()
+                    .toUpperCase()
+                ===
+                unidadNormalizada
+            )
+                ? datos.matriz_flota
+                : null;
+
+        const matrizFlotaGeneral =
+            (
+                datos.matrices_flota
+                &&
+                datos.matrices_flota[
+                    unidadNormalizada
+                ]
+            )
+                ||
+                null;
+
+        const matrizFlotaUnidad =
+            matrizFlotaIndividual
+            ||
+            matrizFlotaGeneral;
+
+
         let ultimoPeriodoCobertura = 0;
 
         if (coberturaUnidad) {
 
+            const periodoR22 = Number(
+                coberturaUnidad.ultimo_periodo
+                ||
+                0
+            );
+
             if (
-                coberturaUnidad.dia_completo === true
+                Number.isInteger(periodoR22)
+                &&
+                periodoR22 >= 1
+                &&
+                periodoR22 <= 24
             ) {
 
-                ultimoPeriodoCobertura = 24;
-
-            } else if (
-                coberturaUnidad.hasta
-            ) {
-
-                const matchHora = String(
-                    coberturaUnidad.hasta
-                ).match(
-                    /^(\d{1,2}):(\d{2})/
-                );
-
-                if (matchHora) {
-
-                    const horaCobertura = Number(
-                        matchHora[1]
-                    );
-
-                    if (
-                        Number.isInteger(horaCobertura)
-                        &&
-                        horaCobertura >= 0
-                        &&
-                        horaCobertura <= 23
-                    ) {
-
-                        ultimoPeriodoCobertura =
-                            horaCobertura + 1;
-                    }
-                }
+                ultimoPeriodoCobertura =
+                    periodoR22;
             }
         }
+
+        if (
+            ultimoPeriodoCobertura === 0
+            &&
+            matrizFlotaUnidad
+        ) {
+
+            const periodoMatriz = Number(
+                matrizFlotaUnidad.ultimo_periodo_r22
+                ||
+                0
+            );
+
+            if (
+                Number.isInteger(periodoMatriz)
+                &&
+                periodoMatriz >= 1
+                &&
+                periodoMatriz <= 24
+            ) {
+
+                ultimoPeriodoCobertura =
+                    periodoMatriz;
+            }
+        }
+
 
         const periodoTieneCobertura = (
             periodo
@@ -2216,7 +3313,8 @@
             unidad,
             filasPeriodo,
             ultimoPeriodoCobertura,
-            terminales
+            terminales,
+            matrizFlotaUnidad
         );
     }
 
@@ -2258,7 +3356,7 @@
 
         // R8F:
         // Ver PPU debe mostrar exclusivamente la flota operativa real.
-        // Cerramos cualquier modal de "sin transmisi?n" que pudiera
+        // Cerramos cualquier modal de "sin transmisión" que pudiera
         // estar visible antes de abrir este detalle.
 
         for (const idModal of [
@@ -2811,11 +3909,1410 @@
     }
 
 
+
+    // ================================================================
+    // PRUEBA VISUAL - REAL R1.6 VS PERFIL OPERACIONAL
+    // Primera etapa: visualizacion por hora / 60 minutos
+    // ================================================================
+
+    async function renderMatrizRealVsPerfilUnidad(
+        unidad,
+        filasGlobal
+    ) {
+
+        const sufijo =
+            unidad === "U8"
+                ? "U8"
+                : "U9";
+
+        const contenedor =
+            $(`matrizUnidad${sufijo}`);
+
+        if (!contenedor) {
+            return;
+        }
+
+        const fechaDesde =
+            $("fechaDesde")
+                ? $("fechaDesde").value
+                : "";
+
+        const fechaHasta =
+            $("fechaHasta")
+                ? $("fechaHasta").value
+                : "";
+
+        const fecha =
+            fechaDesde
+            ||
+            fechaHasta;
+
+        if (!fecha) {
+            contenedor.innerHTML = `
+                <div class="empty-cell">
+                    Seleccione una fecha.
+                </div>
+            `;
+            return;
+        }
+
+        if (
+            fechaDesde
+            &&
+            fechaHasta
+            &&
+            fechaDesde !== fechaHasta
+        ) {
+            contenedor.innerHTML = `
+                <div class="empty-cell">
+                    Real vs Perfil requiere un solo día.
+                    Seleccione la misma fecha Desde y Hasta.
+                </div>
+            `;
+            return;
+        }
+
+        contenedor.innerHTML = `
+            <div class="empty-cell">
+                Cargando Real R1.6 vs Perfil...
+            </div>
+        `;
+
+        try {
+
+            const params =
+                new URLSearchParams({
+                    fecha: fecha,
+                    unidad: unidad
+                });
+
+            const respuesta =
+                await fetch(
+                    `/api/flota-operativa/real-vs-perfil?${params.toString()}`
+                );
+
+            if (!respuesta.ok) {
+                throw new Error(
+                    `HTTP ${respuesta.status}`
+                );
+            }
+
+            const datos =
+                await respuesta.json();
+
+            // --------------------------------------------------------
+            // ESTADO VISUAL 60 / 30
+            // --------------------------------------------------------
+
+            const claveModo =
+                `flotaRealPerfilModo_${unidad}`;
+
+            let modo =
+                sessionStorage.getItem(claveModo)
+                ||
+                "60";
+
+            if (
+                modo !== "60"
+                &&
+                modo !== "30"
+            ) {
+                modo = "60";
+            }
+
+            // --------------------------------------------------------
+            // MODAL DETALLE R1.6
+            // --------------------------------------------------------
+
+            const abrirDetalleSalidas = (
+                terminal,
+                etiqueta,
+                salidas
+            ) => {
+
+                const lista =
+                    Array.isArray(salidas)
+                        ? salidas
+                        : [];
+
+                const filasDetalle =
+                    lista
+                        .slice()
+                        .sort(
+                            (a, b) =>
+                                String(
+                                    a.inicio_servicio
+                                    ||
+                                    ""
+                                ).localeCompare(
+                                    String(
+                                        b.inicio_servicio
+                                        ||
+                                        ""
+                                    )
+                                )
+                        )
+                        .map(
+                            (x, indice) => {
+
+                                const fechaHora =
+                                    String(
+                                        x.inicio_servicio
+                                        ||
+                                        ""
+                                    );
+
+                                const hora =
+                                    fechaHora.includes(" ")
+                                        ? fechaHora.split(" ")[1]
+                                        : fechaHora;
+
+                                return `
+                                    <tr>
+                                        <td class="num">
+                                            ${indice + 1}
+                                        </td>
+
+                                        <td>
+                                            <strong>
+                                                ${escapeHtml(
+                                                    x.patente
+                                                    ||
+                                                    "-"
+                                                )}
+                                            </strong>
+                                        </td>
+
+                                        <td>
+                                            ${escapeHtml(
+                                                x.servicio
+                                                ||
+                                                "-"
+                                            )}
+                                        </td>
+
+                                        <td>
+                                            ${escapeHtml(
+                                                hora
+                                                ||
+                                                "-"
+                                            )}
+                                        </td>
+
+                                        <td>
+                                            ${escapeHtml(
+                                                x.terminal
+                                                ||
+                                                terminal
+                                            )}
+                                        </td>
+                                    </tr>
+                                `;
+                            }
+                        )
+                        .join("");
+
+                const overlay =
+                    document.createElement("div");
+
+                overlay.className =
+                    "detalle-salidas-r16-overlay";
+
+                overlay.style.cssText = `
+                    position:fixed;
+                    inset:0;
+                    z-index:99999;
+                    background:rgba(0,0,0,.48);
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    padding:20px;
+                `;
+
+                overlay.innerHTML = `
+                    <div style="
+                        background:#fff;
+                        width:min(900px,96vw);
+                        max-height:88vh;
+                        border-radius:14px;
+                        box-shadow:0 18px 50px rgba(0,0,0,.25);
+                        overflow:hidden;
+                    ">
+
+                        <div style="
+                            display:flex;
+                            justify-content:space-between;
+                            align-items:center;
+                            gap:20px;
+                            padding:15px 18px;
+                            border-bottom:1px solid #ddd;
+                        ">
+
+                            <div>
+                                <strong>
+                                    Salidas R1.6 ?
+                                    ${escapeHtml(terminal)}
+                                    ?
+                                    ${escapeHtml(etiqueta)}
+                                </strong>
+
+                                <div style="
+                                    margin-top:5px;
+                                    font-size:12px;
+                                    color:#555;
+                                ">
+                                    ${escapeHtml(fecha)}
+                                    ?
+                                    ${escapeHtml(unidad)}
+                                    ?
+                                    ${numero(lista.length)}
+                                    salidas
+                                </div>
+                            </div>
+
+                            <button
+                                type="button"
+                                class="cerrar-salidas-r16"
+                                style="
+                                    border:0;
+                                    background:transparent;
+                                    font-size:28px;
+                                    cursor:pointer;
+                                ">
+                                &times;
+                            </button>
+                        </div>
+
+                        <div style="
+                            overflow:auto;
+                            max-height:72vh;
+                        ">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th class="num">#</th>
+                                        <th>PPU</th>
+                                        <th>Servicio</th>
+                                        <th>Hora salida</th>
+                                        <th>Terminal</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    ${
+                                        filasDetalle
+                                        ||
+                                        `
+                                        <tr>
+                                            <td
+                                                colspan="5"
+                                                class="empty-cell">
+                                                Sin salidas.
+                                            </td>
+                                        </tr>
+                                        `
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(
+                    overlay
+                );
+
+                const cerrar = () =>
+                    overlay.remove();
+
+                overlay
+                    .querySelector(
+                        ".cerrar-salidas-r16"
+                    )
+                    .addEventListener(
+                        "click",
+                        cerrar
+                    );
+
+                overlay.addEventListener(
+                    "click",
+                    evento => {
+                        if (
+                            evento.target
+                            ===
+                            overlay
+                        ) {
+                            cerrar();
+                        }
+                    }
+                );
+            };
+
+            // --------------------------------------------------------
+            // RENDER INTERNO
+            // --------------------------------------------------------
+
+            const renderModo = () => {
+
+                const es60 =
+                    modo === "60";
+
+                const filas =
+                    es60
+                        ? (
+                            Array.isArray(datos.intervalos_60)
+                                ? datos.intervalos_60
+                                : []
+                        )
+                        : (
+                            Array.isArray(datos.intervalos_30)
+                                ? datos.intervalos_30
+                                : []
+                        );
+
+                const resumen =
+                    es60
+                        ? (
+                            Array.isArray(datos.resumen_terminal_60)
+                                ? datos.resumen_terminal_60
+                                : []
+                        )
+                        : (
+                            Array.isArray(datos.resumen_terminal_30)
+                                ? datos.resumen_terminal_30
+                                : []
+                        );
+
+                const intervalos = [];
+
+                if (es60) {
+
+                    for (
+                        let periodo = 1;
+                        periodo <= 24;
+                        periodo++
+                    ) {
+                        intervalos.push({
+                            clave: String(periodo),
+                            etiqueta:
+                                `P${String(periodo).padStart(2, "0")}`
+                        });
+                    }
+
+                } else {
+
+                    for (
+                        let hora = 0;
+                        hora <= 23;
+                        hora++
+                    ) {
+
+                        intervalos.push({
+                            clave:
+                                `${String(hora).padStart(2, "0")}:00`,
+                            etiqueta:
+                                `${String(hora).padStart(2, "0")}:00`
+                        });
+
+                        intervalos.push({
+                            clave:
+                                `${String(hora).padStart(2, "0")}:30`,
+                            etiqueta:
+                                `${String(hora).padStart(2, "0")}:30`
+                        });
+                    }
+                }
+
+                const mapa =
+                    new Map();
+
+                for (const fila of filas) {
+
+                    const terminal =
+                        normalizarTerminalUnidad(
+                            fila.terminal
+                        );
+
+                    const clave =
+                        es60
+                            ? String(
+                                Number(
+                                    fila.periodo
+                                )
+                            )
+                            : String(
+                                fila.intervalo
+                                ??
+                                fila.media_hora
+                                ??
+                                fila.etiqueta
+                                ??
+                                ""
+                            ).slice(0, 5);
+
+                    if (
+                        !terminal
+                        ||
+                        !clave
+                    ) {
+                        continue;
+                    }
+
+                    if (!mapa.has(terminal)) {
+                        mapa.set(
+                            terminal,
+                            new Map()
+                        );
+                    }
+
+                    mapa
+                        .get(terminal)
+                        .set(
+                            clave,
+                            fila
+                        );
+                }
+
+                // ----------------------------------------------------
+                // TERMINALES = UNION DE DATOS + RESUMEN
+                // ----------------------------------------------------
+
+                const terminales =
+                    new Map();
+
+                for (const x of resumen) {
+
+                    const codigo =
+                        normalizarTerminalUnidad(
+                            x.terminal
+                        );
+
+                    if (!codigo) {
+                        continue;
+                    }
+
+                    terminales.set(
+                        codigo,
+                        {
+                            codigo: codigo,
+                            nombre:
+                                x.terminal_nombre
+                                ||
+                                x.terminal
+                        }
+                    );
+                }
+
+                for (const codigo of mapa.keys()) {
+
+                    if (!terminales.has(codigo)) {
+                        terminales.set(
+                            codigo,
+                            {
+                                codigo: codigo,
+                                nombre: codigo
+                            }
+                        );
+                    }
+                }
+
+                // ----------------------------------------------------
+                // TOTALES GENERALES
+                // ----------------------------------------------------
+
+                const totalReal =
+                    resumen.reduce(
+                        (acc, x) =>
+                            acc
+                            +
+                            Number(
+                                x.real
+                                ||
+                                0
+                            ),
+                        0
+                    );
+
+                const totalPerfil =
+                    resumen.reduce(
+                        (acc, x) =>
+                            acc
+                            +
+                            Number(
+                                x.perfil
+                                ||
+                                0
+                            ),
+                        0
+                    );
+
+                const pctGeneral =
+                    totalPerfil > 0
+                        ? (
+                            totalReal
+                            /
+                            totalPerfil
+                        ) * 100
+                        : null;
+
+                // ----------------------------------------------------
+                // CABECERA RESUMEN
+                // ----------------------------------------------------
+
+                const panel = `
+                    <div style="
+                        padding:12px 14px;
+                        border-bottom:1px solid #e3e3e3;
+                        background:#fff;
+                    ">
+
+                        <div style="
+                            display:flex;
+                            align-items:center;
+                            justify-content:space-between;
+                            flex-wrap:wrap;
+                            gap:12px;
+                        ">
+
+                            <div>
+                                <div style="
+                                    font-size:14px;
+                                    font-weight:800;
+                                ">
+                                    Salidas R1.6 vs Perfil operacional
+                                </div>
+
+                                <div style="
+                                    margin-top:3px;
+                                    font-size:12px;
+                                    color:#666;
+                                ">
+                                    ${escapeHtml(unidad)}
+                                    &bull;
+                                    ${escapeHtml(datos.tipo_dia || "")}
+                                    &bull;
+                                    ${escapeHtml(fecha)}
+                                </div>
+                            </div>
+
+                            <div style="
+                                display:flex;
+                                gap:8px;
+                                flex-wrap:wrap;
+                            ">
+
+                                <button
+                                    type="button"
+                                    class="modo-real-perfil"
+                                    data-modo="60"
+                                    style="
+                                        padding:7px 12px;
+                                        border-radius:8px;
+                                        border:1px solid #bbb;
+                                        cursor:pointer;
+                                        font-weight:${
+                                            es60
+                                                ? "800"
+                                                : "500"
+                                        };
+                                        background:${
+                                            es60
+                                                ? "#eef3ff"
+                                                : "#fff"
+                                        };
+                                    ">
+                                    Por hora (60 min)
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="modo-real-perfil"
+                                    data-modo="30"
+                                    style="
+                                        padding:7px 12px;
+                                        border-radius:8px;
+                                        border:1px solid #bbb;
+                                        cursor:pointer;
+                                        font-weight:${
+                                            !es60
+                                                ? "800"
+                                                : "500"
+                                        };
+                                        background:${
+                                            !es60
+                                                ? "#eef3ff"
+                                                : "#fff"
+                                        };
+                                    ">
+                                    Por media hora (30 min)
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="
+                            display:flex;
+                            flex-wrap:wrap;
+                            gap:10px;
+                            margin-top:12px;
+                        ">
+
+                            <div style="
+                                border:1px solid #ddd;
+                                border-radius:9px;
+                                padding:7px 12px;
+                            ">
+                                <small>REAL R1.6</small>
+                                <div style="
+                                    font-size:18px;
+                                    font-weight:800;
+                                ">
+                                    ${numero(totalReal)}
+                                </div>
+                            </div>
+
+                            <div style="
+                                border:1px solid #ddd;
+                                border-radius:9px;
+                                padding:7px 12px;
+                            ">
+                                <small>PERFIL</small>
+                                <div style="
+                                    font-size:18px;
+                                    font-weight:800;
+                                ">
+                                    ${numero(totalPerfil)}
+                                </div>
+                            </div>
+
+                            <div style="
+                                border:1px solid #ddd;
+                                border-radius:9px;
+                                padding:7px 12px;
+                            ">
+                                <small>CUMPLIMIENTO</small>
+                                <div style="
+                                    font-size:18px;
+                                    font-weight:800;
+                                ">
+                                    ${
+                                        pctGeneral === null
+                                            ? "--"
+                                            : porcentaje(pctGeneral)
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="
+                            margin-top:9px;
+                            font-size:11px;
+                            color:#666;
+                        ">
+                            Real / Perfil &bull;
+                            Haz clic en una celda con salidas
+                            para ver PPU, servicio y hora.
+                        </div>
+                    </div>
+                `;
+
+                // ----------------------------------------------------
+                // CABECERA TABLA
+                // ----------------------------------------------------
+
+                let cabecera = `
+                    <th class="sticky-terminal">
+                        Terminal
+                    </th>
+                `;
+
+                for (
+                    const intervalo
+                    of intervalos
+                ) {
+
+                    cabecera += `
+                        <th
+                            class="num periodo-col"
+                            style="min-width:82px;">
+                            ${escapeHtml(
+                                intervalo.etiqueta
+                            )}
+
+                            <small style="
+                                display:block;
+                                font-weight:400;
+                                white-space:nowrap;
+                            ">
+                                Real / Perfil
+                            </small>
+                        </th>
+                    `;
+                }
+
+                // ----------------------------------------------------
+                // TOTALES POR INTERVALO
+                // ----------------------------------------------------
+
+                const totalRealIntervalo =
+                    new Map();
+
+                const totalPerfilIntervalo =
+                    new Map();
+
+                for (
+                    const intervalo
+                    of intervalos
+                ) {
+                    totalRealIntervalo.set(
+                        intervalo.clave,
+                        0
+                    );
+
+                    totalPerfilIntervalo.set(
+                        intervalo.clave,
+                        0
+                    );
+                }
+
+                // ----------------------------------------------------
+                // FILAS TERMINALES
+                // ----------------------------------------------------
+
+                let cuerpo = "";
+
+                for (
+                    const terminal
+                    of terminales.values()
+                ) {
+
+                    const valores =
+                        mapa.get(terminal.codigo)
+                        ||
+                        new Map();
+
+                    let celdas = "";
+
+                    for (
+                        const intervalo
+                        of intervalos
+                    ) {
+
+                        const fila =
+                            valores.get(
+                                intervalo.clave
+                            )
+                            ||
+                            {
+                                real: 0,
+                                perfil: 0,
+                                porcentaje: null,
+                                detalle: []
+                            };
+
+                        const real =
+                            Number(
+                                fila.real
+                                ||
+                                0
+                            );
+
+                        const perfil =
+                            Number(
+                                fila.perfil
+                                ||
+                                0
+                            );
+
+                        totalRealIntervalo.set(
+                            intervalo.clave,
+                            Number(
+                                totalRealIntervalo.get(
+                                    intervalo.clave
+                                )
+                                ||
+                                0
+                            )
+                            +
+                            real
+                        );
+
+                        totalPerfilIntervalo.set(
+                            intervalo.clave,
+                            Number(
+                                totalPerfilIntervalo.get(
+                                    intervalo.clave
+                                )
+                                ||
+                                0
+                            )
+                            +
+                            perfil
+                        );
+
+                        const pct =
+                            perfil > 0
+                                ? (
+                                    real
+                                    /
+                                    perfil
+                                ) * 100
+                                : null;
+
+                        const clase =
+                            pct === null
+                                ? ""
+                                : clasePorcentaje(
+                                    pct
+                                );
+
+                        const detalleTexto =
+                            perfil > 0
+                                ? porcentaje(pct)
+                                : "S/R";
+
+                        const clickeable =
+                            real > 0;
+
+                        celdas += `
+                            <td
+                                class="
+                                    num
+                                    periodo-col
+                                    celda-real-perfil
+                                "
+                                ${
+                                    clickeable
+                                        ? `
+                                        data-terminal="${escapeHtml(
+                                            terminal.codigo
+                                        )}"
+                                        data-clave="${escapeHtml(
+                                            intervalo.clave
+                                        )}"
+                                        data-etiqueta="${escapeHtml(
+                                            intervalo.etiqueta
+                                        )}"
+                                        `
+                                        : ""
+                                }
+                                style="
+                                    min-width:82px;
+                                    padding:5px;
+                                    ${
+                                        clickeable
+                                            ? "cursor:pointer;"
+                                            : ""
+                                    }
+                                ">
+
+                                <div
+                                    class="${clase}"
+                                    style="
+                                        border-radius:8px;
+                                        padding:5px 4px;
+                                        min-height:42px;
+                                        display:flex;
+                                        flex-direction:column;
+                                        justify-content:center;
+                                        align-items:center;
+                                        gap:3px;
+                                    ">
+
+                                    <strong style="
+                                        white-space:nowrap;
+                                        font-size:12px;
+                                    ">
+                                        ${numero(real)}
+                                        /
+                                        ${numero(perfil)}
+                                    </strong>
+
+                                    <small style="
+                                        white-space:nowrap;
+                                        font-size:10px;
+                                    ">
+                                        ${detalleTexto}
+                                    </small>
+                                </div>
+                            </td>
+                        `;
+                    }
+
+                    cuerpo += `
+                        <tr>
+                            <td class="sticky-terminal">
+                                <strong>
+                                    ${escapeHtml(
+                                        terminal.nombre
+                                    )}
+                                </strong>
+                            </td>
+
+                            ${celdas}
+                        </tr>
+                    `;
+                }
+
+                // ----------------------------------------------------
+                // FILA TOTAL
+                // ----------------------------------------------------
+
+                let totales = "";
+
+                for (
+                    const intervalo
+                    of intervalos
+                ) {
+
+                    const real =
+                        Number(
+                            totalRealIntervalo.get(
+                                intervalo.clave
+                            )
+                            ||
+                            0
+                        );
+
+                    const perfil =
+                        Number(
+                            totalPerfilIntervalo.get(
+                                intervalo.clave
+                            )
+                            ||
+                            0
+                        );
+
+                    const pct =
+                        perfil > 0
+                            ? (
+                                real
+                                /
+                                perfil
+                            ) * 100
+                            : null;
+
+                    totales += `
+                        <td
+                            class="
+                                num
+                                periodo-col
+                                total-periodo
+                            "
+                            style="min-width:82px;">
+
+                            <strong style="
+                                white-space:nowrap;
+                            ">
+                                ${numero(real)}
+                                /
+                                ${numero(perfil)}
+                            </strong>
+
+                            <small style="
+                                display:block;
+                                margin-top:3px;
+                                white-space:nowrap;
+                            ">
+                                ${
+                                    pct === null
+                                        ? "S/R"
+                                        : porcentaje(pct)
+                                }
+                            </small>
+                        </td>
+                    `;
+                }
+
+                const filaTotal = `
+                    <tr class="matriz-unidad-total">
+
+                        <td class="sticky-terminal">
+                            <strong>
+                                TOTAL ${escapeHtml(unidad)}
+                            </strong>
+
+                            <small style="
+                                display:block;
+                                margin-top:3px;
+                            ">
+                                ${numero(totalReal)}
+                                /
+                                ${numero(totalPerfil)}
+                            </small>
+                        </td>
+
+                        ${totales}
+
+                    </tr>
+                `;
+
+                // ----------------------------------------------------
+                // PINTAR
+                // ----------------------------------------------------
+
+                contenedor.innerHTML = `
+                    ${panel}
+
+                    <div style="
+                        overflow:auto;
+                        width:100%;
+                    ">
+                        <table class="
+                            data-table
+                            matriz-unidad-table
+                            matriz-periodos-table
+                        ">
+                            <thead>
+                                <tr>
+                                    ${cabecera}
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                ${cuerpo}
+                                ${filaTotal}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                // ----------------------------------------------------
+                // EVENTO CAMBIO 60 / 30
+                // ----------------------------------------------------
+
+                contenedor
+                    .querySelectorAll(
+                        ".modo-real-perfil"
+                    )
+                    .forEach(
+                        boton => {
+
+                            boton.addEventListener(
+                                "click",
+                                () => {
+
+                                    const nuevoModo =
+                                        boton.dataset.modo;
+
+                                    if (
+                                        nuevoModo !== "60"
+                                        &&
+                                        nuevoModo !== "30"
+                                    ) {
+                                        return;
+                                    }
+
+                                    modo =
+                                        nuevoModo;
+
+                                    sessionStorage.setItem(
+                                        claveModo,
+                                        modo
+                                    );
+
+                                    renderModo();
+                                }
+                            );
+                        }
+                    );
+
+                // ----------------------------------------------------
+                // EVENTO DETALLE PPU
+                // ----------------------------------------------------
+
+                contenedor
+                    .querySelectorAll(
+                        ".celda-real-perfil[data-terminal]"
+                    )
+                    .forEach(
+                        celda => {
+
+                            celda.addEventListener(
+                                "click",
+                                () => {
+
+                                    const terminal =
+                                        celda.dataset.terminal
+                                        ||
+                                        "";
+
+                                    const clave =
+                                        celda.dataset.clave
+                                        ||
+                                        "";
+
+                                    const etiqueta =
+                                        celda.dataset.etiqueta
+                                        ||
+                                        clave;
+
+                                    const fila =
+                                        (
+                                            mapa.get(terminal)
+                                            ||
+                                            new Map()
+                                        ).get(clave);
+
+                                    const salidas =
+                                        fila
+                                        &&
+                                        Array.isArray(
+                                            fila.detalle
+                                        )
+                                            ? fila.detalle
+                                            : [];
+
+                                    abrirDetalleSalidas(
+                                        terminal,
+                                        etiqueta,
+                                        salidas
+                                    );
+                                }
+                            );
+                        }
+                    );
+            };
+
+            renderModo();
+
+        } catch (error) {
+
+            console.error(
+                "Error Real vs Perfil",
+                unidad,
+                error
+            );
+
+            contenedor.innerHTML = `
+                <div class="empty-cell">
+                    No fue posible cargar Real R1.6 vs Perfil.
+                </div>
+            `;
+        }
+    }
+
+
+    // ================================================================
+    // FLOTA-R22-DETALLE-VISUAL
+    // Detalle PPU real obtenido desde R2.2.
+    // ================================================================
+
+    function renderDetalleR22Terminal(
+        terminal,
+        series
+    ) {
+
+        const filas =
+            Array.isArray(series)
+                ? series
+                : [];
+
+        let html = `
+            <div style="
+                padding:12px;
+                background:#f8fafc;
+                border:1px solid #e2e8f0;
+                border-radius:8px;
+            ">
+
+                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                    gap:12px;
+                    margin-bottom:10px;
+                    flex-wrap:wrap;
+                ">
+
+                    <div>
+                        <strong>
+                            DETALLE FLOTA R2.2
+                        </strong>
+
+                        <span style="
+                            margin-left:8px;
+                            color:#64748b;
+                        ">
+                            ${escapeHtml(terminal)}
+                        </span>
+                    </div>
+
+                    <small style="color:#64748b;">
+                        PPU detectadas por periodo y acumuladas
+                    </small>
+
+                </div>
+
+                <div style="overflow-x:auto;">
+
+                    <table style="
+                        width:100%;
+                        border-collapse:collapse;
+                        font-size:12px;
+                    ">
+
+                        <thead>
+                            <tr>
+                                <th style="padding:7px;text-align:left;">
+                                    Periodo
+                                </th>
+
+                                <th style="padding:7px;text-align:center;">
+                                    Perfil
+                                </th>
+
+                                <th style="padding:7px;text-align:center;">
+                                    PPU periodo
+                                </th>
+
+                                <th style="padding:7px;text-align:center;">
+                                    Operativa acum.
+                                </th>
+
+                                <th style="padding:7px;text-align:left;">
+                                    PPU detectadas
+                                </th>
+
+                                <th style="padding:7px;text-align:left;">
+                                    PPU acumuladas
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+        `;
+
+        for (const fila of filas) {
+
+            const periodo =
+                Number(fila.periodo || 0);
+
+            const conDatos =
+                String(
+                    fila.estado_r22 || ""
+                ).toUpperCase()
+                ===
+                "CON_DATOS";
+
+            const ppusPeriodo =
+                Array.isArray(
+                    fila.r22_ppus_periodo
+                )
+                    ? fila.r22_ppus_periodo
+                    : [];
+
+            const ppusAcumuladas =
+                Array.isArray(
+                    fila.r22_ppus_acumuladas
+                )
+                    ? fila.r22_ppus_acumuladas
+                    : [];
+
+            const pintarPpus = lista => {
+
+                if (!conDatos || !lista.length) {
+                    return "-";
+                }
+
+                return lista
+                    .map(
+                        ppu => `
+                            <span style="
+                                display:inline-block;
+                                margin:2px;
+                                padding:2px 6px;
+                                border:1px solid #cbd5e1;
+                                border-radius:5px;
+                                background:#fff;
+                                font-family:monospace;
+                                font-weight:600;
+                            ">
+                                ${escapeHtml(ppu)}
+                            </span>
+                        `
+                    )
+                    .join("");
+            };
+
+            html += `
+                <tr style="
+                    border-top:1px solid #e2e8f0;
+                    vertical-align:top;
+                ">
+
+                    <td style="
+                        padding:7px;
+                        font-weight:700;
+                    ">
+                        P${String(periodo).padStart(2, "0")}
+                    </td>
+
+                    <td style="
+                        padding:7px;
+                        text-align:center;
+                        font-weight:700;
+                    ">
+                        ${numero(
+                            fila.perfil_teorico ?? 0
+                        )}
+                    </td>
+
+                    <td style="
+                        padding:7px;
+                        text-align:center;
+                    ">
+                        ${
+                            conDatos
+                                ? numero(
+                                    fila.r22_periodo ?? 0
+                                )
+                                : "-"
+                        }
+                    </td>
+
+                    <td style="
+                        padding:7px;
+                        text-align:center;
+                        font-weight:700;
+                    ">
+                        ${
+                            conDatos
+                                ? numero(
+                                    fila.r22_acumulado ?? 0
+                                )
+                                : "-"
+                        }
+                    </td>
+
+                    <td style="padding:7px;">
+                        ${pintarPpus(ppusPeriodo)}
+                    </td>
+
+                    <td style="padding:7px;">
+                        ${pintarPpus(ppusAcumuladas)}
+                    </td>
+
+                </tr>
+            `;
+        }
+
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        return html;
+    }
+
+
     function renderMatrizUnidad(
         unidad,
         filasPeriodo,
         ultimoPeriodoCobertura,
-        filasGlobal
+        filasGlobal,
+        matrizFlota
     ) {
 
         const sufijo =
@@ -2898,6 +5395,388 @@
                 );
         }
 
+
+        // ============================================================
+        // FLOTA - 4 SERIES CERTIFICADAS
+        //
+        // PERFIL:
+        //   buses requeridos por periodo.
+        //
+        // R1.6:
+        //   PPU con presencia historica en el periodo.
+        //
+        // R2.2 PERIODO:
+        //   PPU unicas detectadas dentro del periodo.
+        //
+        // R2.2 ACUMULADA:
+        //   PPU distintas acumuladas hasta el periodo.
+        // ============================================================
+
+        const seriesFlota =
+            (
+                matrizFlota
+                &&
+                Array.isArray(
+                    matrizFlota.series
+                )
+            )
+                ? matrizFlota.series
+                : [];
+
+        const serieFlotaPorPeriodo =
+            new Map();
+
+        for (
+            const filaSerie
+            of seriesFlota
+        ) {
+
+            const periodoSerie =
+                Number(
+                    filaSerie.periodo
+                );
+
+            if (
+                Number.isInteger(
+                    periodoSerie
+                )
+                &&
+                periodoSerie >= 1
+                &&
+                periodoSerie <= 24
+            ) {
+
+                serieFlotaPorPeriodo.set(
+                    periodoSerie,
+                    filaSerie
+                );
+            }
+        }
+
+
+        // ============================================================
+        // FLOTA-BUS-PERFIL-R22
+        //
+        // BUS:
+        //   PPU operativas acumuladas detectadas por R2.2.
+        //
+        // PERFIL:
+        //   buses requeridos en el periodo.
+        //
+        // Fuente:
+        //   matrizFlota.terminales
+        // ============================================================
+
+        const terminalesMatrizFlota =
+            (
+                matrizFlota
+                &&
+                Array.isArray(
+                    matrizFlota.terminales
+                )
+            )
+                ? matrizFlota.terminales
+                : [];
+
+        const mapaBusPerfilTerminal =
+            new Map();
+
+        for (
+            const filaTerminal
+            of terminalesMatrizFlota
+        ) {
+
+            const terminal =
+                normalizarTerminalUnidad(
+                    filaTerminal.terminal
+                );
+
+            const seriesTerminal =
+                Array.isArray(
+                    filaTerminal.series
+                )
+                    ? filaTerminal.series
+                    : [];
+
+            if (!terminal) {
+                continue;
+            }
+
+            if (
+                !mapaBusPerfilTerminal.has(
+                    terminal
+                )
+            ) {
+                mapaBusPerfilTerminal.set(
+                    terminal,
+                    new Map()
+                );
+            }
+
+            const mapaPeriodos =
+                mapaBusPerfilTerminal.get(
+                    terminal
+                );
+
+            for (
+                const filaPeriodo
+                of seriesTerminal
+            ) {
+
+                const periodo =
+                    Number(
+                        filaPeriodo.periodo
+                    );
+
+                if (
+                    !Number.isInteger(periodo)
+                    ||
+                    periodo < 1
+                    ||
+                    periodo > 24
+                ) {
+                    continue;
+                }
+
+                mapaPeriodos.set(
+                    periodo,
+                    filaPeriodo
+                );
+            }
+        }
+
+
+        function valorBusPerfilTerminal(
+            terminal,
+            periodo
+        ) {
+
+            const mapaTerminal =
+                mapaBusPerfilTerminal.get(
+                    terminal
+                );
+
+            const fila =
+                mapaTerminal
+                    ? mapaTerminal.get(periodo)
+                    : null;
+
+            if (!fila) {
+                return {
+                    visible: "-",
+                    bus: null,
+                    perfil: null,
+                    estado: "SIN_DATOS"
+                };
+            }
+
+            const estado =
+                fila.estado_r22
+                ||
+                (
+                    fila.r22_acumulado === null
+                    ||
+                    fila.r22_acumulado === undefined
+                        ? "SIN_DATOS"
+                        : "CON_DATOS"
+                );
+
+            if (
+                estado === "SIN_DATOS"
+                ||
+                fila.r22_acumulado === null
+                ||
+                fila.r22_acumulado === undefined
+            ) {
+                return {
+                    visible: "-",
+                    bus: null,
+                    perfil:
+                        fila.perfil_teorico,
+                    estado: "SIN_DATOS"
+                };
+            }
+
+            const bus =
+                Number(
+                    fila.r22_acumulado
+                );
+
+            const perfil =
+                Number(
+                    fila.perfil_teorico
+                    ??
+                    0
+                );
+
+            return {
+                // FLOTA-PERFIL-NEGRITA
+                visible:
+                    `${numero(bus)}/<strong class="perfil-negrita">${numero(perfil)}</strong>`,
+                bus,
+                perfil,
+                estado
+            };
+        }
+
+
+        const definicionesSeriesFlota = [
+            {
+                clave: "perfil_teorico",
+                etiqueta: "PERFIL TEORICO",
+                clase: "matriz-serie-perfil"
+            },
+            {
+                clave: "r16_ppu",
+                etiqueta: "PPU CON PRESENCIA R1.6",
+                clase: "matriz-serie-r16"
+            },
+            {
+                clave: "r22_periodo",
+                etiqueta: "PPU DETECTADAS R2.2",
+                clase: "matriz-serie-r22"
+            },
+            {
+                clave: "r22_acumulado",
+                etiqueta: "OPERATIVA ACUM. R2.2",
+                clase: "matriz-serie-r22-acum"
+            }
+        ];
+
+        let filasSeriesFlota = "";
+
+        if (seriesFlota.length) {
+
+            for (
+                const definicion
+                of definicionesSeriesFlota
+            ) {
+
+                let celdasSerie = "";
+
+                for (
+                    let periodo = 1;
+                    periodo <= 24;
+                    periodo++
+                ) {
+
+                    const seleccionado =
+                        (
+                            periodo >= periodoInicial
+                            &&
+                            periodo <= periodoFinal
+                        );
+
+                    const filaSerie =
+                        serieFlotaPorPeriodo.get(
+                            periodo
+                        );
+
+                    const valor =
+                        filaSerie
+                            ? filaSerie[
+                                definicion.clave
+                            ]
+                            : null;
+
+                    const esSerieR22 =
+                        (
+                            definicion.clave
+                            ===
+                            "r22_periodo"
+                            ||
+                            definicion.clave
+                            ===
+                            "r22_acumulado"
+                        );
+
+                    const r22SinDatos =
+                        (
+                            esSerieR22
+                            &&
+                            (
+                                !filaSerie
+                                ||
+                                filaSerie.estado_r22
+                                ===
+                                "SIN_DATOS"
+                                ||
+                                valor === null
+                                ||
+                                valor === undefined
+                            )
+                        );
+
+                    const valorVisible =
+                        r22SinDatos
+                            ? "-"
+                            : (
+                                valor === null
+                                ||
+                                valor === undefined
+                                    ? "\u2014"
+                                    : numero(valor)
+                            );
+
+                    celdasSerie += `
+                        <td
+                            class="
+                                num
+                                periodo-col
+                                ${
+                                    seleccionado
+                                        ? "periodo-seleccionado"
+                                        : "periodo-fuera-rango"
+                                }
+                            ">
+                            <strong>
+                                ${valorVisible}
+                            </strong>
+                        </td>
+                    `;
+                }
+
+                filasSeriesFlota += `
+                    <tr
+                        class="
+                            matriz-serie-flota
+                            ${definicion.clase}
+                        ">
+
+                        <td class="sticky-terminal">
+                            <strong>
+                                ${escapeHtml(
+                                    definicion.etiqueta
+                                )}
+                            </strong>
+                        </td>
+
+                        <td class="num sticky-asignada">
+                            &mdash;
+                        </td>
+
+                        ${celdasSerie}
+
+                        <td class="num">
+                            &mdash;
+                        </td>
+
+                        <td class="num">
+                            &mdash;
+                        </td>
+
+                        <td class="num">
+                            &mdash;
+                        </td>
+
+                        <td>
+                            &mdash;
+                        </td>
+
+                    </tr>
+                `;
+            }
+        }
 
         // ------------------------------------------------------------
         // CABECERA
@@ -3046,33 +5925,29 @@
                 periodo++
             ) {
 
+                const busPerfil =
+                    valorBusPerfilTerminal(
+                        terminalCodigo,
+                        periodo
+                    );
+
                 const valor =
-                    (
-                        Number(periodo)
-                        <=
-                        Number(ultimoPeriodoCobertura)
-                    )
-                        ? (
-                            periodos.get(
+                    busPerfil.bus;
+
+                if (valor !== null) {
+                    totalesPeriodo.set(
+                        periodo,
+                        Number(
+                            totalesPeriodo.get(
                                 periodo
                             )
-                            ??
+                            ||
                             0
                         )
-                        : null;
-
-                totalesPeriodo.set(
-                    periodo,
-                    Number(
-                        totalesPeriodo.get(
-                            periodo
-                        )
-                        ||
-                        0
-                    )
-                    +
-                    Number(valor)
-                );
+                        +
+                        Number(valor)
+                    );
+                }
 
                 const seleccionado =
                     (
@@ -3094,9 +5969,7 @@
                         ">
                         <strong>
                             ${
-                                valor === null
-                                    ? "\u2014"
-                                    : numero(valor)
+                                busPerfil.visible
                             }
                         </strong>
                     </td>
@@ -3104,17 +5977,53 @@
             }
 
 
+            const terminalDetalleId =
+                (
+                    "detalle-terminal-"
+                    +
+                    unidad
+                    +
+                    "-"
+                    +
+                    String(
+                        global.terminal
+                        ||
+                        ""
+                    ).replace(
+                        /[^a-zA-Z0-9_-]/g,
+                        "-"
+                    )
+                );
+
             cuerpo += `
-                <tr>
+                <tr class="matriz-terminal-principal">
 
                     <td class="sticky-terminal">
-                        <strong>
-                            ${escapeHtml(
-                                global.terminal_nombre
-                                ||
-                                global.terminal
-                            )}
-                        </strong>
+
+                        <button
+                            type="button"
+                            class="btn-toggle-terminal"
+                            data-toggle-terminal="${escapeHtml(
+                                terminalDetalleId
+                            )}"
+                            aria-expanded="false">
+
+                            <span
+                                class="toggle-terminal-icon"
+                                aria-hidden="true">
+                                &#9654;
+                            </span>
+
+                            <strong>
+                                ${escapeHtml(
+                                    global.terminal_nombre
+                                    ||
+                                    global.terminal
+                                )}
+                            </strong>
+
+                        </button>
+
                     </td>
 
                     <td class="num sticky-asignada">
@@ -3174,6 +6083,53 @@
                     </td>
 
                 </tr>
+
+                <tr
+                    id="${escapeHtml(terminalDetalleId)}"
+                    class="matriz-terminal-detalle"
+                    hidden>
+
+                    <td
+                        colspan="30"
+                        class="matriz-terminal-detalle-celda">
+
+                        <div class="matriz-terminal-detalle-contenido">
+
+                            ${renderDetalleR22Terminal(
+                                global.terminal,
+                                (
+                                    matrizFlota
+                                    &&
+                                    Array.isArray(
+                                        matrizFlota.terminales
+                                    )
+                                        ? (
+                                            (
+                                                matrizFlota.terminales.find(
+                                                    x =>
+                                                        normalizarTerminalUnidad(
+                                                            x.terminal
+                                                        )
+                                                        ===
+                                                        normalizarTerminalUnidad(
+                                                            global.terminal
+                                                        )
+                                                )
+                                                ||
+                                                {}
+                                            ).series
+                                            ||
+                                            []
+                                        )
+                                        : []
+                                )
+                            )}
+
+                        </div>
+
+                    </td>
+
+                </tr>
             `;
         }
 
@@ -3181,6 +6137,48 @@
         // ============================================================
         // FILA TOTAL DE LA UNIDAD
         // ============================================================
+
+
+        function valorBusPerfilTotal(
+            periodo
+        ) {
+
+            const fila =
+                serieFlotaPorPeriodo.get(
+                    periodo
+                );
+
+            if (!fila) {
+                return "-";
+            }
+
+            if (
+                fila.estado_r22 === "SIN_DATOS"
+                ||
+                fila.r22_acumulado === null
+                ||
+                fila.r22_acumulado === undefined
+            ) {
+                return "-";
+            }
+
+            const bus =
+                Number(
+                    fila.r22_acumulado
+                );
+
+            const perfil =
+                Number(
+                    fila.perfil_teorico
+                    ??
+                    0
+                );
+
+            return (
+                `${numero(bus)}/<strong class="perfil-negrita">${numero(perfil)}</strong>`
+            );
+        }
+
 
         let celdasTotalesPeriodo = "";
 
@@ -3212,15 +6210,9 @@
                     ">
                     <strong>
                         ${
-                            Number(periodo)
-                            >
-                            Number(ultimoPeriodoCobertura)
-                                ? "\u2014"
-                                : numero(
-                                    totalesPeriodo.get(periodo)
-                                    ||
-                                    0
-                                )
+                            valorBusPerfilTotal(
+                                periodo
+                            )
                         }
                     </strong>
                 </td>
@@ -3238,13 +6230,35 @@
                 : 0;
 
 
+        const idDetalleTotal =
+            `detalle-total-${unidad}`;
+
         const filaTotal = `
             <tr class="matriz-unidad-total">
 
                 <td class="sticky-terminal">
-                    <strong>
-                        TOTAL ${unidad}
-                    </strong>
+
+                    <button
+                        type="button"
+                        class="
+                            btn-toggle-terminal
+                            btn-toggle-total
+                        "
+                        data-toggle-terminal="${idDetalleTotal}"
+                        aria-expanded="false">
+
+                        <span
+                            class="toggle-terminal-icon"
+                            aria-hidden="true">
+                            &#9654;
+                        </span>
+
+                        <strong>
+                            TOTAL ${unidad}
+                        </strong>
+
+                    </button>
+
                 </td>
 
                 <td class="num sticky-asignada">
@@ -3286,6 +6300,40 @@
                 </td>
 
             </tr>
+
+            <tr
+                id="${idDetalleTotal}"
+                class="
+                    matriz-terminal-detalle
+                    matriz-total-detalle
+                "
+                hidden>
+
+                <td
+                    colspan="30"
+                    class="matriz-terminal-detalle-celda">
+
+                    <div class="matriz-total-series">
+
+                        <table
+                            class="
+                                data-table
+                                matriz-unidad-table
+                                matriz-periodos-table
+                                matriz-series-detalle-table
+                            ">
+
+                            <tbody>
+                                ${filasSeriesFlota}
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </td>
+
+            </tr>
         `;
 
 
@@ -3303,6 +6351,8 @@
                 </thead>
 
                 <tbody>
+
+
                     ${
                         cuerpo
                         ||
@@ -3326,6 +6376,69 @@
 
             </table>
         `;
+
+
+        // ------------------------------------------------------------
+        // DESPLEGAR / CERRAR TERMINAL Y TOTAL
+        // ------------------------------------------------------------
+
+        contenedor
+            .querySelectorAll(
+                ".btn-toggle-terminal[data-toggle-terminal]"
+            )
+            .forEach(
+                boton => {
+
+                    boton.addEventListener(
+                        "click",
+                        () => {
+
+                            const idDetalle =
+                                boton.dataset.toggleTerminal
+                                ||
+                                "";
+
+                            if (!idDetalle) {
+                                return;
+                            }
+
+                            const detalle =
+                                document.getElementById(
+                                    idDetalle
+                                );
+
+                            if (!detalle) {
+                                return;
+                            }
+
+                            const abrir =
+                                detalle.hidden;
+
+                            detalle.hidden =
+                                !abrir;
+
+                            boton.setAttribute(
+                                "aria-expanded",
+                                abrir
+                                    ? "true"
+                                    : "false"
+                            );
+
+                            const icono =
+                                boton.querySelector(
+                                    ".toggle-terminal-icon"
+                                );
+
+                            if (icono) {
+                                icono.innerHTML =
+                                    abrir
+                                        ? "&#9660;"
+                                        : "&#9654;";
+                            }
+                        }
+                    );
+                }
+            );
 
 
         // ------------------------------------------------------------
@@ -3864,6 +6977,234 @@
     // ================================================================
     // RANKING DE APOYO
     // ================================================================
+
+
+    // ============================================================
+    // DETECTOR PPU NO RECONOCIDAS
+    // ============================================================
+
+    function renderAlertasPpu(alertas) {
+
+        const panel =
+            $("alertasPpuPanel");
+
+        const estado =
+            $("alertasPpuEstado");
+
+        const contenido =
+            $("alertasPpuContenido");
+
+        if (
+            !panel
+            ||
+            !estado
+            ||
+            !contenido
+        ) {
+            return;
+        }
+
+        const datos = (
+            alertas
+            &&
+            typeof alertas === "object"
+        )
+            ? alertas
+            : {};
+
+        const detalle =
+            Array.isArray(
+                datos.detalle
+            )
+                ? datos.detalle
+                : [];
+
+        const totalBackend =
+            Number(
+                datos.total_no_reconocidas
+            );
+
+        const total =
+            Number.isFinite(
+                totalBackend
+            )
+                ? totalBackend
+                : detalle.length;
+
+        panel.classList.remove(
+            "con-alertas",
+            "sin-alertas"
+        );
+
+        if (total <= 0) {
+
+            panel.classList.add(
+                "sin-alertas"
+            );
+
+            estado.textContent =
+                "SIN ALERTAS";
+
+            contenido.innerHTML = `
+                <div class="alertas-ppu-vacio">
+                    Sin PPU no reconocidas pendientes
+                    de validaci?n.
+                </div>
+            `;
+
+            return;
+        }
+
+        panel.classList.add(
+            "con-alertas"
+        );
+
+        estado.textContent = (
+            total === 1
+                ? "1 PPU POR VALIDAR"
+                : `${total} PPU POR VALIDAR`
+        );
+
+        const filas =
+            detalle
+            .map(
+                item => {
+
+                    const ppu =
+                        escapeHtml(
+                            item.ppu
+                            ??
+                            "-"
+                        );
+
+                    const unidad =
+                        escapeHtml(
+                            item.unidad
+                            ??
+                            "-"
+                        );
+
+                    const terminal =
+                        escapeHtml(
+                            item.terminal
+                            ??
+                            "-"
+                        );
+
+                    const serviciosValor =
+                        Array.isArray(
+                            item.servicios
+                        )
+                            ? item.servicios.join(", ")
+                            : (
+                                item.servicio
+                                ??
+                                "-"
+                            );
+
+                    const tsValor =
+                        Array.isArray(
+                            item.codigos_ts
+                        )
+                            ? item.codigos_ts.join(", ")
+                            : (
+                                item.codigo_ts
+                                ??
+                                "-"
+                            );
+
+                    const servicios =
+                        escapeHtml(
+                            serviciosValor
+                        );
+
+                    const codigosTs =
+                        escapeHtml(
+                            tsValor
+                        );
+
+                    const primera =
+                        escapeHtml(
+                            item.primera_deteccion
+                            ??
+                            item.primera_fecha
+                            ??
+                            "-"
+                        );
+
+                    const ultima =
+                        escapeHtml(
+                            item.ultima_deteccion
+                            ??
+                            item.ultima_fecha
+                            ??
+                            "-"
+                        );
+
+                    const estadoItem =
+                        escapeHtml(
+                            item.estado
+                            ??
+                            "POR VALIDAR"
+                        );
+
+                    return `
+                        <tr>
+                            <td>
+                                <strong>
+                                    ${ppu}
+                                </strong>
+                            </td>
+
+                            <td>${unidad}</td>
+                            <td>${terminal}</td>
+                            <td>${servicios}</td>
+                            <td>${codigosTs}</td>
+                            <td>${primera}</td>
+                            <td>${ultima}</td>
+
+                            <td>
+                                <span class="alertas-ppu-badge">
+                                    ${estadoItem}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                }
+            )
+            .join("");
+
+        contenido.innerHTML = `
+            <div class="alertas-ppu-resumen">
+                Se detectaron ${total}
+                PPU no reconocidas en operaci?n R1.6.
+                Requieren validaci?n antes de
+                clasificarlas.
+            </div>
+
+            <div class="table-wrap">
+                <table class="alertas-ppu-tabla">
+                    <thead>
+                        <tr>
+                            <th>PPU</th>
+                            <th>Unidad</th>
+                            <th>Terminal</th>
+                            <th>Servicio</th>
+                            <th>TS observado</th>
+                            <th>Primera detecci?n</th>
+                            <th>?ltima detecci?n</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        ${filas}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
 
     function renderRanking(filas) {
 
@@ -5976,7 +9317,7 @@ const operativaReceptorProyectada =
     ) {
 
         // R8F:
-        // Este detalle pertenece exclusivamente a "Sin transmisi?n".
+        // Este detalle pertenece exclusivamente a "Sin transmisión".
         // Si estaba abierto Ver PPU, se cierra antes.
 
         const modalOperativas =
@@ -6695,11 +10036,15 @@ const operativaReceptorProyectada =
         );
 
 
-    $("btnExportar")
-        .addEventListener(
+    const btnExportar =
+        $("btnExportar");
+
+    if (btnExportar) {
+        btnExportar.addEventListener(
             "click",
             exportar
         );
+    }
 
 
 
@@ -7170,6 +10515,11 @@ const operativaReceptorProyectada =
 
                 const datos =
                     await respuesta.json();
+
+
+                await completarMatricesFlota(
+                    datos
+                );
 
 
                 datosActuales =
@@ -7834,7 +11184,7 @@ const operativaReceptorProyectada =
 
     // ================================================================
     // R11D3 - PINTAR BARRAS APOYO
-    // Solo presentaci?n.
+    // Solo presentación.
     // Lee el porcentaje ya calculado y mostrado por SWAV.
     // ================================================================
 

@@ -27,6 +27,9 @@ from app.services.historico_flota_operativa_r16_service import (
 from app.services.historico_flota_operativa_servicio_r16_service import (
     procesar_r16_servicios,
 )
+from app.services.flota_ppu_detector_service import (
+    detectar_ppu_desde_historico,
+)
 from app.services.sinoptico_r16_service import SinopticoR16Service
 from app.models import CredencialSinoptico
 
@@ -285,104 +288,6 @@ def descargar_r16(
         )
 
     # =====================================================
-    # DIAGNOSTICO ARCHIVO REAL RECIBIDO DEL BRIDGE
-    # =====================================================
-
-    print()
-    print("=" * 100)
-    print("DIAGNOSTICO R1.6 - ARCHIVO RECIBIDO DEL BRIDGE")
-    print("=" * 100)
-    print("RUTA :", archivo)
-    print("EXISTE :", archivo.exists())
-
-    if archivo.exists():
-
-        print(
-            "TAMANO :",
-            archivo.stat().st_size
-        )
-
-        try:
-
-            contenido_debug = archivo.read_text(
-                encoding="utf-8-sig",
-                errors="replace"
-            )
-
-            lineas_debug = (
-                contenido_debug.splitlines()
-            )
-
-            print("LINEAS :", len(lineas_debug))
-
-            print("-" * 100)
-
-            for numero, linea in enumerate(
-                lineas_debug[:15],
-                start=1
-            ):
-
-                print(
-                    f"{numero:03d}:",
-                    repr(linea)
-                )
-
-            print("-" * 100)
-
-            encabezados = [
-                (
-                    i + 1,
-                    linea
-                )
-                for i, linea
-                in enumerate(lineas_debug)
-                if (
-                    "SERVICIO" in linea.upper()
-                    and
-                    "CODIGO BUS" in linea.upper()
-                    and
-                    "PATENTE BUS" in linea.upper()
-                )
-            ]
-
-            print(
-                "ENCABEZADOS DETECTADOS:",
-                len(encabezados)
-            )
-
-            for numero, linea in encabezados[:3]:
-
-                print(
-                    "HEADER LINEA:",
-                    numero
-                )
-
-                print(
-                    "HEADER REPR:",
-                    repr(linea)
-                )
-
-                print(
-                    "TABS:",
-                    linea.count("\t"),
-                    "| ;:",
-                    linea.count(";"),
-                    "| ,:",
-                    linea.count(",")
-                )
-
-        except Exception as exc_debug:
-
-            print(
-                "ERROR LEYENDO ARCHIVO DEBUG:",
-                repr(exc_debug)
-            )
-
-    print("=" * 100)
-    print()
-
-
-    # =====================================================
     # 3. FLOTA OPERATIVA - R1.6 ORIGINAL COMPLETO
     # =====================================================
     #
@@ -423,6 +328,155 @@ def descargar_r16(
                 unidad=unidad,
             )
         )
+
+        # =================================================
+        # DETECTOR PERSISTENTE DE PPU NO RECONOCIDAS
+        # =================================================
+        #
+        # Solo se procesan fechas reconocidas por AMBOS
+        # historicos R1.6:
+        #
+        #   - Flota Operativa general
+        #   - Flota Operativa por TS
+        #
+        # Cada fecha se procesa individualmente para evitar
+        # incluir dias intermedios no presentes en el archivo.
+        # =================================================
+
+        fechas_flota_general = set(
+            (
+                resultado_flota_operativa.get(
+                    "resultado_por_fecha",
+                    {},
+                )
+                or {}
+            ).keys()
+        )
+
+        fechas_flota_servicios = set(
+            (
+                resultado_flota_servicios.get(
+                    "resultado_por_fecha",
+                    {},
+                )
+                or {}
+            ).keys()
+        )
+
+        fechas_detector = sorted(
+            fechas_flota_general
+            & fechas_flota_servicios
+        )
+
+        fechas_solo_general = sorted(
+            fechas_flota_general
+            - fechas_flota_servicios
+        )
+
+        fechas_solo_servicios = sorted(
+            fechas_flota_servicios
+            - fechas_flota_general
+        )
+
+        resultado_detector_ppu = {
+            "estado": "OK",
+            "fechas_procesadas": [],
+            "fechas_solo_general":
+                fechas_solo_general,
+            "fechas_solo_servicios":
+                fechas_solo_servicios,
+            "eventos_analizados": 0,
+            "eventos_candidatos": 0,
+            "detecciones_creadas": 0,
+            "detecciones_existentes": 0,
+            "evidencias_creadas": 0,
+            "evidencias_existentes": 0,
+            "maestros_creados": 0,
+            "maestros_actualizados": 0,
+            "detalle_por_fecha": {},
+        }
+
+        for fecha_detector in fechas_detector:
+
+            resultado_fecha_detector = (
+                detectar_ppu_desde_historico(
+                    db=flota_db,
+                    fecha_desde=fecha_detector,
+                    fecha_hasta=fecha_detector,
+                    dry_run=False,
+                )
+            )
+
+            persistencia_fecha = (
+                resultado_fecha_detector.get(
+                    "persistencia"
+                )
+                or {}
+            )
+
+            resultado_detector_ppu[
+                "fechas_procesadas"
+            ].append(
+                fecha_detector
+            )
+
+            resultado_detector_ppu[
+                "eventos_analizados"
+            ] += (
+                resultado_fecha_detector.get(
+                    "eventos_analizados",
+                    0,
+                )
+                or 0
+            )
+
+            resultado_detector_ppu[
+                "eventos_candidatos"
+            ] += (
+                resultado_fecha_detector.get(
+                    "eventos_candidatos",
+                    0,
+                )
+                or 0
+            )
+
+            for clave in (
+                "detecciones_creadas",
+                "detecciones_existentes",
+                "evidencias_creadas",
+                "evidencias_existentes",
+                "maestros_creados",
+                "maestros_actualizados",
+            ):
+
+                resultado_detector_ppu[
+                    clave
+                ] += (
+                    persistencia_fecha.get(
+                        clave,
+                        0,
+                    )
+                    or 0
+                )
+
+            resultado_detector_ppu[
+                "detalle_por_fecha"
+            ][fecha_detector] = {
+                "eventos_analizados":
+                    resultado_fecha_detector.get(
+                        "eventos_analizados",
+                        0,
+                    ),
+
+                "eventos_candidatos":
+                    resultado_fecha_detector.get(
+                        "eventos_candidatos",
+                        0,
+                    ),
+
+                "persistencia":
+                    persistencia_fecha,
+            }
 
         flota_db.commit()
 
@@ -595,6 +649,9 @@ def descargar_r16(
 
         "flota_operativa_servicios":
             resultado_flota_servicios,
+
+        "detector_ppu":
+            resultado_detector_ppu,
 
         "mensaje":
             (

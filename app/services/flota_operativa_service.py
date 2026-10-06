@@ -25,12 +25,15 @@ from typing import Iterable
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.services.flota_r002_service import cargar_r002
+from app.services.flota_operativa_r22_service import construir_resumen_terminal_r22
+from app.services.sinoptico_r22_service import SinopticoR22Service
 
 from app.config import CATALOGOS_DIR
 from app.models import (
-    FlotaAsignacionTerminal,
+    Expedicion,    FlotaAsignacionTerminal,
     HistoricoFlotaOperativa,
     HistoricoFlotaOperativaServicio,
+    FlotaPPUValidacion,
     Servicio,
 )
 
@@ -450,7 +453,7 @@ def _resolver_patio_operativo(
 
 
 def _bool_csv(valor) -> bool:
-    return _norm(valor) in {"1", "SI", "SÍ", "TRUE", "VERDADERO"}
+    return _norm(valor) in {"1", "SI", "SÃ", "TRUE", "VERDADERO"}
 
 
 def asegurar_catalogo_terminales(db: Session) -> dict:
@@ -516,6 +519,1192 @@ def asegurar_catalogo_terminales(db: Session) -> dict:
 def _version_catalogo_actual(db: Session) -> str | None:
     asegurar_catalogo_terminales(db)
     return db.query(func.max(FlotaAsignacionTerminal.version)).scalar()
+
+
+# =====================================================================
+# SALIDAS REALES R1.6
+# =====================================================================
+
+
+# =====================================================================
+# PERFIL OPERACIONAL 30 / 60 MINUTOS
+# =====================================================================
+
+def construir_perfil_operacional(
+    fecha: str | date | datetime,
+    unidad: str | None = None,
+) -> dict:
+    """
+    Construye el requerimiento operacional desde:
+
+        catalogos/perfil_operacional.xlsx
+        catalogos/INFO.xlsx
+
+    Reglas certificadas:
+
+    60 minutos:
+        perfil = suma de MAXIMO_HORA por servicio,
+        contado una sola vez por servicio/periodo.
+
+    30 minutos:
+        perfil = suma de DATO de la media hora exacta.
+
+    Tipo de dia:
+        lunes-viernes -> LABORAL
+        sabado        -> SABADO
+        domingo       -> DOMINGO
+
+    INFO.xlsx se utiliza exclusivamente para resolver:
+        unidad + servicio -> terminal
+
+    Esta funcion NO modifica BD ni archivos.
+    """
+
+    import pandas as pd
+    import unicodedata
+
+    def normalizar(valor) -> str:
+        if pd.isna(valor):
+            return ""
+
+        s = unicodedata.normalize(
+            "NFKD",
+            str(valor).strip(),
+        )
+
+        return "".join(
+            c for c in s
+            if not unicodedata.combining(c)
+        ).upper()
+
+    def resolver_fecha(valor) -> date:
+        if isinstance(valor, datetime):
+            return valor.date()
+
+        if isinstance(valor, date):
+            return valor
+
+        if isinstance(valor, str):
+            texto_fecha = valor.strip()
+
+            for formato in (
+                "%Y-%m-%d",
+                "%d-%m-%Y",
+                "%d/%m/%Y",
+            ):
+                try:
+                    return datetime.strptime(
+                        texto_fecha,
+                        formato,
+                    ).date()
+                except ValueError:
+                    pass
+
+        raise ValueError(
+            f"Fecha invalida para perfil operacional: {valor!r}"
+        )
+
+    fecha_obj = resolver_fecha(fecha)
+
+    dia_semana = fecha_obj.weekday()
+
+    if dia_semana <= 4:
+        tipo_dia = "LABORAL"
+    elif dia_semana == 5:
+        tipo_dia = "SABADO"
+    else:
+        tipo_dia = "DOMINGO"
+
+    archivo_perfil = (
+        CATALOGOS_DIR
+        / "perfil_operacional.xlsx"
+    )
+
+    archivo_info = (
+        CATALOGOS_DIR
+        / "INFO.xlsx"
+    )
+
+    if not archivo_perfil.exists():
+        raise FileNotFoundError(
+            f"Perfil operacional no encontrado: {archivo_perfil}"
+        )
+
+    if not archivo_info.exists():
+        raise FileNotFoundError(
+            f"INFO.xlsx no encontrado: {archivo_info}"
+        )
+
+    perfil = pd.read_excel(
+        archivo_perfil,
+        sheet_name="Perfil_tabla",
+    )
+
+    if len(perfil.columns) != 8:
+        raise RuntimeError(
+            "perfil_operacional.xlsx no tiene las 8 columnas "
+            "certificadas."
+        )
+
+    # Renombrado interno para evitar dependencia de tildes/codificacion.
+    perfil.columns = [
+        "UNIDAD",
+        "TIPO_DIA",
+        "SERVICIO",
+        "MEDIA_HORA",
+        "DATO",
+        "HORA",
+        "MAXIMO_HORA",
+        "PERIODO",
+    ]
+
+    info = pd.read_excel(
+        archivo_info,
+        sheet_name="Info",
+    )
+
+    mapa_info = {
+        normalizar(c): c
+        for c in info.columns
+    }
+
+    requeridas_info = {
+        "UNIDAD",
+        "SERVICIO",
+        "TERMINAL",
+    }
+
+    faltantes_info = sorted(
+        requeridas_info
+        - set(mapa_info)
+    )
+
+    if faltantes_info:
+        raise RuntimeError(
+            "INFO.xlsx sin columnas requeridas: "
+            + ", ".join(faltantes_info)
+        )
+
+    # -------------------------------------------------------------
+    # Normalizacion perfil
+    # -------------------------------------------------------------
+
+    perfil["UNIDAD_N"] = (
+        perfil["UNIDAD"]
+        .map(normalizar)
+    )
+
+    perfil["TIPO_N"] = (
+        perfil["TIPO_DIA"]
+        .map(normalizar)
+    )
+
+    perfil["SERVICIO_N"] = (
+        perfil["SERVICIO"]
+        .map(normalizar)
+    )
+
+    # -------------------------------------------------------------
+    # Normalizacion INFO
+    # -------------------------------------------------------------
+
+    info["UNIDAD_N"] = (
+        info[mapa_info["UNIDAD"]]
+        .map(normalizar)
+        .replace(
+            {
+                "ALFAU8": "U8",
+                "OMEGAU9": "U9",
+            }
+        )
+    )
+
+    info["SERVICIO_N"] = (
+        info[mapa_info["SERVICIO"]]
+        .map(normalizar)
+    )
+
+    info["TERMINAL_N"] = (
+        info[mapa_info["TERMINAL"]]
+        .map(normalizar)
+    )
+
+    catalogo = (
+        info[
+            [
+                "UNIDAD_N",
+                "SERVICIO_N",
+                "TERMINAL_N",
+            ]
+        ]
+        .drop_duplicates()
+    )
+
+    control_terminal = (
+        catalogo
+        .groupby(
+            [
+                "UNIDAD_N",
+                "SERVICIO_N",
+            ]
+        )["TERMINAL_N"]
+        .nunique()
+    )
+
+    multiterrminal = control_terminal[
+        control_terminal > 1
+    ]
+
+    if len(multiterrminal):
+        raise RuntimeError(
+            "INFO.xlsx contiene servicios asociados "
+            "a mas de una terminal."
+        )
+
+    # -------------------------------------------------------------
+    # Filtro fecha / tipo de dia / unidad
+    # -------------------------------------------------------------
+
+    seleccionado = perfil[
+        perfil["TIPO_N"].eq(tipo_dia)
+    ].copy()
+
+    unidad_n = normalizar(unidad)
+
+    if unidad_n:
+        seleccionado = seleccionado[
+            seleccionado["UNIDAD_N"].eq(
+                unidad_n
+            )
+        ].copy()
+
+    # -------------------------------------------------------------
+    # Cruce servicio -> terminal
+    # -------------------------------------------------------------
+
+    seleccionado = seleccionado.merge(
+        catalogo,
+        how="left",
+        on=[
+            "UNIDAD_N",
+            "SERVICIO_N",
+        ],
+        validate="many_to_one",
+    )
+
+    sin_terminal_df = seleccionado[
+        seleccionado["TERMINAL_N"].isna()
+        |
+        seleccionado["TERMINAL_N"].eq("")
+    ]
+
+    sin_terminal = (
+        sin_terminal_df[
+            [
+                "UNIDAD_N",
+                "SERVICIO_N",
+            ]
+        ]
+        .drop_duplicates()
+        .to_dict("records")
+    )
+
+    if sin_terminal:
+        raise RuntimeError(
+            "Perfil operacional con servicios sin terminal: "
+            + ", ".join(
+                f'{x["UNIDAD_N"]}/{x["SERVICIO_N"]}'
+                for x in sin_terminal
+            )
+        )
+
+    # -------------------------------------------------------------
+    # Validaciones numericas
+    # -------------------------------------------------------------
+
+    for columna in (
+        "DATO",
+        "MAXIMO_HORA",
+        "PERIODO",
+    ):
+        seleccionado[columna] = pd.to_numeric(
+            seleccionado[columna],
+            errors="raise",
+        )
+
+    # -------------------------------------------------------------
+    # 60 MINUTOS
+    #
+    # MAXIMO_HORA aparece en las dos medias horas.
+    # Debe contarse UNA sola vez por servicio/periodo.
+    # -------------------------------------------------------------
+
+    servicio_60 = (
+        seleccionado[
+            [
+                "UNIDAD_N",
+                "TERMINAL_N",
+                "SERVICIO_N",
+                "PERIODO",
+                "MAXIMO_HORA",
+            ]
+        ]
+        .drop_duplicates(
+            subset=[
+                "UNIDAD_N",
+                "TERMINAL_N",
+                "SERVICIO_N",
+                "PERIODO",
+            ]
+        )
+    )
+
+    perfil_60_df = (
+        servicio_60
+        .groupby(
+            [
+                "UNIDAD_N",
+                "TERMINAL_N",
+                "PERIODO",
+            ],
+            as_index=False,
+        )["MAXIMO_HORA"]
+        .sum()
+    )
+
+    intervalos_60 = []
+
+    for fila in perfil_60_df.itertuples(
+        index=False
+    ):
+        periodo = int(fila.PERIODO)
+
+        intervalos_60.append(
+            {
+                "fecha": fecha_obj.isoformat(),
+                "unidad": fila.UNIDAD_N,
+                "terminal": fila.TERMINAL_N,
+                "periodo": periodo,
+                "etiqueta": f"P{periodo:02d}",
+                "perfil": int(fila.MAXIMO_HORA),
+            }
+        )
+
+    # -------------------------------------------------------------
+    # 30 MINUTOS
+    #
+    # Se usa DATO exacto de cada MEDIA_HORA.
+    # -------------------------------------------------------------
+
+    perfil_30_df = (
+        seleccionado
+        .groupby(
+            [
+                "UNIDAD_N",
+                "TERMINAL_N",
+                "MEDIA_HORA",
+            ],
+            as_index=False,
+        )["DATO"]
+        .sum()
+    )
+
+    intervalos_30 = []
+
+    for fila in perfil_30_df.itertuples(
+        index=False
+    ):
+        media = fila.MEDIA_HORA
+
+        if hasattr(media, "strftime"):
+            etiqueta = media.strftime("%H:%M")
+        else:
+            texto_media = str(media)
+            etiqueta = texto_media[:5]
+
+        intervalos_30.append(
+            {
+                "fecha": fecha_obj.isoformat(),
+                "unidad": fila.UNIDAD_N,
+                "terminal": fila.TERMINAL_N,
+                "media_hora": etiqueta,
+                "perfil": int(fila.DATO),
+            }
+        )
+
+    return {
+        "fecha": fecha_obj.isoformat(),
+        "tipo_dia": tipo_dia,
+        "unidad": unidad_n or None,
+        "archivo_perfil": str(
+            archivo_perfil
+        ),
+        "archivo_info": str(
+            archivo_info
+        ),
+        "filas_perfil_filtradas": int(
+            len(seleccionado)
+        ),
+        "total_sin_terminal": 0,
+        "sin_terminal": [],
+        "intervalos_60": intervalos_60,
+        "intervalos_30": intervalos_30,
+    }
+
+
+def construir_salidas_r16(
+    db: Session,
+    fecha_desde: str | date | None = None,
+    fecha_hasta: str | date | None = None,
+    unidad: str | None = None,
+) -> dict:
+    """
+    Construye salidas reales desde Expedicion (R1.6).
+
+    Salida unica:
+        unidad + servicio + patente + inicio_servicio
+
+    La terminal se obtiene desde el catalogo vigente de
+    FlotaAsignacionTerminal mediante PPU normalizada.
+
+    Devuelve:
+        - intervalos_60: fecha + unidad + terminal + periodo
+        - intervalos_30: fecha + unidad + terminal + media hora
+
+    No modifica el historico.
+    """
+
+    f_desde = _parse_fecha(
+        fecha_desde,
+        "fecha_desde",
+    )
+
+    f_hasta = _parse_fecha(
+        fecha_hasta,
+        "fecha_hasta",
+    )
+
+    if f_desde and f_hasta and f_desde > f_hasta:
+        raise ValueError(
+            "fecha_desde no puede ser mayor que fecha_hasta"
+        )
+
+    q = (
+        db.query(
+            Expedicion.unidad,
+            Expedicion.servicio,
+            Expedicion.patente,
+            Expedicion.inicio_servicio,
+        )
+        .filter(
+            Expedicion.inicio_servicio.isnot(None)
+        )
+    )
+
+    if f_desde:
+        q = q.filter(
+            Expedicion.inicio_servicio
+            >= datetime.combine(
+                f_desde,
+                time.min,
+            )
+        )
+
+    if f_hasta:
+        q = q.filter(
+            Expedicion.inicio_servicio
+            < datetime.combine(
+                f_hasta + timedelta(days=1),
+                time.min,
+            )
+        )
+
+    if unidad:
+        q = q.filter(
+            func.upper(Expedicion.unidad)
+            == _norm(unidad)
+        )
+
+    # Deduplicacion certificada para este indicador.
+    filas = q.distinct().all()
+
+    # Catalogo vigente PPU -> terminal.
+    asignaciones = obtener_asignaciones(db)
+
+    salidas_60 = defaultdict(int)
+    salidas_30 = defaultdict(int)
+
+    detalle_60 = defaultdict(list)
+    detalle_30 = defaultdict(list)
+
+    sin_terminal = []
+
+    for fila in filas:
+
+        inicio = fila.inicio_servicio
+
+        if inicio is None:
+            continue
+
+        unidad_fila = _norm(fila.unidad)
+
+        servicio_fila = (
+            _texto(fila.servicio)
+            or "SIN SERVICIO"
+        )
+
+        patente_fila = (
+            _texto(fila.patente)
+            or "SIN PATENTE"
+        )
+
+        ppu_normalizada = _normalizar_ppu(
+            patente_fila
+        )
+
+        asignacion = asignaciones.get(
+            ppu_normalizada
+        )
+
+        if asignacion is None:
+            terminal = "SIN ASIGNAR"
+
+            sin_terminal.append({
+                "fecha": inicio.date().isoformat(),
+                "unidad": unidad_fila,
+                "servicio": servicio_fila,
+                "patente": patente_fila,
+                "inicio_servicio": inicio.isoformat(
+                    sep=" "
+                ),
+            })
+
+        else:
+            terminal = (
+                _norm(asignacion.terminal)
+                or "SIN ASIGNAR"
+            )
+
+        fecha_fila = inicio.date()
+
+        # P01 = 00:00-00:59
+        # ...
+        # P24 = 23:00-23:59
+        periodo = inicio.hour + 1
+
+        minuto_base = (
+            0
+            if inicio.minute < 30
+            else 30
+        )
+
+        intervalo_30 = (
+            f"{inicio.hour:02d}:"
+            f"{minuto_base:02d}"
+        )
+
+        clave_60 = (
+            fecha_fila,
+            unidad_fila,
+            terminal,
+            periodo,
+        )
+
+        clave_30 = (
+            fecha_fila,
+            unidad_fila,
+            terminal,
+            intervalo_30,
+        )
+
+        salidas_60[clave_60] += 1
+        salidas_30[clave_30] += 1
+
+        detalle = {
+            "fecha": fecha_fila.isoformat(),
+            "unidad": unidad_fila,
+            "terminal": terminal,
+            "servicio": servicio_fila,
+            "patente": patente_fila,
+            "inicio_servicio": inicio.isoformat(
+                sep=" "
+            ),
+        }
+
+        detalle_60[clave_60].append(
+            detalle
+        )
+
+        detalle_30[clave_30].append(
+            detalle
+        )
+
+    intervalos_60 = []
+
+    for clave in sorted(salidas_60.keys()):
+
+        (
+            fecha_fila,
+            unidad_fila,
+            terminal,
+            periodo,
+        ) = clave
+
+        intervalos_60.append({
+            "fecha": fecha_fila.isoformat(),
+            "unidad": unidad_fila,
+            "terminal": terminal,
+            "periodo": periodo,
+            "hora_inicio":
+                f"{periodo - 1:02d}:00",
+            "hora_fin":
+                f"{periodo - 1:02d}:59",
+            "salidas": salidas_60[clave],
+            "detalle": detalle_60[clave],
+        })
+
+    intervalos_30 = []
+
+    for clave in sorted(salidas_30.keys()):
+
+        (
+            fecha_fila,
+            unidad_fila,
+            terminal,
+            intervalo,
+        ) = clave
+
+        hora_txt, minuto_txt = (
+            intervalo.split(":")
+        )
+
+        hora_num = int(hora_txt)
+        minuto_num = int(minuto_txt)
+
+        hora_fin = (
+            f"{hora_num:02d}:29"
+            if minuto_num == 0
+            else f"{hora_num:02d}:59"
+        )
+
+        intervalos_30.append({
+            "fecha": fecha_fila.isoformat(),
+            "unidad": unidad_fila,
+            "terminal": terminal,
+            "intervalo": intervalo,
+            "hora_inicio": intervalo,
+            "hora_fin": hora_fin,
+            "salidas": salidas_30[clave],
+            "detalle": detalle_30[clave],
+        })
+
+    return {
+        "total_salidas_unicas": len(filas),
+        "total_sin_terminal": len(sin_terminal),
+        "sin_terminal": sin_terminal,
+        "intervalos_60": intervalos_60,
+        "intervalos_30": intervalos_30,
+    }
+
+
+# =====================================================================
+# REAL R1.6 VS PERFIL OPERACIONAL
+# =====================================================================
+
+def construir_real_vs_perfil(
+    db: Session,
+    fecha: str | date | datetime,
+    unidad: str | None = None,
+) -> dict:
+    """
+    Compara salidas reales R1.6 contra perfil operacional.
+
+    REAL:
+        Expedicion R1.6 certificada mediante construir_salidas_r16().
+
+    PERFIL 60:
+        Maximo Hora por servicio/periodo.
+
+    PERFIL 30:
+        Dato exacto por media hora.
+
+    Reglas:
+        - No es acumulativo.
+        - No usa buses en calle como salidas.
+        - Conserva valores superiores a 100%.
+        - Perfil 0 no genera division por cero.
+        - Real > 0 y Perfil = 0 se marca SIN_REQUERIMIENTO.
+        - El universo es la union REAL + PERFIL.
+    """
+
+    from collections import defaultdict
+
+    def resolver_fecha(valor) -> date:
+        if isinstance(valor, datetime):
+            return valor.date()
+
+        if isinstance(valor, date):
+            return valor
+
+        if isinstance(valor, str):
+            valor = valor.strip()
+
+            for formato in (
+                "%Y-%m-%d",
+                "%d-%m-%Y",
+                "%d/%m/%Y",
+            ):
+                try:
+                    return datetime.strptime(
+                        valor,
+                        formato,
+                    ).date()
+                except ValueError:
+                    pass
+
+        raise ValueError(
+            f"Fecha invalida para Real vs Perfil: {valor!r}"
+        )
+
+    fecha_obj = resolver_fecha(fecha)
+    fecha_iso = fecha_obj.isoformat()
+
+    unidad_n = _norm(unidad) or None
+
+    real = construir_salidas_r16(
+        db,
+        fecha_desde=fecha_obj,
+        fecha_hasta=fecha_obj,
+        unidad=unidad_n,
+    )
+
+    perfil = construir_perfil_operacional(
+        fecha_obj,
+        unidad=unidad_n,
+    )
+
+    # ================================================================
+    # REAL 60
+    # ================================================================
+
+    real60 = defaultdict(int)
+
+    for fila in real["intervalos_60"]:
+        clave = (
+            _norm(fila.get("unidad")),
+            _norm(fila.get("terminal")),
+            int(fila.get("periodo")),
+        )
+
+        real60[clave] += int(
+            fila.get(
+                "salidas",
+                fila.get("total", 0),
+            )
+            or 0
+        )
+
+    # ================================================================
+    # PERFIL 60
+    # ================================================================
+
+    perfil60 = defaultdict(int)
+
+    for fila in perfil["intervalos_60"]:
+        clave = (
+            _norm(fila.get("unidad")),
+            _norm(fila.get("terminal")),
+            int(fila.get("periodo")),
+        )
+
+        perfil60[clave] += int(
+            fila.get("perfil", 0)
+            or 0
+        )
+
+    # ================================================================
+    # REAL 30
+    # ================================================================
+
+    real30 = defaultdict(int)
+
+    for fila in real["intervalos_30"]:
+
+        intervalo = (
+            fila.get("media_hora")
+            or fila.get("intervalo")
+            or fila.get("etiqueta")
+            or ""
+        )
+
+        intervalo = str(intervalo)[:5]
+
+        clave = (
+            _norm(fila.get("unidad")),
+            _norm(fila.get("terminal")),
+            intervalo,
+        )
+
+        real30[clave] += int(
+            fila.get(
+                "salidas",
+                fila.get("total", 0),
+            )
+            or 0
+        )
+
+    # ================================================================
+    # PERFIL 30
+    # ================================================================
+
+    perfil30 = defaultdict(int)
+
+    for fila in perfil["intervalos_30"]:
+
+        intervalo = str(
+            fila.get("media_hora")
+            or fila.get("intervalo")
+            or fila.get("etiqueta")
+            or ""
+        )[:5]
+
+        clave = (
+            _norm(fila.get("unidad")),
+            _norm(fila.get("terminal")),
+            intervalo,
+        )
+
+        perfil30[clave] += int(
+            fila.get("perfil", 0)
+            or 0
+        )
+
+    # ================================================================
+    # UNIVERSO DE UNIDADES / TERMINALES
+    # ================================================================
+
+    unidades = sorted(
+        {
+            clave[0]
+            for clave in real60
+            if clave[0]
+        }
+        |
+        {
+            clave[0]
+            for clave in perfil60
+            if clave[0]
+        }
+    )
+
+    terminales_por_unidad = defaultdict(set)
+
+    for u, terminal, _ in real60:
+        terminales_por_unidad[u].add(terminal)
+
+    for u, terminal, _ in perfil60:
+        terminales_por_unidad[u].add(terminal)
+
+    # ================================================================
+    # CONSTRUCTOR DE CELDA
+    # ================================================================
+
+    def construir_celda(real_valor, perfil_valor):
+        real_valor = int(real_valor or 0)
+        perfil_valor = int(perfil_valor or 0)
+
+        if perfil_valor > 0:
+            porcentaje = round(
+                (
+                    real_valor
+                    / perfil_valor
+                )
+                * 100,
+                2,
+            )
+
+            estado = "CON_PERFIL"
+
+        else:
+            porcentaje = None
+
+            if real_valor > 0:
+                estado = "SIN_REQUERIMIENTO"
+            else:
+                estado = "SIN_PERFIL"
+
+        return {
+            "real": real_valor,
+            "perfil": perfil_valor,
+            "porcentaje": porcentaje,
+            "estado": estado,
+        }
+
+    # ================================================================
+    # MATRIZ 60 MIN
+    # ================================================================
+
+    intervalos_60 = []
+
+    for u in unidades:
+
+        for terminal in sorted(
+            terminales_por_unidad[u]
+        ):
+
+            for periodo in range(1, 25):
+
+                clave = (
+                    u,
+                    terminal,
+                    periodo,
+                )
+
+                celda = construir_celda(
+                    real60.get(clave, 0),
+                    perfil60.get(clave, 0),
+                )
+
+                intervalos_60.append(
+                    {
+                        "fecha": fecha_iso,
+                        "unidad": u,
+                        "terminal": terminal,
+                        "periodo": periodo,
+                        "etiqueta": f"P{periodo:02d}",
+                        **celda,
+                    }
+                )
+
+    # ================================================================
+    # MATRIZ 30 MIN
+    # ================================================================
+
+    etiquetas_30 = []
+
+    for hora in range(24):
+        etiquetas_30.append(
+            f"{hora:02d}:00"
+        )
+        etiquetas_30.append(
+            f"{hora:02d}:30"
+        )
+
+    intervalos_30 = []
+
+    for u in unidades:
+
+        for terminal in sorted(
+            terminales_por_unidad[u]
+        ):
+
+            for intervalo in etiquetas_30:
+
+                clave = (
+                    u,
+                    terminal,
+                    intervalo,
+                )
+
+                celda = construir_celda(
+                    real30.get(clave, 0),
+                    perfil30.get(clave, 0),
+                )
+
+                intervalos_30.append(
+                    {
+                        "fecha": fecha_iso,
+                        "unidad": u,
+                        "terminal": terminal,
+                        "media_hora": intervalo,
+                        "etiqueta": intervalo,
+                        **celda,
+                    }
+                )
+
+    # ================================================================
+    # RESUMEN POR TERMINAL
+    #
+    # El porcentaje total se calcula:
+    #
+    #     SUM(real) / SUM(perfil)
+    #
+    # Nunca se suman ni promedian porcentajes de celdas.
+    # ================================================================
+
+    resumen_terminal_60 = []
+
+    for u in unidades:
+
+        for terminal in sorted(
+            terminales_por_unidad[u]
+        ):
+
+            filas = [
+                x
+                for x in intervalos_60
+                if (
+                    x["unidad"] == u
+                    and
+                    x["terminal"] == terminal
+                )
+            ]
+
+            total_real = sum(
+                x["real"]
+                for x in filas
+            )
+
+            total_perfil = sum(
+                x["perfil"]
+                for x in filas
+            )
+
+            if total_perfil > 0:
+                porcentaje = round(
+                    (
+                        total_real
+                        / total_perfil
+                    )
+                    * 100,
+                    2,
+                )
+                estado = "CON_PERFIL"
+
+            else:
+                porcentaje = None
+
+                if total_real > 0:
+                    estado = "SIN_REQUERIMIENTO"
+                else:
+                    estado = "SIN_PERFIL"
+
+            resumen_terminal_60.append(
+                {
+                    "fecha": fecha_iso,
+                    "unidad": u,
+                    "terminal": terminal,
+                    "real": total_real,
+                    "perfil": total_perfil,
+                    "porcentaje": porcentaje,
+                    "estado": estado,
+                }
+            )
+
+    # ================================================================
+    # RESUMEN POR UNIDAD
+    # ================================================================
+
+    resumen_unidad_60 = []
+
+    for u in unidades:
+
+        filas = [
+            x
+            for x in resumen_terminal_60
+            if x["unidad"] == u
+        ]
+
+        total_real = sum(
+            x["real"]
+            for x in filas
+        )
+
+        total_perfil = sum(
+            x["perfil"]
+            for x in filas
+        )
+
+        porcentaje = (
+            round(
+                (
+                    total_real
+                    / total_perfil
+                )
+                * 100,
+                2,
+            )
+            if total_perfil > 0
+            else None
+        )
+
+        resumen_unidad_60.append(
+            {
+                "fecha": fecha_iso,
+                "unidad": u,
+                "real": total_real,
+                "perfil": total_perfil,
+                "porcentaje": porcentaje,
+            }
+        )
+
+    # ================================================================
+    # CONTROLES DE CONSERVACION
+    # ================================================================
+
+    total_real_60 = sum(
+        x["real"]
+        for x in intervalos_60
+    )
+
+    total_real_30 = sum(
+        x["real"]
+        for x in intervalos_30
+    )
+
+    total_salidas = int(
+        real.get(
+            "total_salidas_unicas",
+            0,
+        )
+        or 0
+    )
+
+    controles = {
+        "total_salidas_r16": total_salidas,
+        "total_real_60": total_real_60,
+        "total_real_30": total_real_30,
+        "conservacion_60": (
+            total_real_60
+            == total_salidas
+        ),
+        "conservacion_30": (
+            total_real_30
+            == total_salidas
+        ),
+        "total_sin_terminal_r16": int(
+            real.get(
+                "total_sin_terminal",
+                0,
+            )
+            or 0
+        ),
+        "total_sin_terminal_perfil": int(
+            perfil.get(
+                "total_sin_terminal",
+                0,
+            )
+            or 0
+        ),
+    }
+
+    controles["ok"] = (
+        controles["conservacion_60"]
+        and
+        controles["conservacion_30"]
+    )
+
+    return {
+        "fecha": fecha_iso,
+        "tipo_dia": perfil["tipo_dia"],
+        "unidad": unidad_n,
+        "modo_default": "60",
+        "intervalos_60": intervalos_60,
+        "intervalos_30": intervalos_30,
+        "resumen_terminal_60": resumen_terminal_60,
+        "resumen_unidad_60": resumen_unidad_60,
+        "controles": controles,
+    }
 
 
 def obtener_asignaciones(db: Session) -> dict[str, FlotaAsignacionTerminal]:
@@ -1763,14 +2952,44 @@ def consultar_flota(
 
     asignada_terminal = defaultdict(int)
 
+    # Terminales pertenecientes a la unidad consultada.
+    # La relacion Unidad -> Terminal proviene del catalogo PPU.
+    terminales_unidad = set()
+
+    if unidad:
+        terminales_unidad = {
+            _norm(a.terminal)
+            for a in asignaciones.values()
+            if _norm(a.unidad) == _norm(unidad)
+            and _norm(a.terminal)
+        }
+
     if r001_actual:
         for term, cantidad in r001_actual["totales"].items():
-            asignada_terminal[term] = int(cantidad)
+
+            term_norm = _norm(term)
+
+            if (
+                unidad
+                and
+                terminales_unidad
+                and
+                term_norm not in terminales_unidad
+            ):
+                continue
+
+            asignada_terminal[
+                term_norm
+            ] = int(cantidad)
+
     else:
         for a in asignaciones.values():
             if unidad and _norm(a.unidad) != _norm(unidad):
                 continue
-            asignada_terminal[_norm(a.terminal)] += 1
+
+            asignada_terminal[
+                _norm(a.terminal)
+            ] += 1
 
     # Resumen terminal: PPU DISTINCT por fecha+periodo+terminal, independiente del servicio.
     terminal_ppus = defaultdict(set)
@@ -2286,6 +3505,132 @@ def consultar_flota(
 
 
 
+
+    # ================================================================
+    # R13C-R22 - FUENTE R2.2 PARA MATRIZ DE FLOTA
+    #
+    # PRIMERA INTEGRACION CONTROLADA:
+    # - Solo se usa si la consulta corresponde a UN solo dia.
+    # - Solo se usa si existe previamente el CSV R2.2.
+    # - NO descarga automaticamente.
+    # - NO reemplaza `presencias` R1.6.
+    # - NO modifica prestamos, patio ni otros calculos.
+    # ================================================================
+
+    resumen_r22_matriz = None
+    cobertura_r22 = None
+    fuente_matriz_acumulada = "R1.6"
+
+    fecha_r22_matriz = (
+        _parse_fecha(
+            fecha_desde,
+            "fecha_desde",
+        )
+    )
+
+    fecha_r22_hasta = (
+        _parse_fecha(
+            fecha_hasta,
+            "fecha_hasta",
+        )
+    )
+
+    if (
+        unidad
+        and
+        fecha_r22_matriz is not None
+        and
+        fecha_r22_hasta is not None
+        and
+        fecha_r22_matriz == fecha_r22_hasta
+    ):
+        servicio_r22_matriz = (
+            SinopticoR22Service()
+        )
+
+        ruta_r22_matriz = (
+            servicio_r22_matriz
+            .ruta_archivo_esperado(
+                unidad=unidad,
+                fecha=fecha_r22_matriz.strftime(
+                    "%d/%m/%Y"
+                ),
+            )
+        )
+
+        if ruta_r22_matriz.exists():
+
+            resumen_r22_matriz = (
+                construir_resumen_terminal_r22(
+                    ruta_archivo=ruta_r22_matriz,
+                    asignaciones=list(
+                        asignaciones.values()
+                    ),
+                    fecha=fecha_r22_matriz,
+                    unidad=unidad,
+                )
+            )
+
+            fuente_matriz_acumulada = "R2.2"
+
+            cobertura_r22_base = (
+                resumen_r22_matriz.get(
+                    "cobertura",
+                    {}
+                )
+                or {}
+            )
+
+            primera_r22 = (
+                cobertura_r22_base.get(
+                    "primera_transmision"
+                )
+            )
+
+            ultima_r22 = (
+                cobertura_r22_base.get(
+                    "ultima_transmision"
+                )
+            )
+
+            ultimo_periodo_r22 = (
+                cobertura_r22_base.get(
+                    "ultimo_periodo"
+                )
+            )
+
+            cobertura_r22 = {
+                "unidad":
+                    _norm(unidad),
+
+                "fecha":
+                    fecha_r22_matriz.isoformat(),
+
+                "primera_transmision":
+                    (
+                        primera_r22.isoformat(
+                            sep=" "
+                        )
+                        if primera_r22 is not None
+                        else None
+                    ),
+
+                "ultima_transmision":
+                    (
+                        ultima_r22.isoformat(
+                            sep=" "
+                        )
+                        if ultima_r22 is not None
+                        else None
+                    ),
+
+                "ultimo_periodo":
+                    ultimo_periodo_r22,
+
+                "fuente":
+                    "R2.2",
+            }
+
     # ================================================================
     # R13C - ACUMULADO PROGRESIVO PPU DISTINCT
     # Exclusivo para matriz Comportamiento por periodo.
@@ -2302,44 +3647,99 @@ def consultar_flota(
         lambda: defaultdict(set)
     )
 
-    for presencia in presencias:
+    if resumen_r22_matriz is not None:
 
-        term_acum = presencia.get(
-            "terminal"
-        )
-
-        ppu_acum = presencia.get(
-            "ppu"
-        )
-
-        try:
-            periodo_acum = int(
-                presencia.get(
-                    "periodo"
-                )
-                or 0
+        for fila_r22 in (
+            resumen_r22_matriz.get(
+                "resumen_terminal",
+                []
             )
-        except (TypeError, ValueError):
-            periodo_acum = 0
-
-        if (
-            not term_acum
-            or
-            not ppu_acum
-            or
-            periodo_acum < 1
-            or
-            periodo_acum > 24
         ):
-            continue
 
-        ppus_exactas_terminal_periodo[
-            term_acum
-        ][
-            periodo_acum
-        ].add(
-            ppu_acum
-        )
+            term_acum = _norm(
+                fila_r22.get(
+                    "terminal"
+                )
+            )
+
+            try:
+                periodo_acum = int(
+                    fila_r22.get(
+                        "periodo"
+                    )
+                    or 0
+                )
+            except (TypeError, ValueError):
+                periodo_acum = 0
+
+            if (
+                not term_acum
+                or
+                periodo_acum < 1
+                or
+                periodo_acum > 24
+            ):
+                continue
+
+            for ppu_acum in (
+                fila_r22.get(
+                    "ppus_periodo",
+                    []
+                )
+                or []
+            ):
+                if ppu_acum:
+                    ppus_exactas_terminal_periodo[
+                        term_acum
+                    ][
+                        periodo_acum
+                    ].add(
+                        ppu_acum
+                    )
+
+    else:
+
+        # Fallback historico:
+        # si no existe R2.2 controlado,
+        # conservar exactamente R1.6.
+        for presencia in presencias:
+
+            term_acum = presencia.get(
+                "terminal"
+            )
+
+            ppu_acum = presencia.get(
+                "ppu"
+            )
+
+            try:
+                periodo_acum = int(
+                    presencia.get(
+                        "periodo"
+                    )
+                    or 0
+                )
+            except (TypeError, ValueError):
+                periodo_acum = 0
+
+            if (
+                not term_acum
+                or
+                not ppu_acum
+                or
+                periodo_acum < 1
+                or
+                periodo_acum > 24
+            ):
+                continue
+
+            ppus_exactas_terminal_periodo[
+                term_acum
+            ][
+                periodo_acum
+            ].add(
+                ppu_acum
+            )
 
 
     resumen_terminal_acumulado = []
@@ -2551,8 +3951,166 @@ def consultar_flota(
         )
     }
 
-    total_operativa = len(
+    # =====================================================
+    # PASO 24L.1 - DETECTOR INFORMATIVO DE PPU NO RECONOCIDA
+    # =====================================================
+    #
+    # R1.6 es la fuente operacional.
+    # Una PPU observada en R1.6 que no existe en el catalogo
+    # de flota propia se informa para validacion.
+    #
+    # IMPORTANTE:
+    #   En este paso NO se modifica ningun KPI.
+    #   No se altera Total Flota, Operativa ni Sin transmision.
+    # =====================================================
+
+    ppus_catalogadas = {
+        _normalizar_ppu(ppu)
+        for ppu in asignaciones.keys()
+        if _normalizar_ppu(ppu)
+    }
+
+    # PPU propias validadas persistentemente.
+    #
+    # Una PPU fuera del catalogo solo se reconoce como propia
+    # cuando existe una validacion humana terminada y su
+    # clasificacion corresponde a una categoria propia.
+    #
+    # POR_VALIDAR y APOYO_EXTERNO quedan fuera del universo
+    # propio y, por lo tanto, no aumentan Flota Operativa.
+    clasificaciones_propias = {
+        "BUS_NUEVO_PROPIO",
+        "MOVIMIENTO_INTERNO",
+    }
+
+    filas_propias_validadas = (
+        db.query(FlotaPPUValidacion)
+        .filter(
+            FlotaPPUValidacion.estado == "VALIDADO",
+            FlotaPPUValidacion.clasificacion_final.in_(
+                clasificaciones_propias
+            ),
+        )
+        .all()
+    )
+
+    ppus_propias_validadas = {
+        _normalizar_ppu(fila.ppu)
+        for fila in filas_propias_validadas
+        if _normalizar_ppu(fila.ppu)
+    }
+
+    ppus_propias_reconocidas = (
+        ppus_catalogadas
+        | ppus_propias_validadas
+    )
+
+    ppus_no_reconocidas_set = (
         ppus_transmitiendo_global
+        - ppus_propias_reconocidas
+    )
+
+    detalle_ppu_no_reconocidas = []
+
+    for ppu_alerta in sorted(ppus_no_reconocidas_set):
+
+        presencias_ppu = [
+            p
+            for p in presencias
+            if _normalizar_ppu(p.get("ppu")) == ppu_alerta
+            and (
+                not terminal
+                or _norm(p.get("terminal")) == _norm(terminal)
+            )
+        ]
+
+        unidades_ppu = sorted({
+            str(p.get("unidad") or "").strip()
+            for p in presencias_ppu
+            if str(p.get("unidad") or "").strip()
+        })
+
+        terminales_ppu = sorted({
+            str(p.get("terminal") or "").strip()
+            for p in presencias_ppu
+            if str(p.get("terminal") or "").strip()
+        })
+
+        servicios_ppu = sorted({
+            str(p.get("servicio") or "").strip()
+            for p in presencias_ppu
+            if str(p.get("servicio") or "").strip()
+        })
+
+        codigos_ts_ppu = sorted({
+            str(p.get("codigo_ts") or "").strip()
+            for p in presencias_ppu
+            if str(p.get("codigo_ts") or "").strip()
+        })
+
+        fechas_ppu = sorted({
+            str(p.get("fecha") or "").strip()
+            for p in presencias_ppu
+            if str(p.get("fecha") or "").strip()
+        })
+
+        detalle_ppu_no_reconocidas.append({
+            "ppu": ppu_alerta,
+            "estado": "POR VALIDAR",
+            "tipo_alerta": "PPU_NO_RECONOCIDA_R16",
+            "unidades": unidades_ppu,
+            "terminales_operacionales": terminales_ppu,
+            "servicios": servicios_ppu,
+            "codigos_ts": codigos_ts_ppu,
+            "primera_fecha": (
+                fechas_ppu[0]
+                if fechas_ppu
+                else None
+            ),
+            "ultima_fecha": (
+                fechas_ppu[-1]
+                if fechas_ppu
+                else None
+            ),
+            "presencias": len(presencias_ppu),
+        })
+
+    alertas_ppu = {
+        "total_no_reconocidas":
+            len(detalle_ppu_no_reconocidas),
+
+        "ppu_no_reconocidas":
+            detalle_ppu_no_reconocidas,
+
+        "regla":
+            "PPU observada en R1.6 y no reconocida como flota propia.",
+
+        "afecta_kpi":
+            False,
+    }
+
+    # =====================================================
+    # PASO 24M.2 - OPERATIVA PROPIA
+    # =====================================================
+    #
+    # Solo una PPU reconocida como propia puede formar parte
+    # del KPI oficial de Flota Operativa.
+    #
+    # Una PPU observada en R1.6 pero no reconocida:
+    #   - sigue visible en alertas_ppu
+    #   - NO aumenta Flota Operativa propia
+    #   - NO modifica Total Flota R001
+    #   - queda POR VALIDAR
+    # =====================================================
+
+    ppus_operativas_propias = (
+        ppus_transmitiendo_global
+        &
+        ppus_propias_reconocidas
+    )
+
+    total_operativa = len(
+        ppus_operativas_propias
     )
 
     total_sin_transmision = max(
@@ -3366,7 +4924,535 @@ def consultar_flota(
             r002.get("error"),
     }
 
+
+    # ================================================================
+    # MATRIZ FLOTA - 4 SERIES CERTIFICADAS
+    # ================================================================
+    #
+    # PERFIL TEORICO:
+    #   buses requeridos por periodo segun perfil_operacional.xlsx.
+    #
+    # R1.6 PPU:
+    #   PPU DISTINCT con presencia historica R1.6 por periodo.
+    #
+    # R2.2 PERIODO:
+    #   PPU DISTINCT detectadas exactamente en el periodo.
+    #
+    # R2.2 ACUMULADO:
+    #   PPU DISTINCT detectadas desde P01 hasta el periodo.
+    #
+    # IMPORTANTE:
+    # - R1.6 NO se interpreta como intervalo inicio-fin de expedicion.
+    # - R2.2 posterior a su cobertura real se devuelve como None.
+    # - No modifica ninguna tabla.
+    # ================================================================
+
+    matriz_flota = None
+
+    if (
+        unidad
+        and
+        fecha_r22_matriz is not None
+        and
+        fecha_r22_hasta is not None
+        and
+        fecha_r22_matriz == fecha_r22_hasta
+    ):
+
+        # ------------------------------------------------------------
+        # PERFIL TEORICO
+        # ------------------------------------------------------------
+
+        perfil_matriz = construir_perfil_operacional(
+            fecha_r22_matriz,
+            unidad,
+        )
+
+        perfil_por_periodo = defaultdict(int)
+
+        for fila_perfil in (
+            perfil_matriz.get(
+                "intervalos_60",
+                []
+            )
+        ):
+
+            try:
+                periodo_perfil = int(
+                    fila_perfil.get(
+                        "periodo"
+                    )
+                    or 0
+                )
+            except (TypeError, ValueError):
+                continue
+
+            if not 1 <= periodo_perfil <= 24:
+                continue
+
+            perfil_por_periodo[
+                periodo_perfil
+            ] += int(
+                fila_perfil.get(
+                    "perfil"
+                )
+                or 0
+            )
+
+        # ------------------------------------------------------------
+        # MATRIZ POR TERMINAL - PERFIL
+        # ------------------------------------------------------------
+
+        perfil_terminal_periodo = defaultdict(int)
+
+        for fila_perfil in (
+            perfil_matriz.get(
+                "intervalos_60",
+                []
+            )
+        ):
+            terminal_perfil = _norm(
+                fila_perfil.get(
+                    "terminal"
+                )
+            )
+
+            try:
+                periodo_perfil_terminal = int(
+                    fila_perfil.get(
+                        "periodo"
+                    )
+                    or 0
+                )
+            except (TypeError, ValueError):
+                continue
+
+            if (
+                terminal_perfil
+                and
+                1 <= periodo_perfil_terminal <= 24
+            ):
+                perfil_terminal_periodo[
+                    (
+                        terminal_perfil,
+                        periodo_perfil_terminal
+                    )
+                ] += int(
+                    fila_perfil.get(
+                        "perfil"
+                    )
+                    or 0
+                )
+
+        # ------------------------------------------------------------
+        # R1.6 - PPU DISTINCT CON PRESENCIA POR PERIODO
+        # ------------------------------------------------------------
+
+        r16_ppus_periodo = defaultdict(set)
+        r16_ppus_terminal_periodo = defaultdict(set)
+
+        for presencia_matriz in presencias:
+
+            fecha_presencia = (
+                presencia_matriz.get(
+                    "fecha"
+                )
+            )
+
+            if (
+                fecha_presencia
+                !=
+                fecha_r22_matriz
+            ):
+                continue
+
+            try:
+                periodo_r16 = int(
+                    presencia_matriz.get(
+                        "periodo"
+                    )
+                    or 0
+                )
+            except (TypeError, ValueError):
+                continue
+
+            if not 1 <= periodo_r16 <= 24:
+                continue
+
+            ppu_r16 = _normalizar_ppu(
+                presencia_matriz.get(
+                    "ppu"
+                )
+            )
+
+            if ppu_r16:
+                r16_ppus_periodo[
+                    periodo_r16
+                ].add(
+                    ppu_r16
+                )
+
+                terminal_r16 = _norm(
+                    presencia_matriz.get(
+                        "terminal"
+                    )
+                )
+
+                if terminal_r16:
+                    r16_ppus_terminal_periodo[
+                        (
+                            terminal_r16,
+                            periodo_r16
+                        )
+                    ].add(
+                        ppu_r16
+                    )
+
+        # ------------------------------------------------------------
+        # R2.2 - EXACTO Y ACUMULADO
+        # ------------------------------------------------------------
+
+        r22_ppus_periodo = defaultdict(set)
+        r22_ppus_terminal_periodo = defaultdict(set)
+
+        if resumen_r22_matriz is not None:
+
+            for fila_r22_matriz in (
+                resumen_r22_matriz.get(
+                    "resumen_terminal",
+                    []
+                )
+            ):
+
+                try:
+                    periodo_r22 = int(
+                        fila_r22_matriz.get(
+                            "periodo"
+                        )
+                        or 0
+                    )
+                except (TypeError, ValueError):
+                    continue
+
+                if not 1 <= periodo_r22 <= 24:
+                    continue
+
+                for ppu_r22 in (
+                    fila_r22_matriz.get(
+                        "ppus_periodo",
+                        []
+                    )
+                    or []
+                ):
+
+                    ppu_r22_norm = (
+                        _normalizar_ppu(
+                            ppu_r22
+                        )
+                    )
+
+                    if ppu_r22_norm:
+                        r22_ppus_periodo[
+                            periodo_r22
+                        ].add(
+                            ppu_r22_norm
+                        )
+
+                        terminal_r22 = _norm(
+                            fila_r22_matriz.get(
+                                "terminal"
+                            )
+                        )
+
+                        if terminal_r22:
+                            r22_ppus_terminal_periodo[
+                                (
+                                    terminal_r22,
+                                    periodo_r22
+                                )
+                            ].add(
+                                ppu_r22_norm
+                            )
+
+        ultimo_periodo_r22_matriz = None
+
+        if cobertura_r22:
+
+            try:
+                ultimo_periodo_r22_matriz = int(
+                    cobertura_r22.get(
+                        "ultimo_periodo"
+                    )
+                    or 0
+                )
+            except (TypeError, ValueError):
+                ultimo_periodo_r22_matriz = None
+
+            if (
+                ultimo_periodo_r22_matriz is not None
+                and
+                not (
+                    1
+                    <=
+                    ultimo_periodo_r22_matriz
+                    <=
+                    24
+                )
+            ):
+                ultimo_periodo_r22_matriz = None
+
+        acumuladas_r22 = set()
+
+        series_matriz_flota = []
+
+        for periodo_matriz in range(1, 25):
+
+            # Solo acumulamos PPU realmente observadas
+            # en ese periodo.
+            acumuladas_r22.update(
+                r22_ppus_periodo.get(
+                    periodo_matriz,
+                    set()
+                )
+            )
+
+            periodo_con_cobertura_r22 = (
+                resumen_r22_matriz is not None
+                and
+                ultimo_periodo_r22_matriz is not None
+                and
+                periodo_matriz
+                <=
+                ultimo_periodo_r22_matriz
+            )
+
+            series_matriz_flota.append({
+                "periodo":
+                    periodo_matriz,
+
+                "etiqueta":
+                    f"P{periodo_matriz:02d}",
+
+                "perfil_teorico":
+                    int(
+                        perfil_por_periodo.get(
+                            periodo_matriz,
+                            0
+                        )
+                    ),
+
+                "r16_ppu":
+                    len(
+                        r16_ppus_periodo.get(
+                            periodo_matriz,
+                            set()
+                        )
+                    ),
+
+                "r22_periodo":
+                    (
+                        len(
+                            r22_ppus_periodo.get(
+                                periodo_matriz,
+                                set()
+                            )
+                        )
+                        if periodo_con_cobertura_r22
+                        else None
+                    ),
+
+                "r22_acumulado":
+                    (
+                        len(
+                            acumuladas_r22
+                        )
+                        if periodo_con_cobertura_r22
+                        else None
+                    ),
+
+                "estado_r22":
+                    (
+                        "CON_DATOS"
+                        if periodo_con_cobertura_r22
+                        else "SIN_DATOS"
+                    ),
+            })
+
+        # ------------------------------------------------------------
+        # SERIES REALES POR TERMINAL
+        # ------------------------------------------------------------
+
+        terminales_matriz = sorted(
+            {
+                terminal
+                for terminal, _periodo
+                in perfil_terminal_periodo.keys()
+            }
+            |
+            {
+                terminal
+                for terminal, _periodo
+                in r22_ppus_terminal_periodo.keys()
+            }
+            |
+            {
+                terminal
+                for terminal, _periodo
+                in r16_ppus_terminal_periodo.keys()
+            }
+        )
+
+        series_terminales_matriz = []
+
+        for terminal_matriz in terminales_matriz:
+
+            acumuladas_terminal_r22 = set()
+            series_terminal = []
+
+            for periodo_matriz in range(1, 25):
+
+                exactas_terminal_r22 = (
+                    r22_ppus_terminal_periodo.get(
+                        (
+                            terminal_matriz,
+                            periodo_matriz
+                        ),
+                        set()
+                    )
+                )
+
+                acumuladas_terminal_r22.update(
+                    exactas_terminal_r22
+                )
+
+                periodo_con_cobertura_terminal = (
+                    resumen_r22_matriz is not None
+                    and
+                    ultimo_periodo_r22_matriz is not None
+                    and
+                    periodo_matriz
+                    <=
+                    ultimo_periodo_r22_matriz
+                )
+
+                series_terminal.append({
+                    "periodo":
+                        periodo_matriz,
+
+                    "etiqueta":
+                        f"P{periodo_matriz:02d}",
+
+                    "perfil_teorico":
+                        int(
+                            perfil_terminal_periodo.get(
+                                (
+                                    terminal_matriz,
+                                    periodo_matriz
+                                ),
+                                0
+                            )
+                        ),
+
+                    "r16_ppu":
+                        len(
+                            r16_ppus_terminal_periodo.get(
+                                (
+                                    terminal_matriz,
+                                    periodo_matriz
+                                ),
+                                set()
+                            )
+                        ),
+
+                    "r22_periodo":
+                        (
+                            len(
+                                exactas_terminal_r22
+                            )
+                            if periodo_con_cobertura_terminal
+                            else None
+                        ),
+
+                    # FLOTA-R22-DETALLE-PPU
+                    # PPU DISTINCT detectadas exactamente
+                    # dentro del periodo.
+                    "r22_ppus_periodo":
+                        (
+                            sorted(
+                                exactas_terminal_r22
+                            )
+                            if periodo_con_cobertura_terminal
+                            else []
+                        ),
+
+                    "r22_acumulado":
+                        (
+                            len(
+                                acumuladas_terminal_r22
+                            )
+                            if periodo_con_cobertura_terminal
+                            else None
+                        ),
+
+                    # PPU DISTINCT observadas desde P01
+                    # hasta este periodo.
+                    "r22_ppus_acumuladas":
+                        (
+                            sorted(
+                                acumuladas_terminal_r22
+                            )
+                            if periodo_con_cobertura_terminal
+                            else []
+                        ),
+
+                    "estado_r22":
+                        (
+                            "CON_DATOS"
+                            if periodo_con_cobertura_terminal
+                            else "SIN_DATOS"
+                        ),
+                })
+
+            series_terminales_matriz.append({
+                "terminal":
+                    terminal_matriz,
+
+                "series":
+                    series_terminal,
+            })
+
+        matriz_flota = {
+            "fecha":
+                fecha_r22_matriz.isoformat(),
+
+            "unidad":
+                _norm(unidad),
+
+            "ultimo_periodo_r22":
+                ultimo_periodo_r22_matriz,
+
+            "fuente_perfil":
+                "perfil_operacional.xlsx",
+
+            "fuente_r16":
+                "HistoricoFlotaOperativaServicio",
+
+            "fuente_r22":
+                (
+                    "R2.2"
+                    if resumen_r22_matriz is not None
+                    else None
+                ),
+
+            "series":
+                series_matriz_flota,
+
+            "terminales":
+                series_terminales_matriz,
+        }
+
     return {
+        "matriz_flota": matriz_flota,
         "estado_actual_r002": estado_r002_resumen,
         "resumen_sin_transmision_dias": sin_tx_dias["resumen"],
         "sin_transmision_detalle_dias": sin_tx_dias["detalle"],
@@ -3378,6 +5464,7 @@ def consultar_flota(
         "kpis": kpis,
         "resumen_unidades": resumen_unidades,
         "cobertura_fuente": cobertura_fuente,
+        "cobertura_r22": cobertura_r22,
         "resumen_terminal": resumen_terminal,
         "resumen_terminal_acumulado": resumen_terminal_acumulado,
         "resumen_terminal_global": resumen_terminal_global,
@@ -3385,6 +5472,7 @@ def consultar_flota(
         "prestamos_detalle": prestamos_detalle,
         "prestamos_revision": prestamos_revision,
         "total_global": total_global,
+        "alertas_ppu": alertas_ppu,
         "sin_transmision_detalle": sin_transmision_detalle,
         "resumen_sin_transmision": resumen_sin_transmision,
         "resumen_servicio": resumen_servicio,
@@ -3440,3 +5528,8 @@ def consultar_detalle(
         })
     salida.sort(key=lambda x: (x["servicio"], x["ppu"]))
     return salida
+
+
+
+
+

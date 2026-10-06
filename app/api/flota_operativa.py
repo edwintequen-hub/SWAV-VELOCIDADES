@@ -9,7 +9,9 @@ from app.services.flota_operativa_service import (
     consultar_detalle,
     consultar_flota,
     obtener_filtros,
+    construir_real_vs_perfil,
 )
+from app.services.r22_scheduler import obtener_estado_r22
 
 router = APIRouter(prefix="/api/flota-operativa", tags=["Flota Operativa"])
 
@@ -43,6 +45,32 @@ def consulta(
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+
+
+
+@router.get("/real-vs-perfil")
+def real_vs_perfil(
+    fecha: str = Query(...),
+    unidad: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    """
+    Comparacion certificada de salidas reales R1.6
+    contra Perfil Operacional.
+
+    Endpoint inicial de prueba para la nueva matriz.
+    """
+    try:
+        return construir_real_vs_perfil(
+            db=db,
+            fecha=fecha,
+            unidad=unidad,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
 
 
 @router.get("/detalle")
@@ -3373,6 +3401,641 @@ def exportar_sin_tx_historico(
         headers={
             "Content-Disposition":
                 f'attachment; filename="{nombre_archivo}"'
+        },
+    )
+
+# ============================================================
+# ESTADO AUTOMATICO R2.2 - FLOTA
+# ============================================================
+
+@router.get("/r22/estado")
+def estado_r22_automatico():
+
+    """
+    Estado en memoria del scheduler automatico R2.2.
+
+    Solo lectura.
+    No ejecuta descarga.
+    No modifica BD.
+    """
+
+    estado = obtener_estado_r22()
+
+    return {
+        "ok": True,
+        "fuente": "R2.2",
+        "automatico": True,
+        "activo": estado.get("activo", False),
+        "ejecutando": estado.get("ejecutando", False),
+        "intervalo_minutos":
+            estado.get("intervalo_minutos"),
+        "ultima_ejecucion":
+            estado.get("ultima_ejecucion"),
+        "proxima_ejecucion":
+            estado.get("proxima_ejecucion"),
+        "resultados":
+            estado.get("resultados", {}),
+        "ultimo_error":
+            estado.get("ultimo_error"),
+    }
+
+
+
+
+# ============================================================
+# API REPORTE COMERCIAL R1.6 HISTORICO
+# ============================================================
+
+@router.get("/comercial-r16/fechas")
+def comercial_r16_fechas(
+    unidad: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    """
+    Fechas disponibles en el historico consolidado R1.6.
+    """
+
+    from sqlalchemy import text
+
+    parametros = {}
+
+    where = ""
+
+    if unidad:
+        unidad = unidad.strip().upper()
+
+        if unidad not in ("U8", "U9"):
+            raise HTTPException(
+                status_code=400,
+                detail="Unidad invalida. Use U8 o U9.",
+            )
+
+        where = "WHERE unidad = :unidad"
+        parametros["unidad"] = unidad
+
+    filas = db.execute(
+        text(f"""
+            SELECT
+                fecha_operacional,
+                GROUP_CONCAT(
+                    DISTINCT unidad
+                ) AS unidades
+            FROM historico_reporte_comercial_r16
+            {where}
+            GROUP BY fecha_operacional
+            ORDER BY fecha_operacional DESC
+        """),
+        parametros,
+    ).mappings().all()
+
+    return {
+        "ok": True,
+        "fuente": "HISTORICO_R1.6",
+        "total_fechas": len(filas),
+        "fechas": [
+            {
+                "fecha": str(f["fecha_operacional"]),
+                "unidades": sorted(
+                    str(f["unidades"]).split(",")
+                ),
+            }
+            for f in filas
+        ],
+    }
+
+
+@router.get("/comercial-r16/reporte")
+def comercial_r16_reporte(
+    fecha: str = Query(...),
+    unidad: str = Query(...),
+    granularidad: str = Query(default="30MIN"),
+    db: Session = Depends(get_db),
+):
+    """
+    Reporte diario persistido de salidas comerciales R1.6.
+
+    granularidad:
+    - 30MIN: 48 periodos.
+    - 1H:    24 periodos derivados de 30MIN.
+
+    No reconstruye R1.6 y no depende del Excel fuente.
+    """
+
+    from sqlalchemy import text
+
+    unidad = unidad.strip().upper()
+    granularidad = granularidad.strip().upper()
+
+    if unidad not in ("U8", "U9"):
+        raise HTTPException(
+            status_code=400,
+            detail="Unidad invalida. Use U8 o U9.",
+        )
+
+    if granularidad not in ("30MIN", "1H"):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Granularidad invalida. "
+                "Use 30MIN o 1H."
+            ),
+        )
+
+    filas = db.execute(
+        text("""
+            SELECT
+                fecha_operacional,
+                unidad,
+                tipo_dia,
+                terminal,
+                servicio,
+                periodo_30,
+                salidas_reales,
+                perfil_comercial,
+                diferencia,
+                inicio_r16,
+                corte_r16,
+                estado_cobertura,
+                fuente
+            FROM historico_reporte_comercial_r16
+            WHERE fecha_operacional = :fecha
+              AND unidad = :unidad
+            ORDER BY
+                terminal,
+                servicio,
+                periodo_30
+        """),
+        {
+            "fecha": fecha,
+            "unidad": unidad,
+        },
+    ).mappings().all()
+
+    if not filas:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "No existe reporte comercial R1.6 "
+                f"para {unidad} en {fecha}."
+            ),
+        )
+
+    tipo_dia = filas[0]["tipo_dia"]
+    inicio_r16 = filas[0]["inicio_r16"]
+    corte_r16 = filas[0]["corte_r16"]
+    estado_cobertura = filas[0]["estado_cobertura"]
+
+    def periodo_hora(periodo_30: str) -> str:
+        hora = int(
+            str(periodo_30).split(":")[0]
+        )
+        return f"{hora:02d}:00"
+
+    agregados = {}
+
+    for fila in filas:
+
+        periodo = str(fila["periodo_30"])
+
+        if granularidad == "1H":
+            periodo = periodo_hora(periodo)
+
+        clave = (
+            str(fila["terminal"]),
+            str(fila["servicio"]),
+            periodo,
+        )
+
+        if clave not in agregados:
+            agregados[clave] = {
+                "terminal": str(fila["terminal"]),
+                "servicio": str(fila["servicio"]),
+                "periodo": periodo,
+                "real": 0,
+                "perfil": 0,
+                "diferencia": 0,
+            }
+
+        agregados[clave]["real"] += int(
+            fila["salidas_reales"] or 0
+        )
+
+        agregados[clave]["perfil"] += int(
+            fila["perfil_comercial"] or 0
+        )
+
+        agregados[clave]["diferencia"] += int(
+            fila["diferencia"] or 0
+        )
+
+    servicios = sorted(
+        agregados.values(),
+        key=lambda x: (
+            x["terminal"],
+            x["servicio"],
+            x["periodo"],
+        ),
+    )
+
+    matriz = {}
+
+    for fila in servicios:
+
+        terminal = fila["terminal"]
+        periodo = fila["periodo"]
+
+        clave = (terminal, periodo)
+
+        if clave not in matriz:
+            matriz[clave] = {
+                "terminal": terminal,
+                "periodo": periodo,
+                "real": 0,
+                "perfil": 0,
+                "diferencia": 0,
+            }
+
+        matriz[clave]["real"] += fila["real"]
+        matriz[clave]["perfil"] += fila["perfil"]
+        matriz[clave]["diferencia"] += fila["diferencia"]
+
+    matriz_terminal = sorted(
+        matriz.values(),
+        key=lambda x: (
+            x["terminal"],
+            x["periodo"],
+        ),
+    )
+
+    resumen_terminal = {}
+
+    for fila in servicios:
+
+        terminal = fila["terminal"]
+
+        if terminal not in resumen_terminal:
+            resumen_terminal[terminal] = {
+                "terminal": terminal,
+                "real": 0,
+                "perfil": 0,
+                "diferencia": 0,
+            }
+
+        resumen_terminal[terminal]["real"] += fila["real"]
+        resumen_terminal[terminal]["perfil"] += fila["perfil"]
+        resumen_terminal[terminal]["diferencia"] += (
+            fila["diferencia"]
+        )
+
+    resumen_terminal = sorted(
+        resumen_terminal.values(),
+        key=lambda x: x["terminal"],
+    )
+
+    total_real = sum(
+        item["real"]
+        for item in servicios
+    )
+
+    total_perfil = sum(
+        item["perfil"]
+        for item in servicios
+    )
+
+    return {
+        "ok": True,
+        "fuente": "HISTORICO_R1.6",
+        "fecha": fecha,
+        "unidad": unidad,
+        "tipo_dia": tipo_dia,
+        "granularidad": granularidad,
+        "inicio_r16": (
+            str(inicio_r16)
+            if inicio_r16 is not None
+            else None
+        ),
+        "corte_r16": (
+            str(corte_r16)
+            if corte_r16 is not None
+            else None
+        ),
+        "estado_cobertura": estado_cobertura,
+        "total_real": total_real,
+        "total_perfil": total_perfil,
+        "diferencia": (
+            total_real - total_perfil
+        ),
+        "resumen_terminal": resumen_terminal,
+        "matriz_terminal": matriz_terminal,
+        "servicios": servicios,
+    }
+
+
+@router.get("/comercial-r16/detalle")
+def comercial_r16_detalle(
+    fecha: str = Query(...),
+    unidad: str = Query(...),
+    terminal: str | None = Query(default=None),
+    servicio: str | None = Query(default=None),
+    periodo: str | None = Query(default=None),
+    granularidad: str = Query(default="30MIN"),
+    db: Session = Depends(get_db),
+):
+    """
+    Detalle deduplicado de expediciones R1.6.
+
+    El terminal se obtiene por unidad + codigo_ts
+    usando el mismo catalogo certificado del motor
+    comercial R1.6.
+    """
+
+    from sqlalchemy import text
+
+    from app.services.reporte_comercial_r16_service import (
+        _catalogo_terminal_ts,
+    )
+
+    unidad = unidad.strip().upper()
+    granularidad = granularidad.strip().upper()
+
+    if unidad not in ("U8", "U9"):
+        raise HTTPException(
+            status_code=400,
+            detail="Unidad invalida. Use U8 o U9.",
+        )
+
+    if granularidad not in ("30MIN", "1H"):
+        raise HTTPException(
+            status_code=400,
+            detail="Granularidad invalida. Use 30MIN o 1H.",
+        )
+
+    terminal_filtro = (
+        terminal.strip().upper()
+        if terminal
+        else None
+    )
+
+    servicio_filtro = (
+        servicio.strip().upper()
+        if servicio
+        else None
+    )
+
+    periodo_filtro = (
+        periodo.strip()
+        if periodo
+        else None
+    )
+
+    filas = db.execute(
+        text("""
+            SELECT
+                h.fecha_operacional,
+                h.unidad,
+                h.servicio,
+                h.codigo_ts,
+                h.patente,
+                h.inicio_servicio,
+                h.fin_servicio,
+                h.ruta_normalizada,
+                h.sentido
+            FROM historico_expediciones h
+            WHERE h.fecha_operacional = :fecha
+              AND h.unidad = :unidad
+            ORDER BY
+                h.inicio_servicio,
+                h.servicio,
+                h.patente
+        """),
+        {
+            "fecha": fecha,
+            "unidad": unidad,
+        },
+    ).mappings().all()
+
+    catalogo_terminal = _catalogo_terminal_ts(
+        db
+    )
+
+    # Deduplicacion certificada:
+    # fecha + unidad + servicio + patente + inicio_servicio
+    unicos = {}
+
+    for fila in filas:
+
+        clave = (
+            str(fila["fecha_operacional"]),
+            str(fila["unidad"]),
+            str(fila["servicio"]),
+            str(fila["patente"]),
+            str(fila["inicio_servicio"]),
+        )
+
+        if clave not in unicos:
+            unicos[clave] = dict(fila)
+
+    detalle = []
+
+    for fila in unicos.values():
+
+        codigo_ts = str(
+            fila["codigo_ts"] or ""
+        ).strip().upper()
+
+        terminal_real = catalogo_terminal.get(
+            (
+                unidad,
+                codigo_ts,
+            )
+        )
+
+        if not terminal_real:
+            continue
+
+        servicio_real = str(
+            fila["servicio"] or ""
+        ).strip()
+
+        if (
+            terminal_filtro
+            and terminal_real != terminal_filtro
+        ):
+            continue
+
+        if (
+            servicio_filtro
+            and servicio_real.upper() != servicio_filtro
+        ):
+            continue
+
+        inicio_servicio = fila[
+            "inicio_servicio"
+        ]
+
+        if inicio_servicio is None:
+            continue
+
+        inicio_texto = str(
+            inicio_servicio
+        )
+
+        try:
+            hora_texto = (
+                inicio_texto
+                .split(" ")[1][:5]
+            )
+
+            hora = int(
+                hora_texto[0:2]
+            )
+
+            minuto = int(
+                hora_texto[3:5]
+            )
+
+        except Exception:
+            continue
+
+        minuto_30 = (
+            0
+            if minuto < 30
+            else 30
+        )
+
+        periodo_30 = (
+            f"{hora:02d}:{minuto_30:02d}"
+        )
+
+        periodo_1h = (
+            f"{hora:02d}:00"
+        )
+
+        periodo_salida = (
+            periodo_30
+            if granularidad == "30MIN"
+            else periodo_1h
+        )
+
+        if (
+            periodo_filtro
+            and periodo_salida != periodo_filtro
+        ):
+            continue
+
+        detalle.append({
+            "terminal": terminal_real,
+            "servicio": servicio_real,
+            "codigo_ts": codigo_ts,
+            "ppu": str(
+                fila["patente"] or ""
+            ).strip(),
+            "inicio_servicio": inicio_texto,
+            "fin_servicio": (
+                str(fila["fin_servicio"])
+                if fila["fin_servicio"] is not None
+                else None
+            ),
+            "sentido": str(
+                fila["sentido"] or ""
+            ).strip(),
+            "ruta": str(
+                fila["ruta_normalizada"] or ""
+            ).strip(),
+            "periodo_30": periodo_30,
+            "periodo_1h": periodo_1h,
+        })
+
+    detalle.sort(
+        key=lambda x: (
+            x["inicio_servicio"],
+            x["terminal"],
+            x["servicio"],
+            x["ppu"],
+        )
+    )
+
+    return {
+        "ok": True,
+        "fuente": "HISTORICO_R1.6",
+        "fecha": fecha,
+        "unidad": unidad,
+        "terminal": terminal_filtro,
+        "servicio": servicio_filtro,
+        "periodo": periodo_filtro,
+        "granularidad": granularidad,
+        "total": len(detalle),
+        "detalle": detalle,
+    }
+
+
+# =====================================================================
+# EXPORTACION EXCEL - REPORTE COMERCIAL R1.6
+# =====================================================================
+
+@router.get("/comercial-r16/exportar-excel")
+def comercial_r16_exportar_excel(
+    fecha: str = Query(...),
+    unidad: str = Query(...),
+    db: Session = Depends(get_db),
+):
+    """
+    Descarga el reporte diario de salidas comerciales R1.6.
+
+    El consolidado se obtiene del historico persistido en BD.
+    El detalle se obtiene del historico R1.6 en BD.
+
+    No depende del archivo R1.6 original.
+    No modifica el historico.
+    """
+
+    from app.services.reporte_comercial_r16_excel_service import (
+        generar_excel_comercial_r16,
+    )
+
+    unidad = str(
+        unidad or ""
+    ).strip().upper()
+
+    if unidad not in ("U8", "U9"):
+        raise HTTPException(
+            status_code=400,
+            detail="Unidad invalida. Use U8 o U9.",
+        )
+
+    try:
+        resultado = generar_excel_comercial_r16(
+            db=db,
+            fecha=fecha,
+            unidad=unidad,
+        )
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=str(exc),
+        )
+
+    nombre = resultado[
+        "nombre_archivo"
+    ]
+
+    return StreamingResponse(
+        resultado["buffer"],
+        media_type=resultado[
+            "media_type"
+        ],
+        headers={
+            "Content-Disposition":
+                f'attachment; filename="{nombre}"',
+            "X-Reporte-Fuente":
+                "HISTORICO_R1.6",
+            "X-Reporte-Cobertura":
+                str(
+                    resultado[
+                        "estado_cobertura"
+                    ]
+                ),
         },
     )
 

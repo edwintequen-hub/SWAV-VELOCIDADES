@@ -98,6 +98,9 @@ print("logo          :", (IMG_DIR / "logo_metropol.png").exists())
 
 print("=" * 80)
 
+from app.services.r22_scheduler import scheduler_r22_tick
+
+
 # ==========================================================
 # CREAR BASE
 # ==========================================================
@@ -144,6 +147,53 @@ def ejecutar_scheduler_r16():
 
 
 # ==========================================================
+# SCHEDULER AUTOMATICO R2.2 - FLOTA
+# ==========================================================
+
+_scheduler_r22_iniciado = False
+
+
+def ejecutar_scheduler_r22():
+
+    print(
+        "[R22 AUTO] Hilo scheduler iniciado"
+    )
+
+    while True:
+
+        try:
+
+            resultado = scheduler_r22_tick()
+
+            estado = (
+                resultado.get("estado")
+                if isinstance(resultado, dict)
+                else None
+            )
+
+            if estado not in (
+                "ESPERANDO",
+                "INACTIVO",
+            ):
+                print(
+                    "[R22 AUTO]",
+                    resultado
+                )
+
+        except Exception as exc:
+
+            print(
+                "[R22 AUTO] Error scheduler:",
+                exc
+            )
+
+        # Revisa cada 10 segundos.
+        # La descarga efectiva se ejecuta
+        # cada 5 minutos.
+        time.sleep(10)
+
+
+# ==========================================================
 # FASTAPI
 # ==========================================================
 
@@ -183,6 +233,35 @@ def iniciar_scheduler_r16():
 
     print(
         "[R16 AUTO] Scheduler activado"
+    )
+
+
+@app.on_event("startup")
+def iniciar_scheduler_r22():
+
+    global _scheduler_r22_iniciado
+
+    if _scheduler_r22_iniciado:
+
+        print(
+            "[R22 AUTO] Scheduler ya estaba iniciado"
+        )
+
+        return
+
+    hilo = threading.Thread(
+        target=ejecutar_scheduler_r22,
+        name="swav-r22-auto",
+        daemon=True,
+    )
+
+    hilo.start()
+
+    _scheduler_r22_iniciado = True
+
+    print(
+        "[R22 AUTO] Scheduler activado - "
+        "intervalo 5 minutos"
     )
 
 

@@ -4858,3 +4858,3273 @@ main.main-content select {
     }
 }
 
+
+
+/* R22-FUENTES-FLOTA */
+
+.fuentes-flota {
+    margin: 0 0 18px 0;
+    padding: 14px;
+    border: 1px solid #d8e1ea;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.fuentes-flota-titulo {
+    margin-bottom: 10px;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .5px;
+    color: #173f67;
+}
+
+.fuentes-flota-grid {
+    display: grid;
+    grid-template-columns:
+        minmax(280px, 1.5fr)
+        repeat(3, minmax(170px, 1fr));
+    gap: 10px;
+}
+
+.fuente-flota-card {
+    min-height: 82px;
+    padding: 11px 12px;
+    border: 1px solid #dce4ec;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #173f67;
+}
+
+.fuente-r22 {
+    background: #f4f8fc;
+}
+
+.fuente-flota-cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.fuente-flota-descripcion {
+    margin-top: 5px;
+    font-size: 10px;
+    color: #61758a;
+}
+
+.fuente-flota-pie {
+    margin-top: 9px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #415c76;
+}
+
+.fuente-flota-datos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-top: 9px;
+    font-size: 10px;
+    color: #415c76;
+}
+
+.fuente-estado {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.fuente-estado-ok {
+    border: 1px solid #9cc9ae;
+    background: #edf8f1;
+    color: #176b38;
+}
+
+.fuente-estado-error {
+    border: 1px solid #e0a5a5;
+    background: #fff1f1;
+    color: #9b2525;
+}
+
+.fuente-estado-espera {
+    border: 1px solid #b8c7d6;
+    background: #f1f5f9;
+    color: #50677d;
+}
+
+@media (max-width: 1200px) {
+    .fuentes-flota-grid {
+        grid-template-columns:
+            repeat(2, minmax(220px, 1fr));
+    }
+}
+
+/* ========================================================================== */
+/* COMERCIAL-R16-HISTORICO-STYLES                                             */
+/* Reporte operacional separado de la matriz Flota/R2.2                       */
+/* ========================================================================== */
+
+.comercial-r16 {
+    margin-top: 24px;
+    padding: 18px;
+    border: 1px solid #d9e2ec;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+.comercial-r16-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.comercial-r16-header .unidad-subtitulo {
+    margin: 0 0 3px 0;
+    font-size: 16px;
+    font-weight: 800;
+    color: #172033;
+}
+
+.comercial-r16-header small {
+    display: block;
+    color: #667085;
+    font-size: 12px;
+}
+
+.comercial-r16-controles {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.comercial-r16-controles select {
+    min-width: 130px;
+    height: 38px;
+    padding: 0 34px 0 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #172033;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.comercial-r16-controles select:focus {
+    outline: 2px solid rgba(37, 99, 235, 0.18);
+    border-color: #2563eb;
+}
+
+.comercial-r16-controles .btn-secondary {
+    min-height: 38px;
+    padding: 0 14px;
+    border: 1px solid #2563eb;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1d4ed8;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.comercial-r16-controles .btn-secondary:hover {
+    background: #eff6ff;
+}
+
+.comercial-r16-estado {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border: 1px solid #fde68a;
+    border-radius: 9px;
+    background: #fffbeb;
+    color: #92400e;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.comercial-r16-estado strong {
+    color: #78350f;
+}
+
+.comercial-r16-estado span {
+    text-align: right;
+}
+
+.comercial-r16-resumen {
+    margin-bottom: 14px;
+}
+
+.comercial-r16-kpis {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.comercial-r16-kpi {
+    min-height: 78px;
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.comercial-r16-kpi span {
+    display: block;
+    margin-bottom: 5px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.comercial-r16-kpi strong {
+    display: block;
+    color: #0f172a;
+    font-size: 23px;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.comercial-r16-terminales {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+    gap: 8px;
+}
+
+.comercial-r16-terminal-card {
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
+    background: #ffffff;
+}
+
+.comercial-r16-terminal-card span {
+    display: block;
+    overflow: hidden;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.comercial-r16-terminal-card strong {
+    display: block;
+    margin-top: 3px;
+    color: #0f172a;
+    font-size: 19px;
+    font-variant-numeric: tabular-nums;
+}
+
+.comercial-r16-terminal-card small {
+    display: block;
+    margin-top: 3px;
+    color: #64748b;
+    font-size: 10px;
+}
+
+.comercial-r16-matriz {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.comercial-r16-leyenda {
+    position: sticky;
+    left: 0;
+    z-index: 4;
+    padding: 8px 10px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 10px;
+}
+
+.comercial-r16-tabla {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 11px;
+}
+
+.comercial-r16-tabla th,
+.comercial-r16-tabla td {
+    min-width: 68px;
+    height: 48px;
+    padding: 5px 7px;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.comercial-r16-tabla thead th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    height: 36px;
+    background: #1e3a5f;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.comercial-r16-tabla thead th:first-child {
+    left: 0;
+    z-index: 6;
+    min-width: 150px;
+}
+
+.comercial-r16-terminal {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    min-width: 150px !important;
+    max-width: 150px;
+    background: #f8fafc;
+    color: #1e293b;
+    text-align: left !important;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.comercial-r16-celda strong,
+.comercial-r16-total strong {
+    display: block;
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.comercial-r16-celda small,
+.comercial-r16-total small {
+    display: block;
+    margin-top: 3px;
+    color: #64748b;
+    font-size: 9px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.comercial-r16-celda:hover {
+    background: #eff6ff;
+}
+
+.comercial-r16-total {
+    min-width: 82px !important;
+    background: #eef2ff;
+}
+
+.comercial-r16-detalle {
+    margin-top: 12px;
+}
+
+@media (max-width: 900px) {
+
+    .comercial-r16-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .comercial-r16-controles {
+        width: 100%;
+    }
+
+    .comercial-r16-controles select,
+    .comercial-r16-controles .btn-secondary {
+        flex: 1 1 auto;
+    }
+
+    .comercial-r16-estado {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .comercial-r16-estado span {
+        text-align: left;
+    }
+
+    .comercial-r16-kpis {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+
+
+/* ========================================================================
+   SWAV-FLOTA-VISUAL-V2-APROBADO
+   Dise?o objetivo aprobado antes de implementaci?n.
+
+   REGLAS:
+   - No modificar c?lculos.
+   - No modificar endpoints.
+   - No modificar hist?rico.
+   - No eliminar funcionalidades.
+   - Conservar U8 / U9.
+   - Conservar Estado por Terminal.
+   - Conservar Comportamiento por Periodo.
+   - Conservar Salidas Comerciales R1.6.
+   - Conservar Terminales que requieren apoyo.
+   - R1.6 es la fuente operacional activa.
+   ======================================================================== */
+
+/* SWAV-VISUAL-V2-19B2-INICIO */
+
+/* ================================================================
+   SWAV FLOTA OPERATIVA - VISUAL V2
+   CAPA 1
+   SOLO:
+   - Sidebar
+   - Cabecera
+   - Resultado operacional
+   - KPI globales
+   - Fuentes de datos
+
+   NO modificar visual U8/U9 ni Apoyo Operacional.
+   ================================================================ */
+
+
+/* ------------------------------------------------
+   FONDO GENERAL
+   ------------------------------------------------ */
+
+body {
+    background:
+        linear-gradient(
+            180deg,
+            #f7f9fc 0%,
+            #f3f6fa 100%
+        );
+}
+
+
+/* ------------------------------------------------
+   SIDEBAR
+   ------------------------------------------------ */
+
+.sidebar {
+    background:
+        linear-gradient(
+            180deg,
+            #10233f 0%,
+            #0b1d35 100%
+        );
+
+    border-right:
+        1px solid rgba(255, 255, 255, 0.06);
+
+    box-shadow:
+        10px 0 30px rgba(15, 35, 63, 0.08);
+}
+
+.sidebar .brand {
+    padding-bottom: 24px;
+    margin-bottom: 10px;
+
+    border-bottom:
+        1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar .brand-mark {
+    box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
+.sidebar .brand-title {
+    letter-spacing: 0.04em;
+}
+
+.sidebar .brand-subtitle {
+    opacity: 0.66;
+}
+
+.menu {
+    gap: 7px;
+}
+
+.menu-item {
+    min-height: 44px;
+
+    border-radius: 10px;
+
+    padding:
+        0 14px;
+
+    border:
+        1px solid transparent;
+
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        transform 0.18s ease;
+}
+
+.menu-item:hover {
+    transform:
+        translateX(2px);
+
+    background:
+        rgba(255, 255, 255, 0.07);
+
+    border-color:
+        rgba(255, 255, 255, 0.06);
+}
+
+.menu-item.active {
+    background:
+        #ffffff;
+
+    color:
+        #10233f;
+
+    border-color:
+        rgba(255, 255, 255, 0.9);
+
+    box-shadow:
+        0 8px 22px rgba(0, 0, 0, 0.16);
+
+    font-weight:
+        700;
+}
+
+.sidebar-footer {
+    border-top:
+        1px solid rgba(255, 255, 255, 0.08);
+
+    padding-top:
+        18px;
+}
+
+
+/* ------------------------------------------------
+   CONTENIDO PRINCIPAL
+   ------------------------------------------------ */
+
+.main-content {
+    background:
+        transparent;
+}
+
+
+/* ------------------------------------------------
+   CABECERA PRINCIPAL
+   ------------------------------------------------ */
+
+.top-header {
+    background:
+        #ffffff;
+
+    border:
+        1px solid #e5eaf1;
+
+    border-radius:
+        16px;
+
+    padding:
+        24px 26px;
+
+    margin-bottom:
+        18px;
+
+    box-shadow:
+        0 8px 24px rgba(16, 35, 63, 0.055);
+}
+
+.top-header .eyebrow {
+    color:
+        #4775a8;
+
+    font-size:
+        11px;
+
+    font-weight:
+        800;
+
+    letter-spacing:
+        0.11em;
+}
+
+.top-header h1 {
+    margin-top:
+        4px;
+
+    margin-bottom:
+        5px;
+
+    color:
+        #10233f;
+
+    font-size:
+        30px;
+
+    line-height:
+        1.1;
+
+    letter-spacing:
+        -0.025em;
+}
+
+.top-header p {
+    max-width:
+        720px;
+
+    color:
+        #68778b;
+
+    line-height:
+        1.5;
+}
+
+
+/* ------------------------------------------------
+   RESULTADO OPERACIONAL
+   ------------------------------------------------ */
+
+.query-banner {
+    background:
+        linear-gradient(
+            135deg,
+            #10233f 0%,
+            #17365f 100%
+        );
+
+    color:
+        #ffffff;
+
+    border:
+        1px solid #193a66;
+
+    border-radius:
+        15px;
+
+    box-shadow:
+        0 10px 25px rgba(16, 35, 63, 0.12);
+}
+
+.query-banner .query-label {
+    color:
+        #a9c5e6;
+
+    font-weight:
+        800;
+
+    letter-spacing:
+        0.09em;
+}
+
+.query-banner h2,
+.query-banner #tituloConsulta {
+    color:
+        #ffffff;
+}
+
+.query-banner p,
+.query-banner #subtituloConsulta {
+    color:
+        rgba(255, 255, 255, 0.72);
+}
+
+.query-update {
+    background:
+        rgba(255, 255, 255, 0.09);
+
+    border:
+        1px solid rgba(255, 255, 255, 0.10);
+
+    border-radius:
+        10px;
+
+    padding:
+        9px 12px;
+}
+
+
+/* ------------------------------------------------
+   KPI GLOBALES
+   ------------------------------------------------ */
+
+.kpi-grid {
+    gap:
+        14px;
+
+    margin-top:
+        16px;
+
+    margin-bottom:
+        18px;
+}
+
+.kpi-card {
+    position:
+        relative;
+
+    overflow:
+        hidden;
+
+    min-height:
+        128px;
+
+    padding:
+        20px 21px;
+
+    background:
+        #ffffff;
+
+    border:
+        1px solid #e5eaf1;
+
+    border-radius:
+        14px;
+
+    box-shadow:
+        0 6px 18px rgba(16, 35, 63, 0.045);
+
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.kpi-card::before {
+    content:
+        "";
+
+    position:
+        absolute;
+
+    left:
+        0;
+
+    top:
+        0;
+
+    bottom:
+        0;
+
+    width:
+        4px;
+
+    background:
+        #7890ad;
+}
+
+.kpi-card:hover {
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        0 10px 24px rgba(16, 35, 63, 0.08);
+}
+
+.kpi-operativa::before {
+    background:
+        #28a66a;
+}
+
+.kpi-sin-tx::before {
+    background:
+        #d95656;
+}
+
+.kpi-porcentaje::before {
+    background:
+        #3e79b8;
+}
+
+.kpi-title {
+    color:
+        #748399;
+
+    font-size:
+        11px;
+
+    font-weight:
+        800;
+
+    letter-spacing:
+        0.075em;
+}
+
+.kpi-card strong {
+    display:
+        block;
+
+    margin-top:
+        8px;
+
+    color:
+        #10233f;
+
+    font-size:
+        30px;
+
+    line-height:
+        1.1;
+
+    letter-spacing:
+        -0.025em;
+}
+
+.kpi-operativa strong {
+    color:
+        #21865a;
+}
+
+.kpi-sin-tx strong {
+    color:
+        #c44343;
+}
+
+.kpi-porcentaje strong {
+    color:
+        #2769a8;
+}
+
+.kpi-card small {
+    display:
+        block;
+
+    margin-top:
+        8px;
+
+    color:
+        #8a96a6;
+
+    font-size:
+        12px;
+
+    line-height:
+        1.35;
+}
+
+
+/* ------------------------------------------------
+   FUENTES DE DATOS
+   SOLO ESTE BLOQUE.
+   ------------------------------------------------ */
+
+.fuentes-flota {
+    margin:
+        0 0 18px 0;
+
+    padding:
+        16px;
+
+    background:
+        #ffffff;
+
+    border:
+        1px solid #e4e9f0;
+
+    border-radius:
+        14px;
+
+    box-shadow:
+        0 5px 18px rgba(16, 35, 63, 0.04);
+}
+
+.fuentes-flota-titulo {
+    margin-bottom:
+        12px;
+
+    color:
+        #10233f;
+
+    font-size:
+        11px;
+
+    font-weight:
+        800;
+
+    letter-spacing:
+        0.085em;
+}
+
+.fuentes-flota-grid {
+    gap:
+        12px;
+}
+
+.fuente-flota-card {
+    min-height:
+        105px;
+
+    padding:
+        14px 15px;
+
+    background:
+        #f8fafc;
+
+    border:
+        1px solid #e4e9ef;
+
+    border-radius:
+        11px;
+
+    box-shadow:
+        none;
+}
+
+.fuente-flota-card strong {
+    color:
+        #22334b;
+
+    font-size:
+        12px;
+}
+
+.fuente-r16 {
+    background:
+        linear-gradient(
+            135deg,
+            #f3fbf7 0%,
+            #f8fcfa 100%
+        );
+
+    border-color:
+        #bfe3cf;
+}
+
+.fuente-flota-cabecera {
+    gap:
+        10px;
+}
+
+.fuente-flota-descripcion {
+    margin-top:
+        8px;
+
+    color:
+        #637287;
+
+    line-height:
+        1.4;
+}
+
+.fuente-flota-pie {
+    margin-top:
+        9px;
+
+    color:
+        #8a96a5;
+
+    font-size:
+        11px;
+}
+
+.fuente-estado {
+    border-radius:
+        999px;
+
+    padding:
+        4px 8px;
+
+    font-size:
+        9px;
+
+    font-weight:
+        800;
+
+    letter-spacing:
+        0.055em;
+}
+
+.fuente-estado-ok {
+    background:
+        #dff4e8;
+
+    color:
+        #20784e;
+}
+
+
+/* ------------------------------------------------
+   RESPONSIVE DE ESTA CAPA
+   ------------------------------------------------ */
+
+@media (max-width: 1100px) {
+
+    .top-header {
+        padding:
+            20px;
+    }
+
+    .kpi-card {
+        min-height:
+            118px;
+    }
+}
+
+@media (max-width: 760px) {
+
+    .top-header {
+        border-radius:
+            12px;
+    }
+
+    .query-banner {
+        border-radius:
+            12px;
+    }
+
+    .kpi-card {
+        border-radius:
+            12px;
+    }
+}
+
+
+/* SWAV-VISUAL-V2-19B2-FIN */
+
+/* SWAV-VISUAL-V2-19C2-INICIO */
+
+/* ================================================================
+   CABECERA OBJETIVO V2
+   ================================================================ */
+
+.top-header.top-header-v2 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+
+    min-height: 74px;
+
+    margin-bottom: 12px;
+    padding: 12px 16px;
+
+    border-radius: 14px;
+    border: 1px solid #dce5ef;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f5faff 100%
+        );
+
+    box-shadow:
+        0 5px 18px rgba(16, 35, 63, 0.06);
+}
+
+.top-v2-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    min-width: 235px;
+}
+
+.top-v2-icon {
+    width: 46px;
+    height: 46px;
+
+    display: grid;
+    place-items: center;
+
+    flex: 0 0 46px;
+
+    border-radius: 11px;
+
+    color: #ffffff;
+    background:
+        linear-gradient(
+            135deg,
+            #2382ed,
+            #0861cf
+        );
+
+    box-shadow:
+        0 7px 18px rgba(18, 104, 211, 0.20);
+
+    font-size: 23px;
+}
+
+.top-header.top-header-v2 h1 {
+    margin: 0;
+
+    color: #10294c;
+
+    font-size: 24px;
+    line-height: 1.1;
+
+    letter-spacing: -0.025em;
+}
+
+.top-header.top-header-v2 p {
+    margin: 4px 0 0;
+
+    color: #687b93;
+
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.top-v2-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    min-width: 0;
+}
+
+.top-v2-date,
+.top-v2-update {
+    min-height: 42px;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 6px 10px;
+
+    border:
+        1px solid #d9e3ee;
+
+    border-radius:
+        10px;
+
+    background:
+        rgba(255, 255, 255, 0.94);
+
+    box-shadow:
+        0 2px 7px rgba(16, 35, 63, 0.035);
+}
+
+.top-v2-date input {
+    width: 122px;
+
+    border: 0;
+    outline: 0;
+
+    background:
+        transparent;
+
+    color:
+        #183456;
+
+    font-size:
+        12px;
+
+    font-weight:
+        700;
+}
+
+.top-v2-action-icon {
+    color:
+        #173b69;
+
+    font-size:
+        16px;
+}
+
+.top-v2-update {
+    min-width:
+        150px;
+}
+
+.top-v2-update div {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        1px;
+}
+
+.top-v2-update small {
+    color:
+        #718198;
+
+    font-size:
+        9px;
+
+    font-weight:
+        700;
+}
+
+.top-v2-update strong {
+    color:
+        #122c4f;
+
+    font-size:
+        11px;
+}
+
+
+/* R1.6 COMPACTO */
+
+.top-v2-r16 {
+    min-height:
+        42px !important;
+
+    width:
+        auto !important;
+
+    min-width:
+        154px;
+
+    padding:
+        6px 10px !important;
+
+    border-radius:
+        10px !important;
+
+    box-shadow:
+        none !important;
+}
+
+.top-v2-r16 .r16-live-main {
+    gap:
+        6px;
+}
+
+.top-v2-r16 .r16-live-main strong {
+    font-size:
+        10px;
+}
+
+.top-v2-r16 .r16-live-main small {
+    font-size:
+        8px;
+}
+
+.top-v2-r16 .r16-live-times {
+    display:
+        none;
+}
+
+
+/* EXCEL SUPERIOR */
+
+.top-v2-excel {
+    min-height:
+        42px;
+
+    padding:
+        0 15px;
+
+    border:
+        1px solid #0866d8;
+
+    border-radius:
+        9px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #1680ef,
+            #0866d8
+        );
+
+    color:
+        #ffffff;
+
+    font-size:
+        11px;
+
+    font-weight:
+        800;
+
+    box-shadow:
+        0 6px 15px rgba(8, 102, 216, 0.16);
+}
+
+.top-v2-excel:hover {
+    transform:
+        translateY(-1px);
+
+    filter:
+        brightness(1.03);
+}
+
+
+/* ================================================================
+   FILTROS AVANZADOS
+   ================================================================ */
+
+.advanced-filters {
+    margin-bottom:
+        12px;
+
+    border:
+        1px solid #dfe6ee;
+
+    border-radius:
+        11px;
+
+    background:
+        #ffffff;
+
+    box-shadow:
+        0 3px 12px rgba(16, 35, 63, 0.035);
+}
+
+.advanced-filters > summary {
+    min-height:
+        40px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        12px;
+
+    padding:
+        0 14px;
+
+    cursor:
+        pointer;
+
+    list-style:
+        none;
+
+    color:
+        #17365d;
+}
+
+.advanced-filters > summary::-webkit-details-marker {
+    display:
+        none;
+}
+
+.advanced-filters > summary::after {
+    content:
+        "?";
+
+    margin-left:
+        auto;
+
+    color:
+        #6380a2;
+
+    font-size:
+        12px;
+}
+
+.advanced-filters[open] > summary::after {
+    transform:
+        rotate(180deg);
+}
+
+.advanced-filters > summary span {
+    font-size:
+        11px;
+
+    font-weight:
+        800;
+}
+
+.advanced-filters > summary small {
+    color:
+        #8794a5;
+
+    font-size:
+        10px;
+}
+
+.advanced-filters-body {
+    padding:
+        12px 14px 14px;
+
+    border-top:
+        1px solid #edf1f5;
+}
+
+.advanced-filters .filters-grid {
+    margin:
+        0;
+}
+
+
+/* ================================================================
+   LA CABECERA V2 REEMPLAZA LA ANTIGUA PRESENTACION.
+   EL BANNER DE RESULTADO SIGUE FUNCIONAL PERO SE COMPACTA.
+   ================================================================ */
+
+.query-banner {
+    min-height:
+        auto;
+
+    padding:
+        10px 14px;
+
+    margin-bottom:
+        12px;
+
+    border-radius:
+        10px;
+}
+
+.query-banner .query-label {
+    font-size:
+        8px;
+}
+
+.query-banner h2,
+.query-banner #tituloConsulta {
+    margin:
+        2px 0;
+
+    font-size:
+        15px;
+}
+
+.query-banner p,
+.query-banner #subtituloConsulta {
+    margin:
+        0;
+
+    font-size:
+        9px;
+}
+
+.query-update {
+    padding:
+        5px 8px;
+
+    font-size:
+        9px;
+}
+
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+@media (max-width: 1350px) {
+
+    .top-header.top-header-v2 {
+        align-items:
+            flex-start;
+
+        flex-direction:
+            column;
+    }
+
+    .top-v2-actions {
+        width:
+            100%;
+
+        justify-content:
+            flex-start;
+
+        flex-wrap:
+            wrap;
+    }
+}
+
+@media (max-width: 760px) {
+
+    .top-v2-actions {
+        align-items:
+            stretch;
+
+        flex-direction:
+            column;
+    }
+
+    .top-v2-date,
+    .top-v2-update,
+    .top-v2-r16,
+    .top-v2-excel {
+        width:
+            100% !important;
+    }
+
+    .advanced-filters > summary small {
+        display:
+            none;
+    }
+}
+
+/* SWAV-VISUAL-V2-19C2-FIN */
+
+/* SWAV-VISUAL-V2-19C3-INICIO */
+
+/* ================================================================
+   PORTADA OBJETIVO
+   Mantiene contratos DOM antiguos pero retira visualmente
+   bloques redundantes de la portada.
+   ================================================================ */
+
+
+/* ------------------------------------------------
+   RESULTADO OPERACIONAL
+   Sigue existiendo para JS y para el puente de hora,
+   pero deja de ocupar espacio visual.
+   ------------------------------------------------ */
+
+.query-banner {
+    position: absolute !important;
+
+    width: 1px !important;
+    height: 1px !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: hidden !important;
+
+    clip: rect(0 0 0 0) !important;
+    clip-path: inset(50%) !important;
+
+    white-space: nowrap !important;
+
+    border: 0 !important;
+}
+
+
+/* ------------------------------------------------
+   RESUMEN OPERATIVO U8/U9/TOTAL
+   Se conserva ?ntegro en DOM porque el JS actualiza
+   tbody, cobertura y donut.
+   No ocupa la portada principal.
+   ------------------------------------------------ */
+
+.decision-panel {
+    position: absolute !important;
+
+    width: 1px !important;
+    height: 1px !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: hidden !important;
+
+    clip: rect(0 0 0 0) !important;
+    clip-path: inset(50%) !important;
+
+    white-space: nowrap !important;
+
+    border: 0 !important;
+}
+
+
+/* ================================================================
+   KPI GLOBAL V2
+   ================================================================ */
+
+.kpi-grid {
+    display: grid !important;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 12px !important;
+
+    margin:
+        0 0 14px !important;
+}
+
+.kpi-grid .fo-v2-kpi {
+    position: relative;
+
+    min-height: 104px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    padding:
+        15px 64px 14px 17px !important;
+
+    overflow: hidden;
+
+    border:
+        1px solid #dde6f0 !important;
+
+    border-radius:
+        14px !important;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #f8fbff 100%
+        ) !important;
+
+    box-shadow:
+        0 5px 16px rgba(18, 41, 74, 0.065) !important;
+}
+
+.kpi-grid .fo-v2-kpi::before {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    top: 15px;
+    bottom: 15px;
+
+    width: 3px;
+
+    border-radius:
+        0 4px 4px 0;
+
+    background:
+        #2d7fe6;
+}
+
+.kpi-grid .fo-v2-kpi-operativa::before {
+    background:
+        #23a35a;
+}
+
+.kpi-grid .fo-v2-kpi-sin-tx::before {
+    background:
+        #e34c43;
+}
+
+.kpi-grid .fo-v2-kpi-porcentaje::before {
+    background:
+        #6659dc;
+}
+
+
+.kpi-grid .fo-v2-kpi .kpi-title {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color:
+        #708098 !important;
+
+    font-size:
+        9px !important;
+
+    font-weight:
+        800 !important;
+
+    letter-spacing:
+        0.08em;
+}
+
+.kpi-grid .fo-v2-kpi > strong {
+    display: block;
+
+    margin: 0 0 4px;
+
+    color:
+        #142f54 !important;
+
+    font-size:
+        25px !important;
+
+    line-height:
+        1 !important;
+
+    font-weight:
+        800 !important;
+
+    letter-spacing:
+        -0.035em;
+}
+
+.kpi-grid .fo-v2-kpi-operativa > strong {
+    color:
+        #168b4c !important;
+}
+
+.kpi-grid .fo-v2-kpi-sin-tx > strong {
+    color:
+        #d8423b !important;
+}
+
+.kpi-grid .fo-v2-kpi-porcentaje > strong {
+    color:
+        #315cae !important;
+}
+
+.kpi-grid .fo-v2-kpi > small {
+    color:
+        #8491a2 !important;
+
+    font-size:
+        9px !important;
+
+    line-height:
+        1.3;
+}
+
+
+/* ------------------------------------------------
+   ICONO KPI
+   ------------------------------------------------ */
+
+.fo-v2-kpi-icon {
+    position: absolute;
+
+    right: 17px;
+    top: 50%;
+
+    width: 40px;
+    height: 40px;
+
+    display: grid;
+    place-items: center;
+
+    transform:
+        translateY(-50%);
+
+    border-radius:
+        12px;
+
+    background:
+        #eaf3ff;
+
+    color:
+        #2375da;
+
+    font-size:
+        18px;
+
+    font-weight:
+        900;
+}
+
+.fo-v2-kpi-operativa .fo-v2-kpi-icon {
+    background:
+        #e8f7ee;
+
+    color:
+        #219653;
+}
+
+.fo-v2-kpi-sin-tx .fo-v2-kpi-icon {
+    background:
+        #fff0ef;
+
+    color:
+        #df4d45;
+}
+
+.fo-v2-kpi-porcentaje .fo-v2-kpi-icon {
+    background:
+        #f0efff;
+
+    color:
+        #6258d8;
+}
+
+
+/* ================================================================
+   PORTADA M?S COMPACTA
+   ================================================================ */
+
+.top-header.top-header-v2 {
+    margin-bottom:
+        8px !important;
+}
+
+.advanced-filters {
+    margin-bottom:
+        10px !important;
+}
+
+
+/* ================================================================
+   PANEL QUE CONTIENE U8/U9
+   No se modifican los art?culos internos protegidos.
+   Solo reducimos el espacio previo de su contenedor.
+   ================================================================ */
+
+#vistaOperacionPorUnidad {
+    margin-top:
+        0 !important;
+}
+
+
+/* ================================================================
+   FUENTES DE DATOS
+   Se conserva funcionalmente, pero m?s discreta para que U8
+   tenga protagonismo.
+   ================================================================ */
+
+#fuentesDatosFlota {
+    margin:
+        0 0 10px !important;
+
+    padding:
+        8px 10px !important;
+
+    border-radius:
+        10px !important;
+}
+
+#fuentesDatosFlota .fuentes-flota-titulo {
+    font-size:
+        8px !important;
+
+    margin-bottom:
+        5px !important;
+}
+
+#fuentesDatosFlota .fuentes-flota-grid {
+    gap:
+        7px !important;
+}
+
+#fuentesDatosFlota .fuente-flota-card {
+    min-height:
+        auto !important;
+
+    padding:
+        7px 9px !important;
+}
+
+#fuentesDatosFlota .fuente-flota-descripcion {
+    font-size:
+        8px !important;
+}
+
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+@media (max-width: 1100px) {
+
+    .kpi-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 650px) {
+
+    .kpi-grid {
+        grid-template-columns:
+            1fr;
+    }
+}
+
+/* SWAV-VISUAL-V2-19C3-FIN */
+
+/* SWAV-VISUAL-V2-19C3E-INICIO */
+
+/* ==========================================================
+   RESUMEN OPERATIVO COMPACTO
+   Recuperamos el panel existente sin duplicar datos ni IDs.
+   ========================================================== */
+
+.decision-panel {
+    position: relative !important;
+
+    width: auto !important;
+    height: auto !important;
+
+    margin:
+        0 0 10px !important;
+
+    padding:
+        0 !important;
+
+    overflow:
+        visible !important;
+
+    clip:
+        auto !important;
+
+    clip-path:
+        none !important;
+
+    white-space:
+        normal !important;
+
+    border:
+        0 !important;
+
+    background:
+        transparent !important;
+
+    box-shadow:
+        none !important;
+}
+
+
+/* Cabecera del antiguo resumen:
+   queda fuera de la portada para no repetir informaci?n. */
+
+.decision-panel > .panel-header {
+    display:
+        none !important;
+}
+
+
+/* Tabla + estado general en una franja compacta */
+
+.decision-panel .decision-layout {
+    display:
+        grid !important;
+
+    grid-template-columns:
+        minmax(0, 1fr) 190px !important;
+
+    gap:
+        10px !important;
+
+    align-items:
+        stretch !important;
+
+    margin:
+        0 !important;
+
+    padding:
+        0 !important;
+}
+
+
+/* Tabla U8 / U9 / Total */
+
+.decision-panel .decision-table-wrap {
+    margin:
+        0 !important;
+
+    padding:
+        0 !important;
+
+    border:
+        1px solid #e3e9f1 !important;
+
+    border-radius:
+        12px !important;
+
+    overflow:
+        hidden !important;
+
+    background:
+        #ffffff !important;
+
+    box-shadow:
+        0 3px 12px rgba(16, 35, 63, 0.04) !important;
+}
+
+
+.decision-panel .unit-summary-table {
+    width:
+        100% !important;
+
+    margin:
+        0 !important;
+
+    border-collapse:
+        collapse !important;
+
+    font-size:
+        11px !important;
+}
+
+
+.decision-panel .unit-summary-table thead th {
+    padding:
+        7px 10px !important;
+
+    font-size:
+        9px !important;
+
+    font-weight:
+        800 !important;
+
+    letter-spacing:
+        0.025em !important;
+
+    color:
+        #65758b !important;
+
+    background:
+        #f7f9fc !important;
+
+    border-bottom:
+        1px solid #e6ebf2 !important;
+}
+
+
+.decision-panel .unit-summary-table tbody td {
+    padding:
+        7px 10px !important;
+
+    font-size:
+        11px !important;
+
+    line-height:
+        1.15 !important;
+
+    border-bottom:
+        1px solid #edf1f6 !important;
+}
+
+
+.decision-panel .unit-summary-table tbody tr:last-child td {
+    border-bottom:
+        0 !important;
+}
+
+
+.decision-panel .unit-summary-table .num {
+    text-align:
+        right !important;
+}
+
+
+/* Nota explicativa:
+   sigue existiendo, pero no ocupa portada. */
+
+.decision-panel .decision-note {
+    display:
+        none !important;
+}
+
+
+/* Estado general compacto */
+
+.decision-panel .decision-global {
+    display:
+        grid !important;
+
+    grid-template-columns:
+        1fr auto !important;
+
+    grid-template-rows:
+        auto 1fr !important;
+
+    column-gap:
+        8px !important;
+
+    align-items:
+        center !important;
+
+    min-height:
+        0 !important;
+
+    margin:
+        0 !important;
+
+    padding:
+        8px 10px !important;
+
+    border:
+        1px solid #e3e9f1 !important;
+
+    border-radius:
+        12px !important;
+
+    background:
+        #ffffff !important;
+
+    box-shadow:
+        0 3px 12px rgba(16, 35, 63, 0.04) !important;
+}
+
+
+.decision-panel .decision-chart-title {
+    grid-column:
+        1 / -1 !important;
+
+    margin:
+        0 0 4px !important;
+
+    font-size:
+        9px !important;
+
+    font-weight:
+        800 !important;
+
+    letter-spacing:
+        0.03em !important;
+
+    color:
+        #65758b !important;
+
+    text-transform:
+        uppercase !important;
+}
+
+
+/* Donut m?s peque?o */
+
+.decision-panel .donut-wrap {
+    margin:
+        0 !important;
+
+    padding:
+        0 !important;
+}
+
+
+.decision-panel .flota-donut {
+    width:
+        58px !important;
+
+    height:
+        58px !important;
+
+    min-width:
+        58px !important;
+
+    min-height:
+        58px !important;
+}
+
+
+.decision-panel .flota-donut-center strong {
+    font-size:
+        10px !important;
+}
+
+
+.decision-panel .flota-donut-center span {
+    font-size:
+        6px !important;
+}
+
+
+/* Leyenda compacta */
+
+.decision-panel .donut-legend {
+    display:
+        flex !important;
+
+    flex-direction:
+        column !important;
+
+    justify-content:
+        center !important;
+
+    gap:
+        4px !important;
+
+    margin:
+        0 !important;
+
+    font-size:
+        8px !important;
+}
+
+
+.decision-panel .donut-legend span {
+    white-space:
+        nowrap !important;
+}
+
+
+/* ==========================================================
+   CONTENEDOR DE OPERACI?N
+   Quitamos ?nicamente la cabecera redundante exterior.
+   NO se toca ning?n article U8/U9.
+   ========================================================== */
+
+#vistaOperacionPorUnidad {
+    margin:
+        0 !important;
+
+    padding-top:
+        0 !important;
+
+    min-height:
+        0 !important;
+}
+
+
+#vistaOperacionPorUnidad
+> .panel-header {
+    display:
+        none !important;
+}
+
+
+#vistaOperacionPorUnidad
+> .unidades-operacion-grid {
+    margin-top:
+        0 !important;
+
+    padding-top:
+        0 !important;
+
+    gap:
+        10px !important;
+}
+
+
+/* ==========================================================
+   FUENTES DE DATOS
+   Pegada al comienzo de la operaci?n, sin huecos.
+   ========================================================== */
+
+#fuentesDatosFlota {
+    margin:
+        0 0 8px !important;
+}
+
+
+/* ==========================================================
+   RESPONSIVE
+   ========================================================== */
+
+@media (max-width: 900px) {
+
+    .decision-panel .decision-layout {
+        grid-template-columns:
+            1fr !important;
+    }
+
+    .decision-panel .decision-global {
+        display:
+            none !important;
+    }
+}
+
+
+@media (max-width: 650px) {
+
+    .decision-panel {
+        overflow-x:
+            auto !important;
+    }
+
+    .decision-panel .unit-summary-table {
+        min-width:
+            520px !important;
+    }
+}
+
+/* SWAV-VISUAL-V2-19C3E-FIN */
+
+
+/* SWAV-21E-RESPONSIVE-INICIO */
+
+/* ==========================================================
+   FLUJO VERTICAL NATURAL
+   Evita reservas de altura al cambiar zoom/resolucion.
+   ========================================================== */
+
+main.main-content {
+    height: auto !important;
+    min-height: 0 !important;
+    align-content: start !important;
+}
+
+#vistaOperacionPorUnidad {
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+#vistaOperacionPorUnidad > .unidades-operacion-grid {
+    position: relative !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+
+    align-content: start !important;
+
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+
+/* ==========================================================
+   FUENTES DE DATOS
+   Mantenerla dentro del flujo normal.
+   ========================================================== */
+
+#fuentesDatosFlota {
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+
+    margin-top: 8px !important;
+    margin-bottom: 10px !important;
+}
+
+
+/* ==========================================================
+   RESUMEN GENERAL
+   No reservar altura adicional.
+   ========================================================== */
+
+.decision-panel {
+    height: auto !important;
+    min-height: 0 !important;
+
+    margin-bottom: 10px !important;
+}
+
+.decision-panel .decision-layout {
+    height: auto !important;
+    min-height: 0 !important;
+    align-items: stretch !important;
+}
+
+
+/* ==========================================================
+   ESTADO GENERAL DE FLOTA
+   Donut compacto pero legible.
+   ========================================================== */
+
+.decision-panel .decision-global {
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+.decision-panel .donut-wrap {
+    width: 82px !important;
+    height: 82px !important;
+
+    min-width: 82px !important;
+    min-height: 82px !important;
+
+    flex: 0 0 82px !important;
+}
+
+.decision-panel .flota-donut {
+    width: 82px !important;
+    height: 82px !important;
+
+    min-width: 82px !important;
+    min-height: 82px !important;
+}
+
+.decision-panel .flota-donut::after {
+    inset: 9px !important;
+}
+
+.decision-panel .flota-donut-center strong {
+    font-size: 14px !important;
+    line-height: 1 !important;
+}
+
+.decision-panel .flota-donut-center span {
+    font-size: 6px !important;
+}
+
+
+/* ==========================================================
+   ZOOM / PANTALLAS AMPLIAS
+   El layout responde al ancho disponible, no al zoom.
+   ========================================================== */
+
+@media (min-width: 901px) {
+
+    .decision-panel .decision-global {
+        display: grid !important;
+        grid-template-columns: 82px minmax(110px, 1fr) !important;
+        grid-template-rows: auto 1fr !important;
+        column-gap: 12px !important;
+        align-items: center !important;
+    }
+
+}
+
+
+/* Pantallas intermedias */
+
+@media (max-width: 1200px) and (min-width: 901px) {
+
+    .decision-panel .donut-wrap,
+    .decision-panel .flota-donut {
+        width: 72px !important;
+        height: 72px !important;
+        min-width: 72px !important;
+        min-height: 72px !important;
+    }
+
+    .decision-panel .donut-wrap {
+        flex-basis: 72px !important;
+    }
+
+    .decision-panel .decision-global {
+        grid-template-columns:
+            72px minmax(100px, 1fr) !important;
+    }
+
+}
+
+
+/* En movil se conserva la regla existente que oculta
+   el resumen lateral para dar prioridad a la tabla. */
+
+/* SWAV-21E-RESPONSIVE-FIN */
+
+
+/* SWAV-21H-INICIO */
+
+/* ==========================================================
+   CONTENEDOR EXTERIOR U8/U9
+   No recortar el contenido interno.
+   ========================================================== */
+
+#vistaOperacionPorUnidad.unidades-operacion-panel {
+    overflow: visible !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+}
+
+
+/* El grid debe participar normalmente del flujo vertical. */
+
+#vistaOperacionPorUnidad > .unidades-operacion-grid {
+    display: grid !important;
+
+    position: static !important;
+
+    width: 100% !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+
+    overflow: visible !important;
+
+    margin: 0 !important;
+
+    padding-top: 0 !important;
+}
+
+
+/* ==========================================================
+   ESTADO GENERAL DE FLOTA
+   Reducimos ligeramente el donut para que quede contenido.
+   ========================================================== */
+
+.decision-panel .donut-wrap,
+.decision-panel .flota-donut {
+    width: 70px !important;
+    height: 70px !important;
+
+    min-width: 70px !important;
+    min-height: 70px !important;
+}
+
+.decision-panel .donut-wrap {
+    flex: 0 0 70px !important;
+}
+
+.decision-panel .flota-donut::after {
+    inset: 8px !important;
+}
+
+.decision-panel .flota-donut-center strong {
+    font-size: 12px !important;
+}
+
+.decision-panel .flota-donut-center span {
+    font-size: 5px !important;
+}
+
+@media (min-width: 901px) {
+
+    .decision-panel .decision-global {
+        grid-template-columns:
+            70px minmax(105px, 1fr) !important;
+
+        column-gap: 10px !important;
+    }
+}
+
+/* SWAV-21H-FIN */
+
+
+/* SWAV-21K-GRAFICO-INICIO */
+
+/* ==========================================================
+   ESTADO GENERAL DE FLOTA
+   Ajuste visual aislado.
+   ========================================================== */
+
+.decision-panel .decision-global {
+    box-sizing: border-box !important;
+
+    min-height: 0 !important;
+    height: 100% !important;
+
+    padding: 8px 10px !important;
+
+    overflow: hidden !important;
+
+    display: grid !important;
+
+    grid-template-columns:
+        62px minmax(90px, 1fr) !important;
+
+    grid-template-rows:
+        auto 1fr !important;
+
+    column-gap: 10px !important;
+    row-gap: 3px !important;
+
+    align-items: center !important;
+}
+
+
+/* T?tulo ocupa todo el ancho */
+
+.decision-panel .decision-chart-title {
+    grid-column: 1 / -1 !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    font-size: 8px !important;
+    line-height: 1.15 !important;
+
+    font-weight: 900 !important;
+    letter-spacing: .02em !important;
+
+    white-space: nowrap !important;
+}
+
+
+/* ==========================================================
+   DONUT
+   ========================================================== */
+
+.decision-panel .donut-wrap {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+
+    width: 62px !important;
+    height: 62px !important;
+
+    min-width: 62px !important;
+    min-height: 62px !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    display: flex !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+
+    align-self: center !important;
+
+    overflow: visible !important;
+}
+
+
+.decision-panel .flota-donut {
+    width: 62px !important;
+    height: 62px !important;
+
+    min-width: 62px !important;
+    min-height: 62px !important;
+
+    margin: 0 !important;
+
+    position: relative !important;
+
+    flex: 0 0 62px !important;
+}
+
+
+.decision-panel .flota-donut::after {
+    inset: 8px !important;
+}
+
+
+/* Centro del donut */
+
+.decision-panel .flota-donut-center {
+    position: absolute !important;
+
+    inset: 0 !important;
+
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+
+    text-align: center !important;
+
+    line-height: 1 !important;
+
+    pointer-events: none !important;
+}
+
+
+.decision-panel .flota-donut-center strong {
+    display: block !important;
+
+    margin: 0 !important;
+
+    font-size: 10px !important;
+    line-height: 1 !important;
+
+    font-weight: 900 !important;
+
+    white-space: nowrap !important;
+}
+
+
+.decision-panel .flota-donut-center span {
+    display: block !important;
+
+    margin-top: 3px !important;
+
+    font-size: 5px !important;
+    line-height: 1 !important;
+
+    font-weight: 800 !important;
+
+    text-transform: uppercase !important;
+}
+
+
+/* ==========================================================
+   LEYENDA
+   ========================================================== */
+
+.decision-panel .donut-legend {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+
+    align-self: center !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    justify-content: center !important;
+
+    gap: 7px !important;
+
+    min-width: 0 !important;
+}
+
+
+.decision-panel .donut-legend > span {
+    display: grid !important;
+
+    grid-template-columns:
+        7px minmax(0, 1fr) auto !important;
+
+    align-items: center !important;
+
+    column-gap: 5px !important;
+
+    margin: 0 !important;
+
+    font-size: 7px !important;
+    line-height: 1.15 !important;
+
+    white-space: nowrap !important;
+}
+
+
+.decision-panel .donut-legend strong {
+    font-size: 8px !important;
+    line-height: 1 !important;
+
+    font-weight: 900 !important;
+
+    margin-left: 2px !important;
+}
+
+
+.decision-panel .legend-dot {
+    width: 7px !important;
+    height: 7px !important;
+
+    min-width: 7px !important;
+
+    margin: 0 !important;
+
+    border-radius: 50% !important;
+}
+
+
+/* ==========================================================
+   PANTALLAS M?S ANGOSTAS
+   ========================================================== */
+
+@media (max-width: 1050px) and (min-width: 901px) {
+
+    .decision-panel .decision-global {
+        grid-template-columns:
+            56px minmax(82px, 1fr) !important;
+
+        column-gap: 7px !important;
+
+        padding:
+            7px 8px !important;
+    }
+
+    .decision-panel .donut-wrap,
+    .decision-panel .flota-donut {
+        width: 56px !important;
+        height: 56px !important;
+
+        min-width: 56px !important;
+        min-height: 56px !important;
+    }
+
+    .decision-panel .flota-donut {
+        flex-basis: 56px !important;
+    }
+
+}
+
+
+/* SWAV-21K-GRAFICO-FIN */
+
+
+/* SWAV-21M-DONUT-INICIO */
+
+/* ==========================================================
+   ESTADO GENERAL DE FLOTA
+   Definicion final y aislada del grafico.
+   ========================================================== */
+
+.decision-panel .decision-global {
+    box-sizing: border-box !important;
+
+    height: 100% !important;
+    min-height: 0 !important;
+
+    padding: 7px 9px !important;
+
+    overflow: hidden !important;
+
+    display: grid !important;
+
+    grid-template-columns:
+        66px minmax(100px, 1fr) !important;
+
+    grid-template-rows:
+        12px minmax(66px, 1fr) !important;
+
+    column-gap: 9px !important;
+    row-gap: 2px !important;
+
+    align-items: center !important;
+}
+
+
+/* Titulo */
+
+.decision-panel .decision-chart-title {
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+
+    width: auto !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    font-size: 7px !important;
+    line-height: 1 !important;
+
+    font-weight: 900 !important;
+
+    white-space: nowrap !important;
+}
+
+
+/* ==========================================================
+   CIRCULO
+   ========================================================== */
+
+.decision-panel .donut-wrap {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+
+    width: 66px !important;
+    height: 66px !important;
+
+    min-width: 66px !important;
+    min-height: 66px !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    display: grid !important;
+    place-items: center !important;
+
+    align-self: center !important;
+
+    overflow: visible !important;
+
+    flex: none !important;
+}
+
+
+.decision-panel .flota-donut {
+    box-sizing: border-box !important;
+
+    width: 66px !important;
+    height: 66px !important;
+
+    min-width: 66px !important;
+    min-height: 66px !important;
+
+    flex: none !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    position: relative !important;
+
+    display: grid !important;
+    place-items: center !important;
+
+    border: 0 !important;
+    border-radius: 50% !important;
+
+    /*
+       Una sola capa controla TODO el donut.
+
+       Exterior:
+       verde = flota operativa
+       rojo  = sin transmision
+
+       Interior:
+       blanco = agujero del donut
+    */
+
+    background:
+        radial-gradient(
+            circle at center,
+            #ffffff 0 57%,
+            transparent 58% 100%
+        ),
+        conic-gradient(
+            var(--green) 0 calc(var(--flota-pct) * 1%),
+            #e45858 calc(var(--flota-pct) * 1%) 100%
+        ) !important;
+
+    overflow: visible !important;
+}
+
+
+/*
+   Desactivamos definitivamente el agujero antiguo.
+   Era de 101x101 px en la definicion original.
+*/
+
+.decision-panel .flota-donut::after {
+    content: none !important;
+    display: none !important;
+}
+
+
+/* ==========================================================
+   CENTRO
+   ========================================================== */
+
+.decision-panel .flota-donut-center {
+    position: absolute !important;
+
+    inset: 0 !important;
+
+    z-index: 2 !important;
+
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    text-align: center !important;
+
+    pointer-events: none !important;
+}
+
+
+.decision-panel .flota-donut-center strong {
+    display: block !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    color: #182844 !important;
+
+    font-size: 10px !important;
+    line-height: 1 !important;
+
+    font-weight: 900 !important;
+
+    white-space: nowrap !important;
+}
+
+
+.decision-panel .flota-donut-center span {
+    display: block !important;
+
+    margin: 3px 0 0 !important;
+    padding: 0 !important;
+
+    color: #66758a !important;
+
+    font-size: 4px !important;
+    line-height: 1 !important;
+
+    font-weight: 800 !important;
+
+    text-transform: uppercase !important;
+
+    white-space: nowrap !important;
+}
+
+
+/* ==========================================================
+   LEYENDA
+   ========================================================== */
+
+.decision-panel .donut-legend {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+
+    width: 100% !important;
+    min-width: 0 !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    display: grid !important;
+
+    grid-template-columns: 1fr !important;
+
+    gap: 7px !important;
+
+    align-self: center !important;
+
+    color: #536176 !important;
+}
+
+
+.decision-panel .donut-legend > span {
+    width: 100% !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    display: grid !important;
+
+    grid-template-columns:
+        6px minmax(0, 1fr) auto !important;
+
+    align-items: center !important;
+
+    column-gap: 4px !important;
+
+    color: #536176 !important;
+
+    font-size: 7px !important;
+    line-height: 1.1 !important;
+
+    white-space: nowrap !important;
+}
+
+
+.decision-panel .donut-legend strong {
+    margin: 0 !important;
+    padding: 0 !important;
+
+    color: #182844 !important;
+
+    font-size: 8px !important;
+    line-height: 1 !important;
+
+    font-weight: 900 !important;
+}
+
+
+.decision-panel .legend-dot {
+    width: 6px !important;
+    height: 6px !important;
+
+    min-width: 6px !important;
+    min-height: 6px !important;
+
+    margin: 0 !important;
+
+    border-radius: 50% !important;
+}
+
+
+.decision-panel .legend-dot.working {
+    background: var(--green) !important;
+}
+
+
+.decision-panel .legend-dot.not-working {
+    background: #e45858 !important;
+}
+
+
+/* ==========================================================
+   ANCHO INTERMEDIO
+   ========================================================== */
+
+@media (max-width: 1050px) and (min-width: 901px) {
+
+    .decision-panel .decision-global {
+        grid-template-columns:
+            60px minmax(90px, 1fr) !important;
+
+        grid-template-rows:
+            11px minmax(60px, 1fr) !important;
+
+        column-gap: 7px !important;
+
+        padding: 6px 7px !important;
+    }
+
+    .decision-panel .donut-wrap,
+    .decision-panel .flota-donut {
+        width: 60px !important;
+        height: 60px !important;
+
+        min-width: 60px !important;
+        min-height: 60px !important;
+    }
+
+}
+
+
+/* SWAV-21M-DONUT-FIN */
+
+/* =========================================================
+   DETECTOR PPU NO RECONOCIDAS - 24S
+   ========================================================= */
+
+.alertas-ppu-panel {
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 24px;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+}
+
+.alertas-ppu-panel::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 5px;
+    background: #64748b;
+}
+
+.alertas-ppu-panel.sin-alertas::before {
+    background: #16a34a;
+}
+
+.alertas-ppu-panel.con-alertas::before {
+    background: #dc2626;
+}
+
+.alertas-ppu-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 22px 24px 18px 28px;
+}
+
+.alertas-ppu-header h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.alertas-ppu-header p {
+    margin: 7px 0 0;
+    max-width: 760px;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    opacity: 0.72;
+}
+
+.alertas-ppu-estado {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-height: 32px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    background: rgba(100, 116, 139, 0.12);
+    color: #475569;
+}
+
+.alertas-ppu-panel.sin-alertas
+.alertas-ppu-estado {
+    background: rgba(22, 163, 74, 0.12);
+    color: #15803d;
+}
+
+.alertas-ppu-panel.con-alertas
+.alertas-ppu-estado {
+    background: rgba(220, 38, 38, 0.12);
+    color: #b91c1c;
+}
+
+.alertas-ppu-contenido {
+    padding: 0 24px 20px 28px;
+}
+
+.alertas-ppu-vacio {
+    display: flex;
+    align-items: center;
+    min-height: 54px;
+    padding: 14px 16px;
+    border: 1px solid rgba(22, 163, 74, 0.18);
+    border-radius: 12px;
+    background: rgba(22, 163, 74, 0.05);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #166534;
+}
+
+.alertas-ppu-resumen {
+    margin-bottom: 14px;
+    padding: 13px 15px;
+    border: 1px solid rgba(220, 38, 38, 0.18);
+    border-radius: 12px;
+    background: rgba(220, 38, 38, 0.05);
+    font-size: 0.88rem;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.alertas-ppu-tabla {
+    width: 100%;
+    min-width: 980px;
+    border-collapse: collapse;
+}
+
+.alertas-ppu-tabla th,
+.alertas-ppu-tabla td {
+    padding: 11px 12px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    text-align: left;
+    vertical-align: middle;
+    font-size: 0.82rem;
+}
+
+.alertas-ppu-tabla th {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.035em;
+    opacity: 0.7;
+}
+
+.alertas-ppu-tabla tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.alertas-ppu-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 9px;
+    border-radius: 999px;
+    background: rgba(220, 38, 38, 0.10);
+    color: #b91c1c;
+    font-size: 0.7rem;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.alertas-ppu-pie {
+    padding: 13px 24px 15px 28px;
+    border-top: 1px solid rgba(148, 163, 184, 0.16);
+    font-size: 0.76rem;
+    line-height: 1.45;
+    opacity: 0.66;
+}
+
+@media (max-width: 900px) {
+
+    .alertas-ppu-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .alertas-ppu-estado {
+        align-self: flex-start;
+    }
+
+    .alertas-ppu-header,
+    .alertas-ppu-contenido,
+    .alertas-ppu-pie {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .alertas-ppu-header {
+        padding-top: 18px;
+    }
+
+    .alertas-ppu-header h2 {
+        font-size: 1rem;
+    }
+
+    .alertas-ppu-header p,
+    .alertas-ppu-vacio,
+    .alertas-ppu-resumen {
+        font-size: 0.8rem;
+    }
+}
+
+

@@ -1680,4 +1680,351 @@ class HistoricoFlotaOperativaServicio(Base):
 
     )
 
+# ================================================================
+# FLOTA - VALIDACION DE PPU DETECTADAS DESDE R1.6
+# ================================================================
+#
+# Registro maestro persistente para PPU observadas operacionalmente
+# que requieren validacion de pertenencia/origen.
+#
+# Estados previstos:
+#   POR_VALIDAR
+#   APOYO_EXTERNO
+#   BUS_NUEVO_PROPIO
+#   MOVIMIENTO_INTERNO
+#
+# La desaparicion de una PPU desde R1.6 NO elimina este registro.
+# ================================================================
+
+class FlotaPPUValidacion(Base):
+
+    __tablename__ = "flota_ppu_validacion"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+    ppu = Column(
+        String(20),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    estado = Column(
+        String(30),
+        nullable=False,
+        default="POR_VALIDAR",
+        index=True,
+    )
+
+    unidad_primera = Column(
+        String(10),
+        nullable=True,
+        index=True,
+    )
+
+    terminal_primera = Column(
+        String(60),
+        nullable=True,
+        index=True,
+    )
+
+    servicio_primero = Column(
+        String(30),
+        nullable=True,
+    )
+
+    codigo_ts_primero = Column(
+        String(50),
+        nullable=True,
+    )
+
+    unidad_ultima = Column(
+        String(10),
+        nullable=True,
+        index=True,
+    )
+
+    terminal_ultima = Column(
+        String(60),
+        nullable=True,
+        index=True,
+    )
+
+    servicio_ultimo = Column(
+        String(30),
+        nullable=True,
+    )
+
+    codigo_ts_ultimo = Column(
+        String(50),
+        nullable=True,
+    )
+
+    primera_deteccion = Column(
+        DateTime,
+        nullable=False,
+        index=True,
+    )
+
+    ultima_deteccion = Column(
+        DateTime,
+        nullable=False,
+        index=True,
+    )
+
+    cantidad_detecciones = Column(
+        Integer,
+        nullable=False,
+        default=1,
+    )
+
+    clasificacion_final = Column(
+        String(30),
+        nullable=True,
+        index=True,
+    )
+
+    observacion = Column(
+        Text,
+        nullable=True,
+    )
+
+    fuente_deteccion = Column(
+        String(30),
+        nullable=False,
+        default="R1.6",
+    )
+
+    fecha_validacion = Column(
+        DateTime,
+        nullable=True,
+    )
+
+    fecha_creacion = Column(
+        DateTime,
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    fecha_actualizacion = Column(
+        DateTime,
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+# ============================================================
+# FLOTA - EVIDENCIA TS POR DETECCION DE PPU
+# ============================================================
+#
+# Una deteccion padre representa:
+#     fecha + periodo + PPU
+#
+# Una misma PPU puede operar mas de un TS dentro del mismo
+# periodo. Esta tabla conserva cada evidencia operacional
+# sin elegir arbitrariamente un servicio principal.
+#
+# codigo_ts_observado:
+#     valor real proveniente del historico R1.6, por ejemplo:
+#     T963 E0
+#     T932 C0
+#
+# servicio_cliente:
+#     solo se completa cuando el cruce contra el catalogo
+#     Servicio es trazable e inequivoco.
+# ============================================================
+
+class FlotaPPUDeteccionServicio(Base):
+
+    __tablename__ = "flota_ppu_deteccion_servicio"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+    deteccion_id = Column(
+        Integer,
+        nullable=False,
+        index=True,
+    )
+
+    codigo_ts_observado = Column(
+        String(100),
+        nullable=False,
+        index=True,
+    )
+
+    servicio_cliente = Column(
+        String(30),
+        nullable=True,
+        index=True,
+    )
+
+    unidad = Column(
+        String(20),
+        nullable=True,
+        index=True,
+    )
+
+    terminal = Column(
+        String(120),
+        nullable=True,
+        index=True,
+    )
+
+    primera_transmision = Column(
+        DateTime,
+        nullable=True,
+    )
+
+    ultima_transmision = Column(
+        DateTime,
+        nullable=True,
+    )
+
+    cantidad_registros_fuente = Column(
+        Integer,
+        nullable=False,
+        default=1,
+    )
+
+    archivo_origen = Column(
+        String(500),
+        nullable=True,
+    )
+
+    fecha_creacion = Column(
+        DateTime,
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "deteccion_id",
+            "codigo_ts_observado",
+            name="uq_flota_ppu_deteccion_servicio_det_ts",
+        ),
+    )
+
+
+
+# ============================================================
+# FLOTA - DETECCIONES OPERACIONALES DE PPU NO RECONOCIDAS
+# ============================================================
+
+class FlotaPPUDeteccion(Base):
+    __tablename__ = "flota_ppu_deteccion"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+    # PPU tal como queda disponible para consulta/auditoria.
+    ppu = Column(
+        String(20),
+        nullable=False,
+        index=True,
+    )
+
+    # PPU canonica para deduplicacion:
+    # mayusculas, sin guion ni espacios.
+    ppu_normalizada = Column(
+        String(20),
+        nullable=False,
+        index=True,
+    )
+
+    fecha = Column(
+        Date,
+        nullable=False,
+        index=True,
+    )
+
+    periodo = Column(
+        Integer,
+        nullable=False,
+        index=True,
+    )
+
+    unidad = Column(
+        String(20),
+        nullable=True,
+        index=True,
+    )
+
+    terminal = Column(
+        String(120),
+        nullable=True,
+        index=True,
+    )
+
+    servicio = Column(
+        String(30),
+        nullable=True,
+        index=True,
+    )
+
+    codigo_ts = Column(
+        String(50),
+        nullable=True,
+    )
+
+    primera_transmision = Column(
+        DateTime,
+        nullable=True,
+    )
+
+    ultima_transmision = Column(
+        DateTime,
+        nullable=True,
+    )
+
+    cantidad_registros_fuente = Column(
+        Integer,
+        nullable=False,
+        default=1,
+    )
+
+    archivo_origen = Column(
+        String(500),
+        nullable=True,
+    )
+
+    carga_hash = Column(
+        String(64),
+        nullable=True,
+        index=True,
+    )
+
+    estado_deteccion = Column(
+        String(30),
+        nullable=False,
+        default="POR_VALIDAR",
+        index=True,
+    )
+
+    fecha_creacion = Column(
+        DateTime,
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "fecha",
+            "periodo",
+            "ppu_normalizada",
+            name="uq_flota_ppu_deteccion_fecha_periodo_ppu",
+        ),
+    )
+
 
