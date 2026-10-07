@@ -24,7 +24,7 @@ REGLAS:
 from __future__ import annotations
 
 from collections import defaultdict
-import time
+import time as time_module
 from datetime import date, datetime, time
 from pathlib import Path
 from typing import Any
@@ -372,6 +372,7 @@ def _cargar_real_30(
     db: Session,
     fecha: date,
     unidad: str,
+    incluir_detalle: bool = True,
 ) -> tuple[
     dict[tuple[str, str], int],
     dict[tuple[str, str, str], int],
@@ -451,23 +452,24 @@ def _cargar_real_30(
             )
         ] += 1
 
-        detalle.append({
-            "unidad": unidad,
-            "terminal": terminal,
-            "servicio": servicio,
-            "codigo_ts": codigo_ts,
-            "patente": patente,
-            "inicio_servicio": dt.isoformat(
-                sep=" "
-            ),
-            "periodo_30": periodo,
-            "periodo_1h":
-                _periodo_60_desde_30(periodo),
-            "ruta":
-                fila["ruta_normalizada"],
-            "sentido":
-                fila["sentido"],
-        })
+        if incluir_detalle:
+            detalle.append({
+                "unidad": unidad,
+                "terminal": terminal,
+                "servicio": servicio,
+                "codigo_ts": codigo_ts,
+                "patente": patente,
+                "inicio_servicio": dt.isoformat(
+                    sep=" "
+                ),
+                "periodo_30": periodo,
+                "periodo_1h":
+                    _periodo_60_desde_30(periodo),
+                "ruta":
+                    fila["ruta_normalizada"],
+                "sentido":
+                    fila["sentido"],
+            })
 
         if minimo is None or dt < minimo:
             minimo = dt
@@ -531,6 +533,7 @@ def construir_reporte_comercial_r16(
     fecha: str | date | datetime,
     unidad: str,
     granularidad: str = "30MIN",
+    incluir_detalle: bool = True,
 ) -> dict:
 
     fecha_obj = _parse_fecha(fecha)
@@ -552,7 +555,7 @@ def construir_reporte_comercial_r16(
             "Use 30MIN o 1H."
         )
 
-    _trace_t0 = time.monotonic()
+    _trace_t0 = time_module.monotonic()
     print(
         f"[R16 COMERCIAL TRACE] {unidad} "
         f"{fecha_obj} TIPO_DIA INICIO",
@@ -568,12 +571,12 @@ def construir_reporte_comercial_r16(
     print(
         f"[R16 COMERCIAL TRACE] {unidad} "
         f"{fecha_obj} TIPO_DIA FIN "
-        f"{time.monotonic() - _trace_t0:.2f}s "
+        f"{time_module.monotonic() - _trace_t0:.2f}s "
         f"tipo={tipo_dia}",
         flush=True,
     )
 
-    _trace_t0 = time.monotonic()
+    _trace_t0 = time_module.monotonic()
     print(
         f"[R16 COMERCIAL TRACE] {unidad} "
         f"{fecha_obj} PERFIL INICIO",
@@ -593,12 +596,12 @@ def construir_reporte_comercial_r16(
     print(
         f"[R16 COMERCIAL TRACE] {unidad} "
         f"{fecha_obj} PERFIL FIN "
-        f"{time.monotonic() - _trace_t0:.2f}s "
+        f"{time_module.monotonic() - _trace_t0:.2f}s "
         f"servicios={len(perfil_servicio_30)}",
         flush=True,
     )
 
-    _trace_t0 = time.monotonic()
+    _trace_t0 = time_module.monotonic()
     print(
         f"[R16 COMERCIAL TRACE] {unidad} "
         f"{fecha_obj} REAL_R16 INICIO",
@@ -616,12 +619,13 @@ def construir_reporte_comercial_r16(
         db,
         fecha_obj,
         unidad,
+        incluir_detalle=incluir_detalle,
     )
 
     print(
         f"[R16 COMERCIAL TRACE] {unidad} "
         f"{fecha_obj} REAL_R16 FIN "
-        f"{time.monotonic() - _trace_t0:.2f}s "
+        f"{time_module.monotonic() - _trace_t0:.2f}s "
         f"servicios={len(real_servicio_30)} "
         f"detalle={len(detalle)}",
         flush=True,
@@ -838,7 +842,7 @@ def sincronizar_historico_reporte_comercial_r16(
     fecha_obj = _parse_fecha(fecha)
     unidad = _norm(unidad)
 
-    _trace_t0 = time.monotonic()
+    _trace_t0 = time_module.monotonic()
     print(
         f"[R16 COMERCIAL TRACE] {unidad} "
         f"{fecha_obj} CONSTRUCTOR INICIO",
@@ -850,12 +854,13 @@ def sincronizar_historico_reporte_comercial_r16(
         fecha=fecha_obj,
         unidad=unidad,
         granularidad="30MIN",
+        incluir_detalle=False,
     )
 
     print(
         f"[R16 COMERCIAL TRACE] {unidad} "
         f"{fecha_obj} CONSTRUCTOR FIN "
-        f"{time.monotonic() - _trace_t0:.2f}s "
+        f"{time_module.monotonic() - _trace_t0:.2f}s "
         f"filas={len(reporte['servicios'])}",
         flush=True,
     )
@@ -868,7 +873,7 @@ def sincronizar_historico_reporte_comercial_r16(
     insertados = 0
     actualizados = 0
 
-    _trace_persistencia = time.monotonic()
+    _trace_persistencia = time_module.monotonic()
     _trace_total_filas = len(reporte["servicios"])
 
     print(
@@ -994,14 +999,14 @@ def sincronizar_historico_reporte_comercial_r16(
                 f"[R16 COMERCIAL TRACE] {unidad} "
                 f"{fecha_obj} PERSISTENCIA PROGRESO "
                 f"{_trace_indice}/{_trace_total_filas} "
-                f"{time.monotonic() - _trace_persistencia:.2f}s",
+                f"{time_module.monotonic() - _trace_persistencia:.2f}s",
                 flush=True,
             )
 
     print(
         f"[R16 COMERCIAL TRACE] {unidad} "
         f"{fecha_obj} PERSISTENCIA FIN "
-        f"{time.monotonic() - _trace_persistencia:.2f}s "
+        f"{time_module.monotonic() - _trace_persistencia:.2f}s "
         f"insertados={insertados} "
         f"actualizados={actualizados}",
         flush=True,
