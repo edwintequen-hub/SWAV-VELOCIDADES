@@ -7,6 +7,7 @@ Procesador Principal
 
 from sqlalchemy.orm import Session
 import time as time_module
+from sqlalchemy import event
 
 from app.services.importador import ImportadorR16
 from app.services.preparacion import PreparadorR16
@@ -77,20 +78,48 @@ class ProcesadorSWAV:
             )
 
             _t_preparador = time_module.monotonic()
+            _sql_preparador = {"total": 0}
+
+            def _contar_sql_preparador(
+                conn,
+                cursor,
+                statement,
+                parameters,
+                context,
+                executemany,
+            ):
+                _sql_preparador["total"] += 1
+
+            _engine_preparador = self.db.get_bind()
+
+            event.listen(
+                _engine_preparador,
+                "before_cursor_execute",
+                _contar_sql_preparador,
+            )
+
             print(
                 f"[SWAV TRACE] {unidad} PREPARADOR INICIO",
                 flush=True,
             )
 
-            resultado_preparacion = (
-                preparador.procesar(
-                    unidad=unidad
+            try:
+                resultado_preparacion = (
+                    preparador.procesar(
+                        unidad=unidad
+                    )
                 )
-            )
+            finally:
+                event.remove(
+                    _engine_preparador,
+                    "before_cursor_execute",
+                    _contar_sql_preparador,
+                )
 
             print(
                 f"[SWAV TRACE] {unidad} PREPARADOR FIN "
-                f"{time_module.monotonic() - _t_preparador:.2f}s",
+                f"{time_module.monotonic() - _t_preparador:.2f}s "
+                f"SQL={_sql_preparador['total']}",
                 flush=True,
             )
 
