@@ -870,9 +870,6 @@ def sincronizar_historico_reporte_comercial_r16(
         sep=" "
     )
 
-    insertados = 0
-    actualizados = 0
-
     _trace_persistencia = time_module.monotonic()
     _trace_total_filas = len(reporte["servicios"])
 
@@ -883,55 +880,78 @@ def sincronizar_historico_reporte_comercial_r16(
         flush=True,
     )
 
-    for _trace_indice, fila in enumerate(
-        reporte["servicios"],
-        start=1,
-    ):
+    # ---------------------------------------------------------
+    # OPTIMIZACION PRODUCCION:
+    # 1 SELECT para conocer las claves ya existentes.
+    # 1 executemany UPSERT para persistir todas las filas.
+    #
+    # Se conserva exactamente la clave historica oficial:
+    # fecha_operacional + unidad + terminal + servicio + periodo_30
+    # ---------------------------------------------------------
 
-        parametros = {
-            "fecha":
-                fecha_iso,
-            "unidad":
-                unidad,
-            "tipo_dia":
-                reporte["tipo_dia"],
-            "terminal":
-                fila["terminal"],
-            "servicio":
-                fila["servicio"],
-            "periodo":
-                fila["periodo"],
-            "real":
-                int(fila["real"]),
-            "perfil":
-                int(fila["perfil"]),
-            "diferencia":
-                int(fila["diferencia"]),
-            "inicio_r16":
-                reporte["inicio_r16"],
-            "corte_r16":
-                reporte["corte_r16"],
-            "estado_cobertura":
-                reporte["estado_cobertura"],
-            "fuente":
-                "HISTORICO_R1.6",
-            "fecha_actualizacion":
-                ahora,
-        }
-
-        existente = db.execute(text("""
-            SELECT id
+    existentes = db.execute(
+        text("""
+            SELECT
+                terminal,
+                servicio,
+                periodo_30
             FROM historico_reporte_comercial_r16
             WHERE fecha_operacional = :fecha
               AND unidad = :unidad
-              AND terminal = :terminal
-              AND servicio = :servicio
-              AND periodo_30 = :periodo
-        """), parametros).scalar()
+        """),
+        {
+            "fecha": fecha_iso,
+            "unidad": unidad,
+        },
+    ).all()
 
-        if existente is None:
+    claves_existentes = {
+        (
+            str(row[0]),
+            str(row[1]),
+            str(row[2]),
+        )
+        for row in existentes
+    }
 
-            db.execute(text("""
+    parametros_filas = []
+    insertados = 0
+    actualizados = 0
+
+    for fila in reporte["servicios"]:
+        parametros = {
+            "fecha": fecha_iso,
+            "unidad": unidad,
+            "tipo_dia": reporte["tipo_dia"],
+            "terminal": fila["terminal"],
+            "servicio": fila["servicio"],
+            "periodo": fila["periodo"],
+            "real": int(fila["real"]),
+            "perfil": int(fila["perfil"]),
+            "diferencia": int(fila["diferencia"]),
+            "inicio_r16": reporte["inicio_r16"],
+            "corte_r16": reporte["corte_r16"],
+            "estado_cobertura": reporte["estado_cobertura"],
+            "fuente": "HISTORICO_R1.6",
+            "fecha_actualizacion": ahora,
+        }
+
+        clave = (
+            str(fila["terminal"]),
+            str(fila["servicio"]),
+            str(fila["periodo"]),
+        )
+
+        if clave in claves_existentes:
+            actualizados += 1
+        else:
+            insertados += 1
+
+        parametros_filas.append(parametros)
+
+    if parametros_filas:
+        db.execute(
+            text("""
                 INSERT INTO historico_reporte_comercial_r16 (
                     fecha_operacional,
                     unidad,
@@ -964,44 +984,26 @@ def sincronizar_historico_reporte_comercial_r16(
                     :fuente,
                     :fecha_actualizacion
                 )
-            """), parametros)
-
-            insertados += 1
-
-        else:
-
-            db.execute(text("""
-                UPDATE historico_reporte_comercial_r16
-                SET
-                    tipo_dia = :tipo_dia,
-                    salidas_reales = :real,
-                    perfil_comercial = :perfil,
-                    diferencia = :diferencia,
-                    inicio_r16 = :inicio_r16,
-                    corte_r16 = :corte_r16,
-                    estado_cobertura = :estado_cobertura,
-                    fuente = :fuente,
-                    fecha_actualizacion = :fecha_actualizacion
-                WHERE id = :id
-            """), {
-                **parametros,
-                "id": existente,
-            })
-
-            actualizados += 1
-
-        if (
-            _trace_indice == 1
-            or _trace_indice % 250 == 0
-            or _trace_indice == _trace_total_filas
-        ):
-            print(
-                f"[R16 COMERCIAL TRACE] {unidad} "
-                f"{fecha_obj} PERSISTENCIA PROGRESO "
-                f"{_trace_indice}/{_trace_total_filas} "
-                f"{time_module.monotonic() - _trace_persistencia:.2f}s",
-                flush=True,
-            )
+                ON CONFLICT (
+                    fecha_operacional,
+                    unidad,
+                    terminal,
+                    servicio,
+                    periodo_30
+                )
+                DO UPDATE SET
+                    tipo_dia = EXCLUDED.tipo_dia,
+                    salidas_reales = EXCLUDED.salidas_reales,
+                    perfil_comercial = EXCLUDED.perfil_comercial,
+                    diferencia = EXCLUDED.diferencia,
+                    inicio_r16 = EXCLUDED.inicio_r16,
+                    corte_r16 = EXCLUDED.corte_r16,
+                    estado_cobertura = EXCLUDED.estado_cobertura,
+                    fuente = EXCLUDED.fuente,
+                    fecha_actualizacion = EXCLUDED.fecha_actualizacion
+            """),
+            parametros_filas,
+        )
 
     print(
         f"[R16 COMERCIAL TRACE] {unidad} "
