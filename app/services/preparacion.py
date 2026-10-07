@@ -45,6 +45,7 @@ class PreparadorR16:
 
     def __init__(self, db: Session):
         self.db = db
+        self._cache_configuracion_unidad = {}
 
         (
             self.duracion_minima,
@@ -121,6 +122,11 @@ class PreparadorR16:
             unidad_codigo
         )
 
+        if unidad_codigo in self._cache_configuracion_unidad:
+            return self._cache_configuracion_unidad[
+                unidad_codigo
+            ]
+
         unidad = (
             self.db.query(Unidad)
             .filter(
@@ -130,7 +136,11 @@ class PreparadorR16:
         )
 
         if unidad is None:
-            return 20, 70
+            resultado = (20, 70)
+            self._cache_configuracion_unidad[
+                unidad_codigo
+            ] = resultado
+            return resultado
 
         config = (
             self.db.query(Configuracion)
@@ -141,7 +151,11 @@ class PreparadorR16:
         )
 
         if config is None:
-            return 20, 70
+            resultado = (20, 70)
+            self._cache_configuracion_unidad[
+                unidad_codigo
+            ] = resultado
+            return resultado
 
         duracion_minima = (
             config.duracion_minima
@@ -158,10 +172,16 @@ class PreparadorR16:
         if porcentaje is None:
             porcentaje = 70
 
-        return (
+        resultado = (
             float(duracion_minima),
             float(porcentaje),
         )
+
+        self._cache_configuracion_unidad[
+            unidad_codigo
+        ] = resultado
+
+        return resultado
 
     # =====================================================
     # DURACIÃ“N
