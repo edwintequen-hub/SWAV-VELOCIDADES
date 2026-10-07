@@ -5,6 +5,7 @@ AplicaciÃ³n Principal
 =========================================================
 """
 
+import os
 from pathlib import Path
 import threading
 import time
@@ -212,6 +213,16 @@ app = FastAPI(
 def iniciar_scheduler_r16():
 
     global _scheduler_r16_iniciado
+
+
+    if os.getenv(
+        "SWAV_R16_AUTO_ENABLED", "0"
+    ).strip().lower() not in ("1", "true", "yes"):
+        print(
+            "[R16 AUTO] DESACTIVADO POR SEGURIDAD",
+            flush=True,
+        )
+        return
 
     if _scheduler_r16_iniciado:
 
