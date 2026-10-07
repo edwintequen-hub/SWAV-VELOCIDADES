@@ -2382,26 +2382,43 @@ def construir_sin_transmision_por_dias(
     )
 
 
-    filas_plazas = (
-        db.query(
-            HistoricoFlotaOperativa
-        )
-        .filter(
-            HistoricoFlotaOperativa.ppu.isnot(
-                None
-            ),
-            HistoricoFlotaOperativa.plazas.isnot(
-                None
-            ),
-        )
-        .order_by(
-            HistoricoFlotaOperativa.fecha.desc(),
-            HistoricoFlotaOperativa.periodo.desc(),
-            HistoricoFlotaOperativa.id.desc(),
-        )
-        .all()
-    )
+    # Optimizacion: ultima plaza por PPU en PostgreSQL.
+    # Mantener el catalogo Consolidado como fuente primaria.
+    if db.get_bind().dialect.name == "postgresql":
+        from sqlalchemy import text as sql_text
 
+        filas_plazas = db.execute(
+            sql_text("""
+                SELECT DISTINCT ON (ppu)
+                    ppu,
+                    plazas
+                FROM historico_flota_operativa
+                WHERE ppu IS NOT NULL
+                  AND plazas IS NOT NULL
+                ORDER BY
+                    ppu,
+                    fecha DESC,
+                    periodo DESC,
+                    id DESC
+            """)
+        ).fetchall()
+    else:
+        filas_plazas = (
+            db.query(
+                HistoricoFlotaOperativa.ppu,
+                HistoricoFlotaOperativa.plazas,
+            )
+            .filter(
+                HistoricoFlotaOperativa.ppu.isnot(None),
+                HistoricoFlotaOperativa.plazas.isnot(None),
+            )
+            .order_by(
+                HistoricoFlotaOperativa.fecha.desc(),
+                HistoricoFlotaOperativa.periodo.desc(),
+                HistoricoFlotaOperativa.id.desc(),
+            )
+            .yield_per(1000)
+        )
 
     for fila in filas_plazas:
 
@@ -2489,7 +2506,7 @@ def construir_sin_transmision_por_dias(
 
         q_presencias = (
             db.query(
-                HistoricoFlotaOperativa
+                HistoricoFlotaOperativa.ppu
             )
             .filter(
                 HistoricoFlotaOperativa.fecha
@@ -2525,7 +2542,7 @@ def construir_sin_transmision_por_dias(
             )
 
 
-        for presencia in q_presencias.all():
+        for presencia in q_presencias.yield_per(1000):
 
             ppu = _normalizar_ppu(
                 presencia.ppu
