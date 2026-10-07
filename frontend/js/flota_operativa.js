@@ -2155,6 +2155,406 @@
     }
 
 
+
+
+    function textoCoberturaComercialR16(
+        datos
+    ) {
+        const estado =
+            String(
+                datos.estado_cobertura
+                ||
+                ""
+            );
+
+        const corte =
+            datos.corte_r16
+                ? String(
+                    datos.corte_r16
+                )
+                : "";
+
+        if (
+            estado ===
+            "PARCIAL_O_POR_CERTIFICAR"
+        ) {
+            return (
+                "Cobertura parcial o por certificar"
+                +
+                (
+                    corte
+                        ? ` ? Corte R1.6: ${escapeComercialR16(corte)}`
+                        : ""
+                )
+            );
+        }
+
+        if (estado) {
+            return (
+                escapeComercialR16(
+                    estado
+                )
+                +
+                (
+                    corte
+                        ? ` ? Corte R1.6: ${escapeComercialR16(corte)}`
+                        : ""
+                )
+            );
+        }
+
+        return (
+            corte
+                ? `Corte R1.6: ${escapeComercialR16(corte)}`
+                : "Cobertura sin informaci?n."
+        );
+    }
+
+    function renderResumenComercialR16(
+        unidad,
+        datos
+    ) {
+        const contenedor =
+            $(
+                `comercialR16Resumen${unidad}`
+            );
+
+        if (!contenedor) {
+            return;
+        }
+
+        const resumen =
+            Array.isArray(
+                datos.resumen_terminal
+            )
+                ? datos.resumen_terminal
+                : [];
+
+        const tarjetasTerminal =
+            resumen
+            .map(
+                fila => {
+
+                    const real =
+                        Number(
+                            fila.salidas_reales
+                            ??
+                            fila.real
+                            ??
+                            fila.total_real
+                            ??
+                            0
+                        );
+
+                    const perfil =
+                        Number(
+                            fila.perfil_comercial
+                            ??
+                            fila.perfil
+                            ??
+                            fila.total_perfil
+                            ??
+                            0
+                        );
+
+                    const diferencia =
+                        Number(
+                            fila.diferencia
+                            ??
+                            (
+                                real
+                                -
+                                perfil
+                            )
+                        );
+
+                    return `
+                        <div class="comercial-r16-terminal-card">
+                            <span>
+                                ${escapeComercialR16(
+                                    fila.terminal
+                                    ||
+                                    "-"
+                                )}
+                            </span>
+
+                            <strong>
+                                ${numeroComercialR16(real)}
+                            </strong>
+
+                            <small>
+                                Perfil:
+                                ${numeroComercialR16(perfil)}
+                                ? Dif:
+                                ${numeroComercialR16(diferencia)}
+                            </small>
+                        </div>
+                    `;
+                }
+            )
+            .join("");
+
+        contenedor.innerHTML = `
+            <div class="comercial-r16-kpis">
+
+                <div class="comercial-r16-kpi">
+                    <span>Salidas R1.6</span>
+                    <strong>
+                        ${numeroComercialR16(
+                            datos.total_real
+                        )}
+                    </strong>
+                </div>
+
+                <div class="comercial-r16-kpi">
+                    <span>Perfil Comercial</span>
+                    <strong>
+                        ${numeroComercialR16(
+                            datos.total_perfil
+                        )}
+                    </strong>
+                </div>
+
+                <div class="comercial-r16-kpi">
+                    <span>Diferencia</span>
+                    <strong>
+                        ${numeroComercialR16(
+                            datos.total_diferencia
+                            ??
+                            (
+                                Number(
+                                    datos.total_real
+                                    ||
+                                    0
+                                )
+                                -
+                                Number(
+                                    datos.total_perfil
+                                    ||
+                                    0
+                                )
+                            )
+                        )}
+                    </strong>
+                </div>
+
+            </div>
+
+            <div class="comercial-r16-terminales">
+                ${tarjetasTerminal}
+            </div>
+        `;
+    }
+
+    function renderMatrizComercialR16(
+        unidad,
+        datos
+    ) {
+        const contenedor =
+            $(
+                `comercialR16Matriz${unidad}`
+            );
+
+        if (!contenedor) {
+            return;
+        }
+
+        const filas =
+            Array.isArray(
+                datos.matriz_terminal
+            )
+                ? datos.matriz_terminal
+                : [];
+
+        if (!filas.length) {
+            contenedor.innerHTML = `
+                <div class="empty-cell">
+                    Sin datos comerciales R1.6 para esta fecha.
+                </div>
+            `;
+            return;
+        }
+
+        const periodos = [
+            ...new Set(
+                filas
+                .map(
+                    fila =>
+                        String(
+                            fila.periodo
+                            ??
+                            fila.periodo_30
+                            ??
+                            fila.periodo_1h
+                            ??
+                            ""
+                        )
+                )
+                .filter(Boolean)
+            )
+        ]
+        .sort();
+
+        const terminales = [
+            ...new Set(
+                filas
+                .map(
+                    fila =>
+                        String(
+                            fila.terminal
+                            ||
+                            ""
+                        )
+                )
+                .filter(Boolean)
+            )
+        ]
+        .sort();
+
+        const indice =
+            new Map();
+
+        filas.forEach(
+            fila => {
+
+                const terminal =
+                    String(
+                        fila.terminal
+                        ||
+                        ""
+                    );
+
+                const periodo =
+                    String(
+                        fila.periodo
+                        ??
+                        fila.periodo_30
+                        ??
+                        fila.periodo_1h
+                        ??
+                        ""
+                    );
+
+                indice.set(
+                    `${terminal}|||${periodo}`,
+                    fila
+                );
+            }
+        );
+
+        const cabeceraPeriodos =
+            periodos
+            .map(
+                periodo => `
+                    <th>
+                        ${escapeComercialR16(periodo)}
+                    </th>
+                `
+            )
+            .join("");
+
+        const cuerpo =
+            terminales
+            .map(
+                terminal => {
+
+                    let totalReal = 0;
+                    let totalPerfil = 0;
+
+                    const celdas =
+                        periodos
+                        .map(
+                            periodo => {
+
+                                const fila =
+                                    indice.get(
+                                        `${terminal}|||${periodo}`
+                                    )
+                                    ||
+                                    {};
+
+                                const real =
+                                    Number(
+                                        fila.salidas_reales
+                                        ??
+                                        fila.real
+                                        ??
+                                        0
+                                    );
+
+                                const perfil =
+                                    Number(
+                                        fila.perfil_comercial
+                                        ??
+                                        fila.perfil
+                                        ??
+                                        0
+                                    );
+
+                                totalReal += real;
+                                totalPerfil += perfil;
+
+                                return `
+                                    <td class="comercial-r16-celda">
+                                        <strong>
+                                            ${numeroComercialR16(real)}
+                                        </strong>
+                                        <small>
+                                            ${numeroComercialR16(perfil)}
+                                        </small>
+                                    </td>
+                                `;
+                            }
+                        )
+                        .join("");
+
+                    return `
+                        <tr>
+                            <th class="comercial-r16-terminal">
+                                ${escapeComercialR16(terminal)}
+                            </th>
+
+                            ${celdas}
+
+                            <td class="comercial-r16-total">
+                                <strong>
+                                    ${numeroComercialR16(totalReal)}
+                                </strong>
+                                <small>
+                                    ${numeroComercialR16(totalPerfil)}
+                                </small>
+                            </td>
+                        </tr>
+                    `;
+                }
+            )
+            .join("");
+
+        contenedor.innerHTML = `
+            <div class="comercial-r16-leyenda">
+                <strong>Valor superior:</strong>
+                Salidas R1.6
+                ?
+                <strong>Valor inferior:</strong>
+                Perfil Comercial
+            </div>
+
+            <table class="comercial-r16-tabla">
+                <thead>
+                    <tr>
+                        <th>Terminal</th>
+                        ${cabeceraPeriodos}
+                        <th>Total</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    ${cuerpo}
+                </tbody>
+            </table>
+        `;
+    }
+
     async function cargarComercialR16Unidad(
         unidad,
         forzar = false
