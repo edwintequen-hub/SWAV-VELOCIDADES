@@ -78,7 +78,15 @@ class ProcesadorSWAV:
             )
 
             _t_preparador = time_module.monotonic()
-            _sql_preparador = {"total": 0}
+            _sql_preparador = {
+                "total": 0,
+                "configuracion": 0,
+                "unidades": 0,
+                "servicios": 0,
+                "periodos": 0,
+                "expediciones": 0,
+                "otros": 0,
+            }
 
             def _contar_sql_preparador(
                 conn,
@@ -89,6 +97,25 @@ class ProcesadorSWAV:
                 executemany,
             ):
                 _sql_preparador["total"] += 1
+
+                sql = " ".join(
+                    str(statement).lower().split()
+                )
+
+                if "configuracion" in sql:
+                    clave = "configuracion"
+                elif "unidades" in sql:
+                    clave = "unidades"
+                elif "servicios" in sql:
+                    clave = "servicios"
+                elif "periodos" in sql:
+                    clave = "periodos"
+                elif "expediciones" in sql:
+                    clave = "expediciones"
+                else:
+                    clave = "otros"
+
+                _sql_preparador[clave] += 1
 
             _engine_preparador = self.db.get_bind()
 
@@ -119,7 +146,13 @@ class ProcesadorSWAV:
             print(
                 f"[SWAV TRACE] {unidad} PREPARADOR FIN "
                 f"{time_module.monotonic() - _t_preparador:.2f}s "
-                f"SQL={_sql_preparador['total']}",
+                f"SQL={_sql_preparador['total']} "
+                f"CONFIG={_sql_preparador['configuracion']} "
+                f"UNIDAD={_sql_preparador['unidades']} "
+                f"SERVICIO={_sql_preparador['servicios']} "
+                f"PERIODO={_sql_preparador['periodos']} "
+                f"EXPEDICION={_sql_preparador['expediciones']} "
+                f"OTROS={_sql_preparador['otros']}",
                 flush=True,
             )
 
