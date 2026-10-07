@@ -236,7 +236,9 @@ def iniciar_scheduler_r16():
     )
 
 
-@app.on_event("startup")
+# R2.2 conservado, pero sin inicio automatico.
+# Fuente operacional activa: R1.6.
+# @app.on_event("startup")
 def iniciar_scheduler_r22():
 
     global _scheduler_r22_iniciado
