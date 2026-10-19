@@ -18,6 +18,9 @@
         document.getElementById(id);
 
 
+    function escapeComercialR16(valor) {
+        return escapeHtml(valor);
+    }
     function escapeHtml(valor) {
 
         return String(
