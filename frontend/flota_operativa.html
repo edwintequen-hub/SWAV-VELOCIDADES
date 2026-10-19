@@ -8,6 +8,62 @@
 
     <link rel="stylesheet"
           href="/css/flota_operativa.css?v=20260911_r8f2">
+<style>
+.comercial-r16-desplegable {
+    margin-top: 16px;
+    border: 1px solid #dfe5ec;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.comercial-r16-desplegable > summary {
+    cursor: pointer;
+    padding: 14px 18px;
+    font-weight: 700;
+    background: #f7f9fc;
+    color: #253456;
+    user-select: none;
+}
+
+.comercial-r16-desplegable > summary:hover {
+    background: #edf2fa;
+}
+
+.comercial-r16-desplegable:not([open]) > .comercial-r16 {
+    display: none !important;
+}
+</style>
+<style>
+.flota-panel-desplegable {
+    margin: 12px 0;
+    border: 1px solid #dfe5ec;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.flota-panel-desplegable > summary {
+    cursor: pointer;
+    padding: 15px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #253456;
+    background: #f7f9fc;
+    user-select: none;
+}
+
+.flota-panel-desplegable > summary:hover {
+    background: #edf2fa;
+}
+
+.flota-panel-desplegable:not([open]) > section {
+    display: none !important;
+}
+
+.flota-panel-desplegable[open] > section {
+    margin-top: 8px;
+}
+</style>
 </head>
 
 <body>
@@ -641,9 +697,10 @@
                     <!-- SALIDAS COMERCIALES R1.6 - U8                 -->
                     <!-- ============================================= -->
 
-                    <section
-                        id="comercialR16UnidadU8"
-                        class="comercial-r16">
+                    <details class="comercial-r16-desplegable">
+    <summary>Salidas Comerciales R1.6 - U8 | Mostrar / ocultar detalle</summary>
+    <section id="comercialR16UnidadU8" class="comercial-r16">
+
 
                         <div class="comercial-r16-header">
 
@@ -714,6 +771,7 @@
                         </div>
 
                     </section>
+</details>
 
                 </article>
 
@@ -785,9 +843,10 @@
                     <!-- SALIDAS COMERCIALES R1.6 - U9                 -->
                     <!-- ============================================= -->
 
-                    <section
-                        id="comercialR16UnidadU9"
-                        class="comercial-r16">
+                    <details class="comercial-r16-desplegable">
+    <summary>Salidas Comerciales R1.6 - U9 | Mostrar / ocultar detalle</summary>
+    <section id="comercialR16UnidadU9" class="comercial-r16">
+
 
                         <div class="comercial-r16-header">
 
@@ -858,6 +917,7 @@
                         </div>
 
                     </section>
+</details>
 
                 </article>
 
@@ -870,6 +930,8 @@
         <!-- FUENTES DE DATOS - REUBICADO PASO 21B.2                  -->
         <!-- ========================================================= -->
 
+<details class="flota-panel-desplegable">
+    <summary>FUENTES DE DATOS</summary>
 <section
                 id="fuentesDatosFlota"
                 class="fuentes-flota">
@@ -930,6 +992,7 @@
                 </div>
 
             </section>
+</details>
 
 
 
@@ -954,7 +1017,9 @@
         <!-- DETECTOR PPU NO RECONOCIDA                               -->
         <!-- ========================================================= -->
 
-        <section
+        <details class="flota-panel-desplegable">
+    <summary>CONTROL DE PPU NO RECONOCIDAS</summary>
+<section
             id="alertasPpuPanel"
             class="panel alertas-ppu-panel">
 
@@ -995,6 +1060,7 @@
             </div>
 
         </section>
+</details>
 
 
         <section class="panel support-panel">
