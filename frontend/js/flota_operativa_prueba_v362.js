@@ -451,12 +451,14 @@
                         );
 
                     if (!respuestaUnidad.ok) {
-                        throw new Error(
-                            "No fue posible cargar matriz "
-                            +
-                            unidadMatriz
-                        );
-                    }
+                            console.warn(
+                                "Matriz operativa secundaria no disponible:",
+                                unidadMatriz,
+                                "HTTP",
+                                respuestaUnidad.status
+                            );
+                            return;
+                        }
 
                     const datosUnidad =
                         await respuestaUnidad.json();
