@@ -2141,7 +2141,7 @@ def _terminal_nombre(valor):
 
 
 
-def obtener_plazas_catalogo():
+def _leer_plazas_catalogo_original():
     """
     Lee plazas por PPU desde la hoja Consolidado
     del catalogo de distribucion de terminales.
@@ -2229,6 +2229,38 @@ def obtener_plazas_catalogo():
 
 
     return resultado
+
+from functools import lru_cache as _flota_lru_cache
+
+
+@_flota_lru_cache(maxsize=4)
+def _leer_plazas_catalogo_cache(ruta, mtime_ns, tamano):
+    return _leer_plazas_catalogo_original()
+
+
+def obtener_plazas_catalogo():
+    from pathlib import Path
+
+    carpeta = Path("catalogos")
+    archivo = carpeta / "Distribucion_Terminales_26Ago2026.xlsx"
+
+    if not archivo.exists():
+        candidatos = list(
+            carpeta.glob("*Terminales*26Ago2026*.xlsx")
+        )
+        if not candidatos:
+            return {}
+        archivo = candidatos[0]
+
+    estado = archivo.stat()
+
+    datos = _leer_plazas_catalogo_cache(
+        str(archivo.resolve()),
+        estado.st_mtime_ns,
+        estado.st_size,
+    )
+
+    return dict(datos)
 
 
 
@@ -5466,6 +5498,300 @@ def consultar_flota(
 
             "terminales":
                 series_terminales_matriz,
+        }
+
+
+    # ================================================================
+    # FLOTA.19 - MATRIZ COMPORTAMIENTO R1.6 VS PERFIL
+    #
+    # REAL:
+    #   Salidas comerciales R1.6 desde Expedicion.
+    #
+    # PERFIL:
+    #   Requerimiento operacional desde perfil_operacional.xlsx.
+    #
+    # COBERTURA:
+    #   Ultimo periodo alcanzado por inicio_servicio R1.6.
+    #
+    # R2.2 NO participa en esta matriz.
+    # ================================================================
+
+    if (
+        unidad
+        and
+        fecha_r22_matriz is not None
+        and
+        fecha_r22_hasta is not None
+        and
+        fecha_r22_matriz == fecha_r22_hasta
+    ):
+        unidad_matriz = _norm(unidad)
+
+        real_vs_perfil_r16 = construir_real_vs_perfil(
+            db=db,
+            fecha=fecha_r22_matriz,
+            unidad=unidad_matriz,
+        )
+
+        filas_r16_perfil = (
+            real_vs_perfil_r16.get(
+                "intervalos_60",
+                [],
+            )
+            or []
+        )
+
+        ultimo_inicio_r16 = (
+            db.query(
+                func.max(
+                    Expedicion.inicio_servicio
+                )
+            )
+            .filter(
+                Expedicion.unidad == unidad_matriz,
+                Expedicion.inicio_servicio.isnot(None),
+                func.date(
+                    Expedicion.inicio_servicio
+                )
+                ==
+                fecha_r22_matriz.isoformat(),
+            )
+            .scalar()
+        )
+
+        ultimo_periodo_r16 = (
+            int(ultimo_inicio_r16.hour) + 1
+            if ultimo_inicio_r16 is not None
+            else None
+        )
+
+        filas_terminal_periodo = {}
+
+        totales_periodo = defaultdict(
+            lambda: {
+                "real": 0,
+                "perfil": 0,
+            }
+        )
+
+        terminales_matriz_r16 = set()
+
+        for fila in filas_r16_perfil:
+            terminal_fila = _norm(
+                fila.get("terminal")
+            )
+
+            try:
+                periodo_fila = int(
+                    fila.get("periodo") or 0
+                )
+            except (TypeError, ValueError):
+                continue
+
+            if (
+                not terminal_fila
+                or
+                not 1 <= periodo_fila <= 24
+            ):
+                continue
+
+            real_fila = int(
+                fila.get("real") or 0
+            )
+
+            perfil_fila = int(
+                fila.get("perfil") or 0
+            )
+
+            terminales_matriz_r16.add(
+                terminal_fila
+            )
+
+            filas_terminal_periodo[
+                (
+                    terminal_fila,
+                    periodo_fila,
+                )
+            ] = {
+                "real": real_fila,
+                "perfil": perfil_fila,
+                "porcentaje":
+                    fila.get("porcentaje"),
+                "estado":
+                    fila.get("estado"),
+            }
+
+            totales_periodo[
+                periodo_fila
+            ]["real"] += real_fila
+
+            totales_periodo[
+                periodo_fila
+            ]["perfil"] += perfil_fila
+
+        series_matriz_r16 = []
+
+        for periodo_matriz in range(1, 25):
+            con_cobertura = (
+                ultimo_periodo_r16 is not None
+                and
+                periodo_matriz <= ultimo_periodo_r16
+            )
+
+            real_total = int(
+                totales_periodo[
+                    periodo_matriz
+                ]["real"]
+            )
+
+            perfil_total = int(
+                totales_periodo[
+                    periodo_matriz
+                ]["perfil"]
+            )
+
+            porcentaje_total = (
+                round(
+                    (
+                        real_total
+                        /
+                        perfil_total
+                    )
+                    * 100,
+                    2,
+                )
+                if (
+                    con_cobertura
+                    and
+                    perfil_total > 0
+                )
+                else None
+            )
+
+            if not con_cobertura:
+                estado_total = "SIN_COBERTURA"
+            elif perfil_total > 0:
+                estado_total = "CON_PERFIL"
+            elif real_total > 0:
+                estado_total = "SIN_REQUERIMIENTO"
+            else:
+                estado_total = "SIN_PERFIL"
+
+            series_matriz_r16.append({
+                "periodo":
+                    periodo_matriz,
+
+                "etiqueta":
+                    f"P{periodo_matriz:02d}",
+
+                "real_r16":
+                    (
+                        real_total
+                        if con_cobertura
+                        else None
+                    ),
+
+                "perfil_teorico":
+                    perfil_total,
+
+                "porcentaje_cumplimiento":
+                    porcentaje_total,
+
+                "estado_cumplimiento":
+                    estado_total,
+            })
+
+        series_terminales_r16 = []
+
+        for terminal_matriz in sorted(
+            terminales_matriz_r16
+        ):
+            series_terminal = []
+
+            for periodo_matriz in range(1, 25):
+                fila = filas_terminal_periodo.get(
+                    (
+                        terminal_matriz,
+                        periodo_matriz,
+                    ),
+                    {
+                        "real": 0,
+                        "perfil": 0,
+                        "porcentaje": None,
+                        "estado": "SIN_PERFIL",
+                    },
+                )
+
+                con_cobertura = (
+                    ultimo_periodo_r16 is not None
+                    and
+                    periodo_matriz <= ultimo_periodo_r16
+                )
+
+                series_terminal.append({
+                    "periodo":
+                        periodo_matriz,
+
+                    "etiqueta":
+                        f"P{periodo_matriz:02d}",
+
+                    "real_r16":
+                        (
+                            int(fila["real"])
+                            if con_cobertura
+                            else None
+                        ),
+
+                    "perfil_teorico":
+                        int(fila["perfil"]),
+
+                    "porcentaje_cumplimiento":
+                        (
+                            fila["porcentaje"]
+                            if con_cobertura
+                            else None
+                        ),
+
+                    "estado_cumplimiento":
+                        (
+                            fila["estado"]
+                            if con_cobertura
+                            else "SIN_COBERTURA"
+                        ),
+                })
+
+            series_terminales_r16.append({
+                "terminal":
+                    terminal_matriz,
+
+                "series":
+                    series_terminal,
+            })
+
+        matriz_flota = {
+            "fecha":
+                fecha_r22_matriz.isoformat(),
+
+            "unidad":
+                unidad_matriz,
+
+            "ultimo_periodo_r16":
+                ultimo_periodo_r16,
+
+            "fuente_perfil":
+                "perfil_operacional.xlsx",
+
+            "fuente_r16":
+                "Expedicion R1.6",
+
+            "fuente_r22":
+                None,
+
+            "series":
+                series_matriz_r16,
+
+            "terminales":
+                series_terminales_r16,
         }
 
     return {

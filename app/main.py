@@ -493,7 +493,7 @@ def reportes():
 @app.get("/flota-operativa")
 def flota_operativa():
 
-    archivo = FRONTEND_DIR / "flota_operativa.html"
+    archivo = FRONTEND_DIR / "flota_operativa_prueba_v362.html"
 
     if archivo.exists():
         return FileResponse(archivo)

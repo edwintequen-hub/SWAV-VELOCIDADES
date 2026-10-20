@@ -541,70 +541,6 @@ def descargar_r16(
         # idempotente y participa en esta misma transaccion.
         # =================================================
 
-        resultado_reporte_comercial_r16 = {
-            "estado": "OK",
-            "fechas_procesadas": [],
-            "insertados": 0,
-            "actualizados": 0,
-            "detalle_por_fecha": {},
-        }
-
-        for fecha_comercial in fechas_detector:
-
-            _trace_t0 = time.monotonic()
-            print(
-                f"[R16 TRACE] {unidad} COMERCIAL INICIO "
-                f"fecha={fecha_comercial}",
-                flush=True,
-            )
-
-            resultado_fecha_comercial = (
-                sincronizar_historico_reporte_comercial_r16(
-                    db=flota_db,
-                    fecha=fecha_comercial,
-                    unidad=unidad,
-                    commit=False,
-                )
-            )
-
-            print(
-                f"[R16 TRACE] {unidad} COMERCIAL FIN "
-                f"fecha={fecha_comercial} "
-                f"{time.monotonic() - _trace_t0:.2f}s",
-                flush=True,
-            )
-
-            resultado_reporte_comercial_r16[
-                "fechas_procesadas"
-            ].append(
-                fecha_comercial
-            )
-
-            resultado_reporte_comercial_r16[
-                "insertados"
-            ] += (
-                resultado_fecha_comercial.get(
-                    "insertados",
-                    0,
-                )
-                or 0
-            )
-
-            resultado_reporte_comercial_r16[
-                "actualizados"
-            ] += (
-                resultado_fecha_comercial.get(
-                    "actualizados",
-                    0,
-                )
-                or 0
-            )
-
-            resultado_reporte_comercial_r16[
-                "detalle_por_fecha"
-            ][fecha_comercial] = (
-                resultado_fecha_comercial
-            )
 
         _trace_t0 = time.monotonic()
         print(
@@ -700,6 +636,147 @@ def descargar_r16(
     # 5. MISMO ARCHIVO YA PROCESADO
     # =====================================================
 
+
+    # FLOTA.110 - REPORTE COMERCIAL POSTERIOR A SWAV
+    # El detector PPU conserva sus propias fechas.
+    if estado_proceso not in ("OK", "DUPLICADO"):
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "mensaje": "SWAV no termino correctamente",
+                "resultado": resultado,
+            },
+        )
+
+    flota_comercial_db = SessionLocal()
+    try:
+        from sqlalchemy import text as sql_text
+
+        # Consultar fechas reales ya persistidas para la unidad.
+        # Se restringen a las fechas presentes en la descarga,
+        # evitando reconstruir todo el historico en cada ejecucion.
+        fechas_descarga = sorted(
+            fechas_flota_general | fechas_flota_servicios
+        )
+
+        fechas_comerciales = []
+
+        if fechas_descarga:
+            fechas_descarga_iso = sorted({
+                str(fecha)[:10]
+                for fecha in fechas_descarga
+            })
+
+            fechas_disponibles = flota_comercial_db.execute(
+                sql_text("""
+                    SELECT DISTINCT fecha_operacional
+                    FROM historico_expediciones
+                    WHERE unidad = :unidad
+                      AND fecha_operacional IN :fechas
+                    ORDER BY fecha_operacional
+                """).bindparams(
+                    __import__(
+                        "sqlalchemy"
+                    ).bindparam("fechas", expanding=True)
+                ),
+                {
+                    "unidad": unidad,
+                    "fechas": fechas_descarga_iso,
+                },
+            ).scalars().all()
+
+            fechas_comerciales = sorted({
+                str(fecha)[:10]
+                for fecha in fechas_disponibles
+            })
+
+        resultado_reporte_comercial_r16 = {
+            "estado": "OK",
+            "fechas_procesadas": [],
+            "insertados": 0,
+            "actualizados": 0,
+            "detalle_por_fecha": {},
+        }
+
+        for fecha_comercial in fechas_comerciales:
+
+            _trace_t0 = time.monotonic()
+            print(
+                f"[R16 TRACE] {unidad} COMERCIAL INICIO "
+                f"fecha={fecha_comercial}",
+                flush=True,
+            )
+
+            resultado_fecha_comercial = (
+                sincronizar_historico_reporte_comercial_r16(
+                    db=flota_comercial_db,
+                    fecha=fecha_comercial,
+                    unidad=unidad,
+                    commit=False,
+                )
+            )
+
+            print(
+                f"[R16 TRACE] {unidad} COMERCIAL FIN "
+                f"fecha={fecha_comercial} "
+                f"{time.monotonic() - _trace_t0:.2f}s",
+                flush=True,
+            )
+
+            resultado_reporte_comercial_r16[
+                "fechas_procesadas"
+            ].append(
+                fecha_comercial
+            )
+
+            resultado_reporte_comercial_r16[
+                "insertados"
+            ] += (
+                resultado_fecha_comercial.get(
+                    "insertados",
+                    0,
+                )
+                or 0
+            )
+
+            resultado_reporte_comercial_r16[
+                "actualizados"
+            ] += (
+                resultado_fecha_comercial.get(
+                    "actualizados",
+                    0,
+                )
+                or 0
+            )
+
+            resultado_reporte_comercial_r16[
+                "detalle_por_fecha"
+            ][fecha_comercial] = (
+                resultado_fecha_comercial
+            )
+
+        if not fechas_comerciales:
+            resultado_reporte_comercial_r16["estado"] = "SIN_FECHAS"
+            resultado_reporte_comercial_r16["mensaje"] = (
+                "No existen expediciones comerciales para "
+                "las fechas de esta descarga."
+            )
+
+        flota_comercial_db.commit()
+
+    except Exception as exc:
+        flota_comercial_db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "mensaje": "Fallo sincronizacion comercial posterior a SWAV",
+                "error": str(exc),
+                "unidad": unidad,
+            },
+        )
+    finally:
+        flota_comercial_db.close()
+
     if estado_proceso == "DUPLICADO":
 
         return {
@@ -735,6 +812,9 @@ def descargar_r16(
 
             "resultado":
                 resultado,
+
+            "reporte_comercial_r16":
+                resultado_reporte_comercial_r16,
 
             "mensaje":
                 (

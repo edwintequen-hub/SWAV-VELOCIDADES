@@ -209,6 +209,34 @@ def _catalogo_terminal_ts(
     return catalogo
 
 
+def _catalogo_servicio_comercial_ts(
+    db: Session,
+) -> dict[tuple[str, str], str]:
+    """Asocia codigo TS con servicio comercial si es unico."""
+    filas = db.execute(text("""
+        SELECT
+            unidad,
+            UPPER(TRIM(codigo_ts)) AS codigo_ts,
+            COUNT(DISTINCT UPPER(TRIM(servicio))) AS cantidad_servicios,
+            MAX(UPPER(TRIM(servicio))) AS servicio
+        FROM servicios
+        WHERE activo IS NOT FALSE
+          AND codigo_ts IS NOT NULL
+        GROUP BY unidad, UPPER(TRIM(codigo_ts))
+    """)).mappings().all()
+
+    catalogo = {}
+
+    for fila in filas:
+        if int(fila["cantidad_servicios"] or 0) != 1:
+            continue
+
+        catalogo[
+            (_norm(fila["unidad"]), _norm(fila["codigo_ts"]))
+        ] = _norm(fila["servicio"])
+
+    return catalogo
+
 def _catalogo_terminal_servicio(
     db: Session,
 ) -> dict[tuple[str, str], str]:
@@ -383,6 +411,7 @@ def _cargar_real_30(
 ]:
 
     catalogo = _catalogo_terminal_ts(db)
+    catalogo_comercial = _catalogo_servicio_comercial_ts(db)
 
     filas = db.execute(text("""
         SELECT
@@ -437,7 +466,11 @@ def _cargar_real_30(
         )
 
         periodo = _periodo_30(dt)
-        servicio = _norm(fila["servicio"])
+        servicio_original = _norm(fila["servicio"])
+        servicio = catalogo_comercial.get(
+            (unidad, codigo_ts),
+            servicio_original,
+        )
         patente = _norm(fila["patente"])
 
         por_terminal[
@@ -457,6 +490,7 @@ def _cargar_real_30(
                 "unidad": unidad,
                 "terminal": terminal,
                 "servicio": servicio,
+                "servicio_r16_original": servicio_original,
                 "codigo_ts": codigo_ts,
                 "patente": patente,
                 "inicio_servicio": dt.isoformat(
@@ -746,6 +780,11 @@ def construir_reporte_comercial_r16(
             "periodo": periodo,
             "real": real,
             "perfil": perfil,
+            "estado_perfil": (
+                "CON_PERFIL"
+                if (terminal, servicio, periodo) in perfil_servicio
+                else "SIN_PERFIL"
+            ),
             "diferencia":
                 real - perfil,
         })
@@ -929,6 +968,7 @@ def sincronizar_historico_reporte_comercial_r16(
             "real": int(fila["real"]),
             "perfil": int(fila["perfil"]),
             "diferencia": int(fila["diferencia"]),
+            "estado_perfil": fila["estado_perfil"],
             "inicio_r16": reporte["inicio_r16"],
             "corte_r16": reporte["corte_r16"],
             "estado_cobertura": reporte["estado_cobertura"],
@@ -962,6 +1002,7 @@ def sincronizar_historico_reporte_comercial_r16(
                     salidas_reales,
                     perfil_comercial,
                     diferencia,
+                    estado_perfil,
                     inicio_r16,
                     corte_r16,
                     estado_cobertura,
@@ -978,6 +1019,7 @@ def sincronizar_historico_reporte_comercial_r16(
                     :real,
                     :perfil,
                     :diferencia,
+                    :estado_perfil,
                     :inicio_r16,
                     :corte_r16,
                     :estado_cobertura,
@@ -996,6 +1038,7 @@ def sincronizar_historico_reporte_comercial_r16(
                     salidas_reales = EXCLUDED.salidas_reales,
                     perfil_comercial = EXCLUDED.perfil_comercial,
                     diferencia = EXCLUDED.diferencia,
+                    estado_perfil = EXCLUDED.estado_perfil,
                     inicio_r16 = EXCLUDED.inicio_r16,
                     corte_r16 = EXCLUDED.corte_r16,
                     estado_cobertura = EXCLUDED.estado_cobertura,
@@ -1011,6 +1054,194 @@ def sincronizar_historico_reporte_comercial_r16(
         f"{time_module.monotonic() - _trace_persistencia:.2f}s "
         f"insertados={insertados} "
         f"actualizados={actualizados}",
+        flush=True,
+    )
+
+    # ---------------------------------------------------------
+    # NORMALIZACION HISTORICA COMERCIAL R1.6
+    # Retirar exclusivamente claves tecnicas obsoletas
+    # despues del UPSERT y antes del COMMIT.
+    # ---------------------------------------------------------
+
+    claves_nuevas = {
+        (
+            str(fila["terminal"]),
+            str(fila["servicio"]),
+            str(fila["periodo"]),
+        )
+        for fila in reporte["servicios"]
+    }
+
+    claves_obsoletas = claves_existentes - claves_nuevas
+
+    codigos_tecnicos_permitidos = {
+        "U8": {"T830 E3"},
+        "U9": {"T902 E3", "T923C", "T930 C0", "T950 E3"},
+    }
+
+    permitidos = codigos_tecnicos_permitidos.get(unidad, set())
+
+    claves_para_retirar = [
+        clave
+        for clave in claves_obsoletas
+        if clave[1] in permitidos
+    ]
+
+    # Normalizacion historica certificada:
+    # U8 / SANTA MARGARITA / 105 (TS 805C) -> 105C.
+    # Exigir igualdad exacta de salidas por periodo.
+    if unidad == "U8":
+        reales_105c = {
+            (str(fila["terminal"]), str(fila["periodo"])): int(fila["real"])
+            for fila in reporte["servicios"]
+            if str(fila["terminal"]) == "SANTA MARGARITA"
+            and str(fila["servicio"]) == "105C"
+        }
+
+        for clave in sorted(claves_obsoletas):
+            terminal, servicio, periodo = clave
+
+            if (terminal, servicio) != ("SANTA MARGARITA", "105"):
+                continue
+
+            fila_antigua = db.execute(
+                text("""
+                    SELECT salidas_reales, perfil_comercial
+                    FROM historico_reporte_comercial_r16
+                    WHERE fecha_operacional = :fecha
+                      AND unidad = :unidad
+                      AND terminal = :terminal
+                      AND servicio = :servicio
+                      AND periodo_30 = :periodo
+                """),
+                {
+                    "fecha": fecha_iso,
+                    "unidad": unidad,
+                    "terminal": terminal,
+                    "servicio": servicio,
+                    "periodo": periodo,
+                },
+            ).one_or_none()
+
+            if fila_antigua is None:
+                raise RuntimeError(
+                    f"Registro historico 105 no encontrado: {clave}"
+                )
+
+            real_antiguo = int(fila_antigua[0])
+            perfil_antiguo = int(fila_antigua[1])
+            real_nuevo = reales_105c.get((terminal, periodo))
+
+            if (
+                real_nuevo is None
+                or real_antiguo != real_nuevo
+                or perfil_antiguo != 0
+            ):
+                raise RuntimeError(
+                    f"Normalizacion 105C no certificada: "
+                    f"{fecha_iso} {clave}, "
+                    f"antiguo={real_antiguo}, "
+                    f"nuevo={real_nuevo}, "
+                    f"perfil={perfil_antiguo}"
+                )
+
+            claves_para_retirar.append(clave)
+
+    # Nunca eliminar claves no certificadas.
+    claves_no_certificadas = claves_obsoletas - set(claves_para_retirar)
+
+    if claves_no_certificadas:
+        raise RuntimeError(
+            f"{unidad} {fecha_iso}: "
+            f"{len(claves_no_certificadas)} claves historicas "
+            "fuera del reporte sin normalizacion certificada. "
+            "Sincronizacion detenida."
+        )
+
+    for terminal, servicio, periodo in claves_para_retirar:
+
+        fila_tecnica = db.execute(
+            text("""
+                SELECT
+                    salidas_reales,
+                    perfil_comercial
+                FROM historico_reporte_comercial_r16
+                WHERE fecha_operacional = :fecha
+                  AND unidad = :unidad
+                  AND terminal = :terminal
+                  AND servicio = :servicio
+                  AND periodo_30 = :periodo
+            """),
+            {
+                "fecha": fecha_iso,
+                "unidad": unidad,
+                "terminal": terminal,
+                "servicio": servicio,
+                "periodo": periodo,
+            },
+        ).one_or_none()
+
+        if fila_tecnica is None:
+            raise RuntimeError(
+                "Registro tecnico desaparecio durante sincronizacion"
+            )
+
+        if int(fila_tecnica[1]) != 0:
+            raise RuntimeError(
+                f"Perfil no nulo en clave tecnica {servicio}"
+            )
+
+        db.execute(
+            text("""
+                DELETE FROM historico_reporte_comercial_r16
+                WHERE fecha_operacional = :fecha
+                  AND unidad = :unidad
+                  AND terminal = :terminal
+                  AND servicio = :servicio
+                  AND periodo_30 = :periodo
+            """),
+            {
+                "fecha": fecha_iso,
+                "unidad": unidad,
+                "terminal": terminal,
+                "servicio": servicio,
+                "periodo": periodo,
+            },
+        )
+
+    validacion = db.execute(
+        text("""
+            SELECT
+                COUNT(*),
+                COALESCE(SUM(salidas_reales), 0),
+                COALESCE(SUM(perfil_comercial), 0)
+            FROM historico_reporte_comercial_r16
+            WHERE fecha_operacional = :fecha
+              AND unidad = :unidad
+        """),
+        {
+            "fecha": fecha_iso,
+            "unidad": unidad,
+        },
+    ).one()
+
+    esperado = (
+        len(claves_nuevas),
+        int(reporte["total_real"]),
+        int(reporte["total_perfil"]),
+    )
+
+    if tuple(validacion) != esperado:
+        raise RuntimeError(
+            f"{unidad} {fecha_iso}: validacion historica "
+            f"incorrecta. Actual={tuple(validacion)} "
+            f"Esperado={esperado}"
+        )
+
+    print(
+        f"[R16 COMERCIAL] {unidad} {fecha_iso} "
+        f"claves_tecnicas_retiradas={len(claves_para_retirar)} "
+        f"integridad=OK",
         flush=True,
     )
 
