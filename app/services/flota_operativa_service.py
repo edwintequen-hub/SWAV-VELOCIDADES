@@ -5554,7 +5554,7 @@ def consultar_flota(
                     Expedicion.inicio_servicio
                 )
                 ==
-                fecha_r22_matriz.isoformat(),
+                fecha_r22_matriz,
             )
             .scalar()
         )
