@@ -9,6 +9,61 @@
 
     let datosActuales = null;
 
+    // FLOTA186 - SEGUIMIENTO DIARIO
+    let seguimientoDiarioAutomatico = true;
+
+    function fechaLocalActual() {
+        const ahora = new Date();
+
+        const anio = ahora.getFullYear();
+        const mes = String(
+            ahora.getMonth() + 1
+        ).padStart(2, "0");
+        const dia = String(
+            ahora.getDate()
+        ).padStart(2, "0");
+
+        return `${anio}-${mes}-${dia}`;
+    }
+
+    function actualizarFechaSeguimiento() {
+        if (!seguimientoDiarioAutomatico) {
+            return false;
+        }
+
+        const hoy = fechaLocalActual();
+
+        if (
+            $("fechaDesde").value === hoy &&
+            $("fechaHasta").value === hoy
+        ) {
+            return false;
+        }
+
+        $("fechaDesde").value = hoy;
+        $("fechaHasta").value = hoy;
+
+        return true;
+    }
+
+    function configurarSeguimientoDiario() {
+        ["fechaDesde", "fechaHasta"].forEach(
+            id => {
+                $(id).addEventListener(
+                    "change",
+                    () => {
+                        const hoy = fechaLocalActual();
+
+                        seguimientoDiarioAutomatico = (
+                            $("fechaDesde").value === hoy &&
+                            $("fechaHasta").value === hoy
+                        );
+                    }
+                );
+            }
+        );
+    }
+
 
     // ================================================================
     // UTILIDADES
@@ -18,9 +73,6 @@
         document.getElementById(id);
 
 
-    function escapeComercialR16(valor) {
-        return escapeHtml(valor);
-    }
     function escapeHtml(valor) {
 
         return String(
@@ -241,11 +293,10 @@
 
         if (datos.fecha_hasta) {
 
-            $("fechaDesde").value =
-                datos.fecha_hasta;
+            const hoy = fechaLocalActual();
 
-            $("fechaHasta").value =
-                datos.fecha_hasta;
+            $("fechaDesde").value = hoy;
+            $("fechaHasta").value = hoy;
         }
 
 
@@ -2186,7 +2237,7 @@
                 +
                 (
                     corte
-                        ? ` ? Corte R1.6: ${escapeComercialR16(corte)}`
+                        ? ` | Corte R1.6: ${escapeHtml(corte)}`
                         : ""
                 )
             );
@@ -2194,13 +2245,13 @@
 
         if (estado) {
             return (
-                escapeComercialR16(
+                escapeHtml(
                     estado
                 )
                 +
                 (
                     corte
-                        ? ` ? Corte R1.6: ${escapeComercialR16(corte)}`
+                        ? ` | Corte R1.6: ${escapeHtml(corte)}`
                         : ""
                 )
             );
@@ -2208,145 +2259,162 @@
 
         return (
             corte
-                ? `Corte R1.6: ${escapeComercialR16(corte)}`
-                : "Cobertura sin informaci?n."
+                ? `Corte R1.6: ${escapeHtml(corte)}`
+                : "Cobertura sin informacion."
         );
     }
 
-    function renderResumenComercialR16(
-        unidad,
-        datos
-    ) {
-        const contenedor =
-            $(
-                `comercialR16Resumen${unidad}`
-            );
+    const periodoSeleccionadoComercialR16 = {
+        U8: "",
+        U9: ""
+    };
 
-        if (!contenedor) {
+    function renderResumenComercialR16(unidad, datos) {
+        const contenedor = $(`comercialR16Resumen${unidad}`);
+        if (!contenedor) return;
+
+        const filas = Array.isArray(datos.matriz_terminal)
+            ? datos.matriz_terminal
+            : [];
+
+        const periodos = [...new Set(
+            filas.map(f => String(f.periodo ?? "")).filter(Boolean)
+        )].sort();
+
+        if (!periodos.length) {
+            contenedor.innerHTML =
+                '<div class="empty-cell">Sin periodos comerciales disponibles.</div>';
             return;
         }
 
-        const resumen =
-            Array.isArray(
-                datos.resumen_terminal
-            )
-                ? datos.resumen_terminal
-                : [];
+        let periodo = periodoSeleccionadoComercialR16[unidad];
 
-        const tarjetasTerminal =
-            resumen
-            .map(
-                fila => {
+        if (!periodos.includes(periodo)) {
+            periodo = periodos[0];
+            periodoSeleccionadoComercialR16[unidad] = periodo;
+        }
 
-                    const real =
-                        Number(
-                            fila.salidas_reales
-                            ??
-                            fila.real
-                            ??
-                            fila.total_real
-                            ??
-                            0
-                        );
+        const filasPeriodo = filas.filter(
+            f => String(f.periodo ?? "") === periodo
+        );
 
-                    const perfil =
-                        Number(
-                            fila.perfil_comercial
-                            ??
-                            fila.perfil
-                            ??
-                            fila.total_perfil
-                            ??
-                            0
-                        );
+        const sumar = (lista, campo) =>
+            lista.reduce((total, fila) =>
+                total + Number(fila[campo] ?? 0), 0
+            );
 
-                    const diferencia =
-                        Number(
-                            fila.diferencia
-                            ??
-                            (
-                                real
-                                -
-                                perfil
-                            )
-                        );
+        const real = sumar(filasPeriodo, "real");
+        const perfil = sumar(filasPeriodo, "perfil");
+        const diferencia = real - perfil;
 
-                    return `
-                        <div class="comercial-r16-terminal-card">
-                            <span>
-                                ${escapeComercialR16(
-                                    fila.terminal
-                                    ||
-                                    "-"
-                                )}
-                            </span>
+        const terminales = filasPeriodo.map(fila => `
+            <div class="comercial-r16-terminal-card">
+                <span>${escapeHtml(fila.terminal || "-")}</span>
+                <strong>${numero(fila.real)}</strong>
+                <small>
+                    Perfil: ${numero(fila.perfil)}
+                    | Dif: ${numero(fila.diferencia)}
+                </small>
+            </div>
+        `).join("");
 
-                            <strong>
-                                ${numeroComercialR16(real)}
-                            </strong>
+        const servicios = (
+            Array.isArray(datos.servicios) ? datos.servicios : []
+        ).filter(
+            fila => String(fila.periodo ?? "") === periodo
+        );
 
-                            <small>
-                                Perfil:
-                                ${numeroComercialR16(perfil)}
-                                ? Dif:
-                                ${numeroComercialR16(diferencia)}
-                            </small>
-                        </div>
-                    `;
-                }
-            )
-            .join("");
+        const detalle = servicios.map(fila => `
+            <tr>
+                <td>${escapeHtml(fila.terminal || "-")}</td>
+                <td>${escapeHtml(fila.servicio || "-")}</td>
+                <td>${numero(fila.real)}</td>
+                <td>${numero(fila.perfil)}</td>
+                <td>${numero(fila.diferencia)}</td>
+            </tr>
+        `).join("");
+
+        const cobertura = datos.estado_cobertura ===
+            "PARCIAL_O_POR_CERTIFICAR"
+            ? "Cobertura parcial o por certificar"
+            : escapeHtml(datos.estado_cobertura || "Sin certificar");
 
         contenedor.innerHTML = `
+            <div class="comercial-r16-leyenda">
+                <label for="selectorPeriodoComercial${unidad}">
+                    Periodo comercial:
+                </label>
+                <select id="selectorPeriodoComercial${unidad}"
+                        class="form-select">
+                    ${periodos.map(p => `
+                        <option value="${escapeHtml(p)}"
+                            ${p === periodo ? "selected" : ""}>
+                            ${escapeHtml(p)}
+                        </option>
+                    `).join("")}
+                </select>
+                <small>${cobertura}</small>
+            </div>
+
             <div class="comercial-r16-kpis">
-
                 <div class="comercial-r16-kpi">
-                    <span>Salidas R1.6</span>
-                    <strong>
-                        ${numeroComercialR16(
-                            datos.total_real
-                        )}
-                    </strong>
+                    <span>Salidas R1.6 - ${escapeHtml(periodo)}</span>
+                    <strong>${numero(real)}</strong>
                 </div>
-
                 <div class="comercial-r16-kpi">
-                    <span>Perfil Comercial</span>
-                    <strong>
-                        ${numeroComercialR16(
-                            datos.total_perfil
-                        )}
-                    </strong>
+                    <span>Perfil comercial - ${escapeHtml(periodo)}</span>
+                    <strong>${numero(perfil)}</strong>
                 </div>
-
                 <div class="comercial-r16-kpi">
-                    <span>Diferencia</span>
-                    <strong>
-                        ${numeroComercialR16(
-                            datos.total_diferencia
-                            ??
-                            (
-                                Number(
-                                    datos.total_real
-                                    ||
-                                    0
-                                )
-                                -
-                                Number(
-                                    datos.total_perfil
-                                    ||
-                                    0
-                                )
-                            )
-                        )}
-                    </strong>
+                    <span>Diferencia - ${escapeHtml(periodo)}</span>
+                    <strong>${numero(diferencia)}</strong>
                 </div>
-
             </div>
 
             <div class="comercial-r16-terminales">
-                ${tarjetasTerminal}
+                ${terminales}
+            </div>
+
+            <details>
+                <summary>
+                    Desglose por servicio del periodo ${escapeHtml(periodo)}
+                </summary>
+                <div style="overflow-x:auto">
+                    <table class="comercial-r16-tabla">
+                        <thead>
+                            <tr>
+                                <th>Terminal</th>
+                                <th>Servicio</th>
+                                <th>Real R1.6</th>
+                                <th>Perfil</th>
+                                <th>Diferencia</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${detalle}
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+
+            <div class="comercial-r16-leyenda">
+                <strong>Totales diarios informativos:</strong>
+                R1.6: ${numero(datos.total_real)}
+                | Perfil: ${numero(datos.total_perfil)}
+                <small>
+                    No representan cumplimiento oficial certificado.
+                </small>
             </div>
         `;
+
+        const selector = $(`selectorPeriodoComercial${unidad}`);
+
+        if (selector) {
+            selector.addEventListener("change", () => {
+                periodoSeleccionadoComercialR16[unidad] = selector.value;
+                renderResumenComercialR16(unidad, datos);
+            });
+        }
     }
 
     function renderMatrizComercialR16(
@@ -2450,7 +2518,7 @@
             .map(
                 periodo => `
                     <th>
-                        ${escapeComercialR16(periodo)}
+                        ${escapeHtml(periodo)}
                     </th>
                 `
             )
@@ -2500,10 +2568,10 @@
                                 return `
                                     <td class="comercial-r16-celda">
                                         <strong>
-                                            ${numeroComercialR16(real)}
+                                            ${numero(real)}
                                         </strong>
                                         <small>
-                                            ${numeroComercialR16(perfil)}
+                                            ${numero(perfil)}
                                         </small>
                                     </td>
                                 `;
@@ -2514,17 +2582,17 @@
                     return `
                         <tr>
                             <th class="comercial-r16-terminal">
-                                ${escapeComercialR16(terminal)}
+                                ${escapeHtml(terminal)}
                             </th>
 
                             ${celdas}
 
                             <td class="comercial-r16-total">
                                 <strong>
-                                    ${numeroComercialR16(totalReal)}
+                                    ${numero(totalReal)}
                                 </strong>
                                 <small>
-                                    ${numeroComercialR16(totalPerfil)}
+                                    ${numero(totalPerfil)}
                                 </small>
                             </td>
                         </tr>
@@ -2537,7 +2605,7 @@
             <div class="comercial-r16-leyenda">
                 <strong>Valor superior:</strong>
                 Salidas R1.6
-                ?
+                |
                 <strong>Valor inferior:</strong>
                 Perfil Comercial
             </div>
@@ -3569,29 +3637,13 @@
         // La cobertura R1.6 permanece intacta para las otras vistas.
         // ============================================================
 
-        const coberturaUnidad =
-            (
-                datos.cobertura_r22
-                &&
-                String(
-                    datos.cobertura_r22.unidad
-                    ||
-                    ""
-                )
-                    .trim()
-                    .toUpperCase()
-                ===
-                String(
-                    unidad
-                    ||
-                    ""
-                )
-                    .trim()
-                    .toUpperCase()
-            )
-                ? datos.cobertura_r22
-                : null;
-
+        // ============================================================
+        // FLOTA.26 - COBERTURA MATRIZ DESDE R1.6
+        //
+        // La matriz COMPORTAMIENTO POR PERIODO utiliza exclusivamente
+        // la cobertura real de Expedicion R1.6.
+        // R2.2 no participa como fuente, fallback ni condicion.
+        // ============================================================
 
         const unidadNormalizada =
             String(
@@ -3635,52 +3687,26 @@
             ||
             matrizFlotaGeneral;
 
-
         let ultimoPeriodoCobertura = 0;
 
-        if (coberturaUnidad) {
+        if (matrizFlotaUnidad) {
 
-            const periodoR22 = Number(
-                coberturaUnidad.ultimo_periodo
+            const periodoR16 = Number(
+                matrizFlotaUnidad.ultimo_periodo_r16
                 ||
                 0
             );
 
             if (
-                Number.isInteger(periodoR22)
+                Number.isInteger(periodoR16)
                 &&
-                periodoR22 >= 1
+                periodoR16 >= 1
                 &&
-                periodoR22 <= 24
+                periodoR16 <= 24
             ) {
 
                 ultimoPeriodoCobertura =
-                    periodoR22;
-            }
-        }
-
-        if (
-            ultimoPeriodoCobertura === 0
-            &&
-            matrizFlotaUnidad
-        ) {
-
-            const periodoMatriz = Number(
-                matrizFlotaUnidad.ultimo_periodo_r22
-                ||
-                0
-            );
-
-            if (
-                Number.isInteger(periodoMatriz)
-                &&
-                periodoMatriz >= 1
-                &&
-                periodoMatriz <= 24
-            ) {
-
-                ultimoPeriodoCobertura =
-                    periodoMatriz;
+                    periodoR16;
             }
         }
 
@@ -5495,221 +5521,6 @@
     }
 
 
-    // ================================================================
-    // FLOTA-R22-DETALLE-VISUAL
-    // Detalle PPU real obtenido desde R2.2.
-    // ================================================================
-
-    function renderDetalleR22Terminal(
-        terminal,
-        series
-    ) {
-
-        const filas =
-            Array.isArray(series)
-                ? series
-                : [];
-
-        let html = `
-            <div style="
-                padding:12px;
-                background:#f8fafc;
-                border:1px solid #e2e8f0;
-                border-radius:8px;
-            ">
-
-                <div style="
-                    display:flex;
-                    justify-content:space-between;
-                    align-items:center;
-                    gap:12px;
-                    margin-bottom:10px;
-                    flex-wrap:wrap;
-                ">
-
-                    <div>
-                        <strong>
-                            DETALLE FLOTA R2.2
-                        </strong>
-
-                        <span style="
-                            margin-left:8px;
-                            color:#64748b;
-                        ">
-                            ${escapeHtml(terminal)}
-                        </span>
-                    </div>
-
-                    <small style="color:#64748b;">
-                        PPU detectadas por periodo y acumuladas
-                    </small>
-
-                </div>
-
-                <div style="overflow-x:auto;">
-
-                    <table style="
-                        width:100%;
-                        border-collapse:collapse;
-                        font-size:12px;
-                    ">
-
-                        <thead>
-                            <tr>
-                                <th style="padding:7px;text-align:left;">
-                                    Periodo
-                                </th>
-
-                                <th style="padding:7px;text-align:center;">
-                                    Perfil
-                                </th>
-
-                                <th style="padding:7px;text-align:center;">
-                                    PPU periodo
-                                </th>
-
-                                <th style="padding:7px;text-align:center;">
-                                    Operativa acum.
-                                </th>
-
-                                <th style="padding:7px;text-align:left;">
-                                    PPU detectadas
-                                </th>
-
-                                <th style="padding:7px;text-align:left;">
-                                    PPU acumuladas
-                                </th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-        `;
-
-        for (const fila of filas) {
-
-            const periodo =
-                Number(fila.periodo || 0);
-
-            const conDatos =
-                String(
-                    fila.estado_r22 || ""
-                ).toUpperCase()
-                ===
-                "CON_DATOS";
-
-            const ppusPeriodo =
-                Array.isArray(
-                    fila.r22_ppus_periodo
-                )
-                    ? fila.r22_ppus_periodo
-                    : [];
-
-            const ppusAcumuladas =
-                Array.isArray(
-                    fila.r22_ppus_acumuladas
-                )
-                    ? fila.r22_ppus_acumuladas
-                    : [];
-
-            const pintarPpus = lista => {
-
-                if (!conDatos || !lista.length) {
-                    return "-";
-                }
-
-                return lista
-                    .map(
-                        ppu => `
-                            <span style="
-                                display:inline-block;
-                                margin:2px;
-                                padding:2px 6px;
-                                border:1px solid #cbd5e1;
-                                border-radius:5px;
-                                background:#fff;
-                                font-family:monospace;
-                                font-weight:600;
-                            ">
-                                ${escapeHtml(ppu)}
-                            </span>
-                        `
-                    )
-                    .join("");
-            };
-
-            html += `
-                <tr style="
-                    border-top:1px solid #e2e8f0;
-                    vertical-align:top;
-                ">
-
-                    <td style="
-                        padding:7px;
-                        font-weight:700;
-                    ">
-                        P${String(periodo).padStart(2, "0")}
-                    </td>
-
-                    <td style="
-                        padding:7px;
-                        text-align:center;
-                        font-weight:700;
-                    ">
-                        ${numero(
-                            fila.perfil_teorico ?? 0
-                        )}
-                    </td>
-
-                    <td style="
-                        padding:7px;
-                        text-align:center;
-                    ">
-                        ${
-                            conDatos
-                                ? numero(
-                                    fila.r22_periodo ?? 0
-                                )
-                                : "-"
-                        }
-                    </td>
-
-                    <td style="
-                        padding:7px;
-                        text-align:center;
-                        font-weight:700;
-                    ">
-                        ${
-                            conDatos
-                                ? numero(
-                                    fila.r22_acumulado ?? 0
-                                )
-                                : "-"
-                        }
-                    </td>
-
-                    <td style="padding:7px;">
-                        ${pintarPpus(ppusPeriodo)}
-                    </td>
-
-                    <td style="padding:7px;">
-                        ${pintarPpus(ppusAcumuladas)}
-                    </td>
-
-                </tr>
-            `;
-        }
-
-        html += `
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `;
-
-        return html;
-    }
-
-
     function renderMatrizUnidad(
         unidad,
         filasPeriodo,
@@ -5969,41 +5780,22 @@
                     visible: "-",
                     bus: null,
                     perfil: null,
-                    estado: "SIN_DATOS"
+                    porcentaje: null,
+                    estado: "SIN_COBERTURA"
                 };
             }
 
             const estado =
-                fila.estado_r22
-                ||
-                (
-                    fila.r22_acumulado === null
+                String(
+                    fila.estado_cumplimiento
                     ||
-                    fila.r22_acumulado === undefined
-                        ? "SIN_DATOS"
-                        : "CON_DATOS"
-                );
+                    ""
+                )
+                    .trim()
+                    .toUpperCase();
 
-            if (
-                estado === "SIN_DATOS"
-                ||
-                fila.r22_acumulado === null
-                ||
-                fila.r22_acumulado === undefined
-            ) {
-                return {
-                    visible: "-",
-                    bus: null,
-                    perfil:
-                        fila.perfil_teorico,
-                    estado: "SIN_DATOS"
-                };
-            }
-
-            const bus =
-                Number(
-                    fila.r22_acumulado
-                );
+            const real =
+                fila.real_r16;
 
             const perfil =
                 Number(
@@ -6012,12 +5804,35 @@
                     0
                 );
 
+            const porcentaje =
+                fila.porcentaje_cumplimiento;
+
+            if (
+                estado === "SIN_COBERTURA"
+                ||
+                real === null
+                ||
+                real === undefined
+            ) {
+                return {
+                    visible: "-",
+                    bus: null,
+                    perfil,
+                    porcentaje: null,
+                    estado: "SIN_COBERTURA"
+                };
+            }
+
+            const bus =
+                Number(real);
+
             return {
-                // FLOTA-PERFIL-NEGRITA
+                // SALIDAS R1.6 / PERFIL OPERACIONAL
                 visible:
                     `${numero(bus)}/<strong class="perfil-negrita">${numero(perfil)}</strong>`,
                 bus,
                 perfil,
+                porcentaje,
                 estado
             };
         }
@@ -6030,21 +5845,18 @@
                 clase: "matriz-serie-perfil"
             },
             {
-                clave: "r16_ppu",
-                etiqueta: "PPU CON PRESENCIA R1.6",
+                clave: "real_r16",
+                etiqueta: "SALIDAS COMERCIALES R1.6",
                 clase: "matriz-serie-r16"
             },
             {
-                clave: "r22_periodo",
-                etiqueta: "PPU DETECTADAS R2.2",
-                clase: "matriz-serie-r22"
-            },
-            {
-                clave: "r22_acumulado",
-                etiqueta: "OPERATIVA ACUM. R2.2",
-                clase: "matriz-serie-r22-acum"
+                clave: "porcentaje_cumplimiento",
+                etiqueta: "% CUMPLIMIENTO R1.6 / PERFIL",
+                clase: "matriz-serie-cumplimiento",
+                porcentaje: true
             }
         ];
+
 
         let filasSeriesFlota = "";
 
@@ -6082,44 +5894,34 @@
                             ]
                             : null;
 
-                    const esSerieR22 =
+                    const sinCobertura =
                         (
-                            definicion.clave
-                            ===
-                            "r22_periodo"
+                            !filaSerie
                             ||
-                            definicion.clave
+                            filaSerie.estado_cumplimiento
                             ===
-                            "r22_acumulado"
-                        );
-
-                    const r22SinDatos =
-                        (
-                            esSerieR22
-                            &&
-                            (
-                                !filaSerie
-                                ||
-                                filaSerie.estado_r22
-                                ===
-                                "SIN_DATOS"
-                                ||
-                                valor === null
-                                ||
-                                valor === undefined
-                            )
+                            "SIN_COBERTURA"
+                            ||
+                            valor === null
+                            ||
+                            valor === undefined
                         );
 
                     const valorVisible =
-                        r22SinDatos
+                        sinCobertura
                             ? "-"
                             : (
-                                valor === null
-                                ||
-                                valor === undefined
-                                    ? "\u2014"
+                                definicion.porcentaje
+                                    ? (
+                                        Number.isFinite(
+                                            Number(valor)
+                                        )
+                                            ? `${numero(valor)}%`
+                                            : "-"
+                                    )
                                     : numero(valor)
                             );
+
 
                     celdasSerie += `
                         <td
@@ -6498,35 +6300,10 @@
 
                         <div class="matriz-terminal-detalle-contenido">
 
-                            ${renderDetalleR22Terminal(
-                                global.terminal,
-                                (
-                                    matrizFlota
-                                    &&
-                                    Array.isArray(
-                                        matrizFlota.terminales
-                                    )
-                                        ? (
-                                            (
-                                                matrizFlota.terminales.find(
-                                                    x =>
-                                                        normalizarTerminalUnidad(
-                                                            x.terminal
-                                                        )
-                                                        ===
-                                                        normalizarTerminalUnidad(
-                                                            global.terminal
-                                                        )
-                                                )
-                                                ||
-                                                {}
-                                            ).series
-                                            ||
-                                            []
-                                        )
-                                        : []
-                                )
-                            )}
+                            <div class="empty-cell">
+                                Detalle R2.2 retirado. La matriz utiliza
+                                Salidas Comerciales R1.6 vs Perfil.
+                            </div>
 
                         </div>
 
@@ -6556,18 +6333,20 @@
             }
 
             if (
-                fila.estado_r22 === "SIN_DATOS"
+                fila.estado_cumplimiento
+                ===
+                "SIN_COBERTURA"
                 ||
-                fila.r22_acumulado === null
+                fila.real_r16 === null
                 ||
-                fila.r22_acumulado === undefined
+                fila.real_r16 === undefined
             ) {
                 return "-";
             }
 
             const bus =
                 Number(
-                    fila.r22_acumulado
+                    fila.real_r16
                 );
 
             const perfil =
@@ -10563,6 +10342,8 @@ const operativaReceptorProyectada =
     // INICIO
     // ================================================================
 
+    configurarSeguimientoDiario();
+
     cargarFiltros()
         .then(
             consultar
@@ -10893,6 +10674,9 @@ const operativaReceptorProyectada =
 
 
             try {
+
+                // FLOTA186: avanzar de fecha solo en seguimiento diario.
+                actualizarFechaSeguimiento();
 
                 const respuesta =
                     await fetch(
